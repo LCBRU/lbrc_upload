@@ -5,3 +5,4 @@ pytest
 Faker
 flask_wtf
 sqlalchemy-migrate
+flask_admin

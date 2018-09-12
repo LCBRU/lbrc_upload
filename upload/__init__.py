@@ -4,6 +4,7 @@ import traceback
 from flask import Flask, render_template
 from .ui import blueprint as ui_blueprint
 from upload.database import db
+from upload.admin import init_admin
 
 
 def create_app(config):
@@ -15,6 +16,7 @@ def create_app(config):
         db.init_app(app)
 
     app.register_blueprint(ui_blueprint)
+    init_admin(app)
 
     @app.errorhandler(500)
     @app.errorhandler(Exception)

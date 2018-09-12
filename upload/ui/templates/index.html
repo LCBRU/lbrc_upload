@@ -2,6 +2,8 @@
 
 {% block content %}
 
-<h1>Hello</h1>
+  {% for s in studies %}
+    <a href="{{ url_for('ui.upload', study_id=s.id) }}">{{ s.name }}</a>
+  {% endfor %}
 
 {% endblock %}
