@@ -1,0 +1,49 @@
+{% macro render_field(field, label=None) %}
+  <div class="row">
+    <div class="form-group{% if field.errors %} has-error{%endif%} col-md-offset-1 col-md-10">
+        {% if field.type == "BooleanField" %}
+            {{ field.label(class="col-sm-6 control-label", text=label) }}{{ render_checkbox_field_control(field, **kwargs) }}
+        {% else %}
+            {{ field.label(class="col-sm-6 control-label", text=label) }}{{ render_field_control(field, **kwargs) }}
+        {% endif %}
+    </div>
+  </div>
+{% endmacro %}
+
+{% macro render_checkbox_field_control(field) %}
+    <div class="col-sm-6 control-label">
+        {{ field(class="checkbox", **kwargs)|safe }}
+    </div>
+{% endmacro %}
+
+{% macro render_field_control(field) %}
+    <div class="col-sm-6">
+        {{ field(class="form-control", **kwargs)|safe }}
+    </div>
+{% endmacro %}
+
+{% macro render_button_bar(cancelview) %}
+      <div class="form-group col-md-offset-1 col-md-10">
+          <div class="col-md-offset-2 col-md-10">
+              <a href="{{ url_for(cancelview) }}" class="btn btn-default" role="button">Cancel</a>
+              <button type="submit" class="btn btn-primary">Save</button>
+          </div>
+      </div>
+{% endmacro %}
+
+{% macro render_form_errors(form) %}
+    {% for field in form %}
+      {% if field.errors %}
+        <div class="alert alert-dismissible alert-danger">
+            <button type="button" class="close" data-dismiss="alert">×</button>
+            <p>{{ field.label }} has the following errors:</p>
+            <ul>
+            {% for error in field.errors%}
+                <li>{{ error }}</li>
+            {% endfor %}
+            </ul>
+          </div>
+      {% endif %}
+    {% endfor %}
+
+{% endmacro %}
