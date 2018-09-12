@@ -1,7 +1,7 @@
-# Batch Demographics
+# LBRC Upload
 
-Provide a user interface an API for interacting
-with the UHL Batch Demographics service.
+Provide a site for study satalite sites to upload
+study image data.
 
 ## Installation and Running
 
