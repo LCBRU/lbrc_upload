@@ -128,3 +128,12 @@ body {
 textarea {
   resize: vertical;
 }
+
+dd {
+  margin-bottom: 10px;
+}
+
+.list-group-item a {
+  margin-right: 20px;
+  font-size: 20px;
+}

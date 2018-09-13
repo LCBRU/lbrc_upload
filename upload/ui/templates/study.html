@@ -3,12 +3,36 @@
 
 {% block content %}
 
-<h1>{{ study.name }} Uploads</h1>
+<div class="page-header">
+    <h1>{{ study.name }} Uploads</h1>
+    {{ formhelper.render_search(searchForm, 'ui.study', {}, study_id=study.id) }}
+</div>
 
-<ul>
-    {% for u in uploads %}
-        <li>{{ u.study_number }}</li>
+<ul class="list-group">
+    {% for u in uploads.items %}
+        <li class="list-group-item">
+            <div>
+                <dl>
+                    <dt>Study Number</dt>
+                    <dd>{{ u.study_number }}</dd>
+                    <dt>Date Uploaded</dt>
+                    <dd>{{ u.date_created | date_format }}</dd>
+                    <dt>Was the study protocol followed?</dt>
+                    <dd>{{ u.protocol_followed | yes_no }}</dd>
+                    <dt>If No, please detail why</dt>
+                    <dd>{{ u.protocol_deviation_description }}</dd>
+                    <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
+                    <dd>{{ u.comments }}</dd>
+                </dl>
+            </div>
+            <div>
+                <a href="{{ url_for('ui.study_file', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Study File</a>
+                <a href="{{ url_for('ui.cmr_data_recording_form_filepath', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CMR Data Recording Form</a>
+            </div>
+        </li>
     {% endfor %}
 </ul>
+
+{{ formhelper.render_pagination(uploads, 'ui.study', search=searchForm.search.data, study_id=study.id) }}
 
 {% endblock %}

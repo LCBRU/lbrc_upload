@@ -6,6 +6,7 @@ from flask import Flask, render_template, send_from_directory
 from .ui import blueprint as ui_blueprint
 from upload.database import db
 from upload.admin import init_admin
+from upload.template_filters import init_template_filters
 
 
 def create_app(config):
@@ -18,6 +19,7 @@ def create_app(config):
 
     app.register_blueprint(ui_blueprint)
     init_admin(app)
+    init_template_filters(app)
 
     @app.route('/favicon.ico')
     def favicon():

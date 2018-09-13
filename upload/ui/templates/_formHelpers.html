@@ -49,3 +49,49 @@
     {% endfor %}
 
 {% endmacro %}
+
+{% macro render_search(searchForm, searchview, buttons) %}
+<form method="GET" class="form-horizontal" action="{{ url_for(searchview, **kwargs) }}">
+  <div class="input-group">
+      {{ searchForm.search(class="form-control") | safe }}
+      <div class="input-group-btn">
+        <button type="submit" class="btn btn-primary">Search</button>
+        <a class="btn btn-primary" href="{{ url_for(searchview, **kwargs) }}">Clear Search</a>
+
+        {% for key, value in buttons.items() %}
+          <a class="btn btn-primary" href="{{ url_for(value, **kwargs) }}">{{ key }}</a>
+        {% endfor %}
+      </div>
+  </div>
+</form>
+{% endmacro %}
+
+{% macro render_pagination(pagination, endpoint) %}
+  {% if pagination.pages > 1 %}
+    <ul class="pagination">
+    {% if pagination.has_prev %}
+      <li><a href="{{ url_for(endpoint, page=pagination.prev_num, **kwargs) }}" rel="prev">Previous</a></li>
+    {% else %}
+      <li class="disabled"><a>Previous</a></li>
+    {% endif %}
+
+    {%- for page in pagination.iter_pages(left_edge=1, left_current=2, right_current=3, right_edge=1) %}
+      {% if page %}
+        {% if page != pagination.page %}
+          <li><a href="{{ url_for(endpoint, page=page, **kwargs) }}">{{ page }}</a></li>
+        {% else %}
+          <li class="active"><a>{{ page }}</a></li>
+        {% endif %}
+      {% else %}
+        <li class="disabled"><a>…</a></li>
+      {% endif %}
+    {%- endfor %}
+
+    {% if pagination.has_next %}
+      <li><a href="{{ url_for(endpoint, page=pagination.next_num, **kwargs) }}" rel="next">Next</a></li>
+    {% else %}
+      <li class="disabled"><a>Next</a></li>
+    {% endif %}
+    </ul>
+  {% endif %}
+{% endmacro %}
