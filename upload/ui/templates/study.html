@@ -1,0 +1,14 @@
+{% extends "_base.html" %}
+{% import "_formHelpers.html" as formhelper %}
+
+{% block content %}
+
+<h1>{{ study.name }} Uploads</h1>
+
+<ul>
+    {% for u in uploads %}
+        <li>{{ u.study_number }}</li>
+    {% endfor %}
+</ul>
+
+{% endblock %}

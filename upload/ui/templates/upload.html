@@ -1,7 +1,27 @@
 {% extends "_base.html" %}
+{% import "_formHelpers.html" as formhelper %}
 
 {% block content %}
 
-<h1>{{ study.name }}</h1>
+<div class="well col-md-offset-1 col-md-10">
+
+    {{ formhelper.render_form_errors(form)  }}
+    
+    <form method="POST" class="form" enctype="multipart/form-data">
+        <fieldset>
+            <legend>{{ study.name }} Upload</legend>
+                {{ form.hidden_tag() }}
+                {{ formhelper.render_field(form.study_number) }}
+                {{ formhelper.render_field(form.protocol_followed) }}
+                {{ formhelper.render_field(form.protocol_deviation_description) }}
+                {{ formhelper.render_field(form.comments) }}
+                {{ formhelper.render_field(form.study_file) }}
+                {{ formhelper.render_field(form.cmr_data_recording_form) }}
+    
+                {{ formhelper.render_button_bar('ui.index') }}
+        </fieldset>
+    
+    </form>
+</div>
 
 {% endblock %}

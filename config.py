@@ -6,6 +6,7 @@ class DevConfig(object):
     DEBUG = True
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
     DB_FILE = os.path.join(BASE_DIR, 'database.sqlite3')
+    FILE_UPLOAD_DIRECTORY = os.path.join(BASE_DIR, 'file_uploads')
     print("Database at " + DB_FILE)
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
     SQLALCHEMY_TRACK_MODIFICATIONS = True

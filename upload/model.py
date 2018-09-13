@@ -6,9 +6,24 @@ class Study(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(100))
-    date_created = db.Column(db.DateTime)
+    date_created = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
 
-    def __init__(self, **kwargs):
-        self.id = kwargs.get('id')
-        self.name = kwargs.get('name')
-        self.date_created = datetime.now(timezone.utc)
+class Upload(db.Model):
+
+    id = db.Column(db.Integer(), primary_key=True)
+    study_id = db.Column(db.Integer())
+    study_number = db.Column(db.String(20))
+    protocol_followed = db.Column(db.Boolean)
+    protocol_deviation_description = db.Column(db.String(500))
+    comments = db.Column(db.String(500))
+    study_file_filename = db.Column(db.String(500))
+    cmr_data_recording_form_filename = db.Column(db.String(500))
+    date_created = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )

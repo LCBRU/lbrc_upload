@@ -1,7 +1,8 @@
 from flask import flash
 from flask_wtf import FlaskForm
-from wtforms import StringField
+from wtforms import StringField, RadioField, TextAreaField
 from wtforms.validators import Length, Required
+from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 
 class FlashingForm(FlaskForm):
@@ -18,5 +19,20 @@ class FlashingForm(FlaskForm):
         return result
 
 
-class BatchForm(FlashingForm):
-    name = StringField('Name', validators=[Required(), Length(max=100)])
+class UploadForm(FlashingForm):
+    study_number = StringField('Study Number', validators=[Required(), Length(max=100)])
+    protocol_followed = RadioField('Was the study protocol followed?', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Required()])
+    protocol_deviation_description = TextAreaField('If No, please detail why', validators=[Length(max=500)])
+    comments = TextAreaField('Any additional comments?  E.g., image quality, motion artifacts, etc', validators=[Length(max=500)])
+    study_file = FileField(
+        'Attach study file here',
+        validators=[
+            FileRequired(),
+            FileAllowed(['dcm', 'dcm30', 'zip', 'pdf'], 'Images and zip files only.'),
+        ])
+    cmr_data_recording_form = FileField(
+        'Attach CMR data recording form',
+        validators=[
+            FileRequired(),
+            FileAllowed(['pdf'], 'PDF files only'),
+        ])

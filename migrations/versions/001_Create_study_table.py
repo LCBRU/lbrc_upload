@@ -12,7 +12,7 @@ meta = MetaData()
 study = Table(
     'study', meta,
     Column('id', Integer, primary_key=True),
-    Column('name', NVARCHAR(500)),
+    Column('name', NVARCHAR(200)),
     Column('date_created', DateTime),
 )
 
