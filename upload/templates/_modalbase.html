@@ -1,0 +1,44 @@
+{% extends "_subbase.html" %}
+
+{% block base_content %}
+
+  <div class="container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+
+          {% set class="alert-info" %}
+          {% set gliph="glyphicon-info-sign" %}
+
+          {% if category == "warning" %}
+            {% set class="alert-warning" %}
+            {% set gliph="glyphicon-exclamation-sign" %}
+          {% elif category == "error" %}
+            {% set class="alert-danger" %}
+            {% set gliph="glyphicon-exclamation-sign" %}
+          {% elif category == "success" %}
+            {% set class="alert-success" %}
+            {% set gliph="glyphicon-ok" %}
+          {% endif %}
+
+
+          <div class="alert {{class}}" role="alert">
+            <span class="glyphicon {{gliph}}" aria-hidden="true"></span>
+            <span class="sr-only">{{category}}:</span>
+            {{message}}
+          </div>
+        {% endfor %}
+      {% endwith %}
+      
+      <div class="jumbotron">
+        <div class="container">
+          <h1 class="text-center">{{ site_name }}</h1>
+
+          {% block content %}{% endblock %}
+
+        </div>
+      </div>
+
+  </div>
+
+{% endblock %}
+

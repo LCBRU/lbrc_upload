@@ -9,6 +9,7 @@ from flask import (
     request,
     send_file,
 )
+from flask_security import login_required
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, func
 from upload.database import db
@@ -16,8 +17,15 @@ from upload.model import Study, Upload
 from upload.ui.forms import UploadForm, SearchForm
 
 
-blueprint = Blueprint('ui', __name__, template_folder='templates')
+blueprint = Blueprint('ui', __name__)
 
+
+# Login required for all views
+@blueprint.before_request
+@login_required
+def before_request():
+    pass
+        
 
 @blueprint.record
 def record(state):
@@ -31,7 +39,7 @@ def record(state):
 def index():
     studies = Study.query.all()
 
-    return render_template('index.html', studies=studies)
+    return render_template('ui/index.html', studies=studies)
 
 @blueprint.route('/study/<int:study_id>')
 def study(study_id):
@@ -56,7 +64,7 @@ def study(study_id):
         ))
 
     return render_template(
-        'study.html',
+        'ui/study.html',
         study=study,
         uploads=uploads,
         searchForm=searchForm
@@ -92,7 +100,7 @@ def upload_data(study_id):
 
     else:
 
-        return render_template('upload.html', form=form, study=study)
+        return render_template('ui/upload.html', form=form, study=study)
 
 
 @blueprint.route('/upload/<int:upload_id>/study_file')

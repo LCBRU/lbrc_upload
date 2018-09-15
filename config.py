@@ -12,7 +12,14 @@ class DevConfig(object):
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     WTF_CSRF_ENABLED = True
     SECRET_KEY = "secret"
-
+    SECURITY_PASSWORD_SALT = "sale"
+    SECURITY_TRACKABLE = 'True'
+    SMTP_SERVER = 'localhost'
+    APPLICATION_EMAIL_ADDRESS = "lcdruit@leicester.le.ac.uk"
+    ADMIN_EMAIL_ADDRESSES = "lcdruit@leicester.le.ac.uk"
+    ERROR_EMAIL_SUBJECT = 'LBRC Study Data Upload Error'
+    SECURITY_CHANGEABLE = True
+    SECURITY_RECOVERABLE = True
 
 class TestConfig(DevConfig):
     """Configuration for general testing"""

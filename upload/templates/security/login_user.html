@@ -1,0 +1,26 @@
+{% extends "_modalbase.html" %}
+{% import "_formHelpers.html" as formhelper %}
+{% from "security/_macros.html" import render_field_with_errors, render_field %}
+
+{% block content %}
+
+<form action="{{ url_for_security('login') }}" method="POST" name="login_user_form" class="form-horizontal">
+	{{ login_user_form.hidden_tag() }}
+
+	<div class="col-sm-6 col-sm-offset-3">
+		{{ formhelper.render_field(login_user_form.email) }}
+	</div>
+	<div class="col-sm-6 col-sm-offset-3">
+		{{ formhelper.render_field(login_user_form.password) }}
+	</div>
+	<div class="col-sm-6 col-sm-offset-3">
+		{{ formhelper.render_field(login_user_form.remember) }}
+	</div>
+	{{ render_field(login_user_form.next) }}
+	<div class="col-sm-6 col-sm-offset-3 text-right">
+		<a href="{{ url_for_security('forgot_password') }}" class="btn btn-info" role="button">First Login or Forgotten Password</a>
+		<button type="submit" class="btn btn-primary">Login</button>
+	</div>
+</form>
+
+{% endblock %}
