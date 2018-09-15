@@ -108,8 +108,8 @@ studies_owners = db.Table(
         db.ForeignKey('user.id')))
 
 
-studies_uploaders = db.Table(
-    'studies_uploaders',
+studies_collaborators = db.Table(
+    'studies_collaborators',
     db.Column(
         'study_id',
         db.Integer(),
@@ -133,10 +133,10 @@ class Study(db.Model):
         'User',
         secondary=studies_owners,
         backref=db.backref('owned_studies', lazy='dynamic'))
-    uploaders = db.relationship(
+    collaborators = db.relationship(
         'User',
-        secondary=studies_uploaders,
-        backref=db.backref('uploader_studies', lazy='dynamic'))
+        secondary=studies_collaborators,
+        backref=db.backref('collaborator_studies', lazy='dynamic'))
 
     def __str__(self):
         return self.name

@@ -13,10 +13,10 @@
     </ul>
 {% endif %}
     
-{% if uploader_studies.count() > 0 %}
+{% if collaborator_studies.count() > 0 %}
     <h2>Collaborating Studies</h2>
     <ul class="study_list">
-        {% for s in uploader_studies %}
+        {% for s in collaborator_studies %}
             <li>
                 <a href="{{ url_for('ui.upload_data', study_id=s.id) }}"><span class="glyphicon glyphicon-upload" aria-hidden="true"></span> {{ s.name }}</a>
             </li>

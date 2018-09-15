@@ -14,7 +14,7 @@ class CustomView(ModelView):
 
 class StudyView(CustomView):
 
-    form_columns = ['name', 'owners', 'uploaders']
+    form_columns = ['name', 'owners', 'collaborators']
 
 
 class UserView(CustomView):
