@@ -1,3 +1,4 @@
+import string
 from sqlalchemy.exc import IntegrityError
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.forms import (
