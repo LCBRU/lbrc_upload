@@ -1,3 +1,5 @@
+import random
+import string
 from datetime import datetime, timezone
 from upload.database import db
 from flask_security import UserMixin, RoleMixin
@@ -43,6 +45,9 @@ class Role(db.Model, RoleMixin):
         default=datetime.utcnow
     )
 
+    def __str__(self):
+        return self.name or ''
+
 
 roles_users = db.Table(
     'roles_users',
@@ -56,10 +61,22 @@ roles_users = db.Table(
         db.ForeignKey('role.id')))
 
 
+def random_password():
+    return ''.join(random.SystemRandom().choice(
+                        string.ascii_lowercase +
+                        string.ascii_uppercase +
+                        string.digits +
+                        string.punctuation) for _ in range(15))
+
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True)
-    password = db.Column(db.String(255))
+    password = db.Column(
+        db.String(255),
+        nullable=False,
+        default=random_password,
+    )
     first_name = db.Column(db.String(255))
     last_name = db.Column(db.String(255))
     active = db.Column(db.Boolean())

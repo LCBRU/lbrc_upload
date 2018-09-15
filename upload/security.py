@@ -1,5 +1,3 @@
-import string
-import random
 from sqlalchemy.exc import IntegrityError
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.forms import (
@@ -97,13 +95,6 @@ def init_security(app):
         for a in app.config['ADMIN_EMAIL_ADDRESSES'].split(';'):
             if not user_datastore.find_user(email=a):
                 print('Creating administrator "{}"'.format(a))
-                user_datastore.create_user(
-                    email=a,
-                    password=''.join(random.SystemRandom().choice(
-                        string.ascii_lowercase +
-                        string.ascii_uppercase +
-                        string.digits +
-                        string.punctuation) for _ in range(15))
-                )
+                user_datastore.create_user(email=a)
 
         db.session.commit()
