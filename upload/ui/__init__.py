@@ -9,7 +9,7 @@ from flask import (
     request,
     send_file,
 )
-from flask_security import login_required
+from flask_security import login_required, current_user
 from werkzeug.utils import secure_filename
 from sqlalchemy import or_, func
 from upload.database import db
@@ -29,7 +29,6 @@ def before_request():
 
 @blueprint.record
 def record(state):
-
     if db is None:
         raise Exception("This blueprint expects you to provide "
                         "database access through database")
@@ -37,9 +36,19 @@ def record(state):
 
 @blueprint.route('/')
 def index():
-    studies = Study.query.all()
+    # If the user is only associated with one study,
+    # just take them to the relevant action page for
+    # that study
+    if current_user.owned_studies.count() == 0 and current_user.uploader_studies.count() == 1:
+        return redirect(url_for('ui.upload_data', study_id=current_user.uploader_studies[0].id))
+    if current_user.owned_studies.count() == 1 and current_user.uploader_studies.count() == 0:
+        return redirect(url_for('ui.study', study_id=current_user.owned_studies[0].id))
 
-    return render_template('ui/index.html', studies=studies)
+    return render_template(
+        'ui/index.html',
+        owned_studies=current_user.owned_studies,
+        uploader_studies=current_user.uploader_studies,
+    )
 
 @blueprint.route('/study/<int:study_id>')
 def study(study_id):

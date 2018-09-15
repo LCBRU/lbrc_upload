@@ -2,14 +2,26 @@
 
 {% block content %}
 
-<ul>
-    {% for s in studies %}
-        <li>
-          {{ s.name }}
-          <a href="{{ url_for('ui.study', study_id=s.id) }}">Details</a>
-          <a href="{{ url_for('ui.upload_data', study_id=s.id) }}">Upload</a>
-        </li>
-    {% endfor %}
-</ul>
-
+{% if owned_studies.count() > 0 %}
+    <h2>Owned Studies</h2>
+    <ul class="study_list">
+        {% for s in owned_studies %}
+            <li>
+                <a href="{{ url_for('ui.study', study_id=s.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ s.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+    
+{% if uploader_studies.count() > 0 %}
+    <h2>Collaborating Studies</h2>
+    <ul class="study_list">
+        {% for s in uploader_studies %}
+            <li>
+                <a href="{{ url_for('ui.upload_data', study_id=s.id) }}"><span class="glyphicon glyphicon-upload" aria-hidden="true"></span> {{ s.name }}</a>
+            </li>
+        {% endfor %}
+    </ul>
+{% endif %}
+    
 {% endblock %}
