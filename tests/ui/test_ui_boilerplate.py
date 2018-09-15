@@ -25,6 +25,7 @@ def test_missing_route(client):
     ('/static/js/main.js'),
     ('/static/js/modernizr.min.js'),
     ('/static/js/respond.min.js'),
+    ('/study/1/upload'),
 ])
 def test_url_exists(client, path):
     resp = client.get(path)
@@ -51,16 +52,16 @@ def test_html_boilerplate(client, path):
     assert soup.body is not None
 
 
-# @pytest.mark.parametrize("path", [
-#     ('/add')
-# ])
-# def test_forms_csrf_token(client_with_crsf, path):
-#     resp = client_with_crsf.get(path)
-#     soup = BeautifulSoup(resp.data, 'html.parser')
+@pytest.mark.parametrize("path", [
+    ('/study/1/upload'),
+])
+def test_forms_csrf_token(client_with_crsf, path):
+    resp = client_with_crsf.get(path)
+    soup = BeautifulSoup(resp.data, 'html.parser')
 
-#     assert soup.find(
-#         'input',
-#         {'name': 'csrf_token'},
-#         type='hidden',
-#         id='csrf_token',
-#     ) is not None
+    assert soup.find(
+        'input',
+        {'name': 'csrf_token'},
+        type='hidden',
+        id='csrf_token',
+    ) is not None

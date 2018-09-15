@@ -47,13 +47,20 @@ class CustomClient(FlaskClient):
         return JsonResponse(super(CustomClient, self).post(*args, **kwargs))
 
 
+def add_studies(faker):
+    db.session.add(faker.study_details())
+    db.session.add(faker.study_details())
+    db.session.commit()
+
 @pytest.yield_fixture(scope='function')
-def app(request):
+def app(faker):
     app = upload.create_app(TestConfig)
     app.test_client_class = CustomClient
     context = app.app_context()
     context.push()
     db.create_all()
+
+    add_studies(faker)
 
     yield app
 
@@ -68,10 +75,14 @@ def client(app):
 
 
 @pytest.yield_fixture(scope='function')
-def client_with_crsf(app):
+def client_with_crsf(faker):
     app = upload.create_app(TestConfigCRSF)
     context = app.app_context()
     context.push()
+    db.create_all()
+
+    add_studies(faker)
+
     client = app.test_client()
 
     yield client
