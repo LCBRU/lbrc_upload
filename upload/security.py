@@ -1,5 +1,7 @@
 import string
+from functools import wraps
 from sqlalchemy.exc import IntegrityError
+from flask import request, abort
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.forms import (
     EqualTo,
@@ -14,7 +16,7 @@ from flask_security.utils import verify_and_update_password, get_message
 from flask_login import current_user
 from wtforms.validators import ValidationError
 from wtforms import PasswordField, SubmitField
-from upload.model import User, Role
+from upload.model import User, Role, Study, Upload
 from upload.database import db
 
 
@@ -100,3 +102,48 @@ def init_security(app):
                 user_datastore.add_role_to_user(user, admin_role)
 
         db.session.commit()
+
+
+def must_be_study_owner():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            study = Study.query.get_or_404(request.view_args.get('study_id'))
+
+            if current_user not in study.owners:
+                abort(404)
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+    return decorator
+
+
+def must_be_upload_study_owner():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            upload = Upload.query.get_or_404(request.view_args.get('upload_id'))
+
+            if current_user not in upload.study.owners:
+                abort(404)
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+    return decorator
+
+
+def must_be_study_collaborator():
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            study = Study.query.get_or_404(request.view_args.get('study_id'))
+
+            if current_user not in study.collaborators:
+                abort(404)
+
+            return f(*args, **kwargs)
+
+        return decorated_function
+    return decorator

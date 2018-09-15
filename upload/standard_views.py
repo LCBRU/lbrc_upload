@@ -13,7 +13,6 @@ def init_standard_views(app):
         """Catch internal 404 errors, display
             a nice error page and log the error.
         """
-        print(traceback.format_exc())
         return render_template('404.html'), 404
 
     @app.errorhandler(500)

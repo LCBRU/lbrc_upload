@@ -15,6 +15,11 @@ from sqlalchemy import or_, func
 from upload.database import db
 from upload.model import Study, Upload
 from upload.ui.forms import UploadForm, SearchForm
+from upload.security import (
+    must_be_study_owner,
+    must_be_study_collaborator,
+    must_be_upload_study_owner,
+)
 
 
 blueprint = Blueprint('ui', __name__)
@@ -51,8 +56,9 @@ def index():
     )
 
 @blueprint.route('/study/<int:study_id>')
+@must_be_study_owner()
 def study(study_id):
-    study = Study.query.get(study_id)
+    study = Study.query.get_or_404(study_id)
 
     searchForm = SearchForm(formdata = request.args)
 
@@ -80,14 +86,15 @@ def study(study_id):
     )
 
 @blueprint.route('/study/<int:study_id>/upload', methods=['GET', 'POST'])
+@must_be_study_collaborator()
 def upload_data(study_id):
-    study = Study.query.get(study_id)
+    study = Study.query.get_or_404(study_id)
     form = UploadForm()
 
     if form.validate_on_submit():
 
         u = Upload(
-            study_id=study_id,
+            study=study,
             study_number=form.data['study_number'],
             protocol_followed=form.data['protocol_followed'],
             protocol_deviation_description=form.data['protocol_deviation_description'],
@@ -113,8 +120,9 @@ def upload_data(study_id):
 
 
 @blueprint.route('/upload/<int:upload_id>/study_file')
+@must_be_upload_study_owner()
 def study_file(upload_id):
-    upload = Upload.query.get(upload_id)
+    upload = Upload.query.get_or_404(upload_id)
 
     return send_file(
         get_study_file_filepath(upload.id, upload.study_file_filename),
@@ -124,8 +132,9 @@ def study_file(upload_id):
 
 
 @blueprint.route('/upload/<int:upload_id>/cmr_data_recording_form')
+@must_be_upload_study_owner()
 def cmr_data_recording_form_filepath(upload_id):
-    upload = Upload.query.get(upload_id)
+    upload = Upload.query.get_or_404(upload_id)
 
     return send_file(
         get_cmr_data_recording_form_filepath(upload.id, upload.cmr_data_recording_form_filename),

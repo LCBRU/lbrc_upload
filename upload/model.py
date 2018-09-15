@@ -5,23 +5,6 @@ from upload.database import db
 from flask_security import UserMixin, RoleMixin
 
 
-class Upload(db.Model):
-
-    id = db.Column(db.Integer(), primary_key=True)
-    study_id = db.Column(db.Integer())
-    study_number = db.Column(db.String(20))
-    protocol_followed = db.Column(db.Boolean)
-    protocol_deviation_description = db.Column(db.String(500))
-    comments = db.Column(db.String(500))
-    study_file_filename = db.Column(db.String(500))
-    cmr_data_recording_form_filename = db.Column(db.String(500))
-    date_created = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow
-    )
-
-
 class Role(db.Model, RoleMixin):
     ADMIN_ROLENAME = 'admin'
 
@@ -140,3 +123,21 @@ class Study(db.Model):
 
     def __str__(self):
         return self.name
+
+
+class Upload(db.Model):
+
+    id = db.Column(db.Integer(), primary_key=True)
+    study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))
+    study_number = db.Column(db.String(20))
+    protocol_followed = db.Column(db.Boolean)
+    protocol_deviation_description = db.Column(db.String(500))
+    comments = db.Column(db.String(500))
+    study_file_filename = db.Column(db.String(500))
+    cmr_data_recording_form_filename = db.Column(db.String(500))
+    date_created = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+    study = db.relationship(Study)
