@@ -88,13 +88,14 @@ def init_security(app):
 
     @app.before_first_request
     def init_security():
-        user_datastore.find_or_create_role(
+        admin_role = user_datastore.find_or_create_role(
             name=Role.ADMIN_ROLENAME,
             description='Administration')
 
         for a in app.config['ADMIN_EMAIL_ADDRESSES'].split(';'):
             if not user_datastore.find_user(email=a):
                 print('Creating administrator "{}"'.format(a))
-                user_datastore.create_user(email=a)
+                user = user_datastore.create_user(email=a)
+                user_datastore.add_role_to_user(user, admin_role)
 
         db.session.commit()

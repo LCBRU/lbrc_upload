@@ -7,3 +7,4 @@ flask_wtf
 sqlalchemy-migrate
 flask_admin
 flask_security
+bcrypt
