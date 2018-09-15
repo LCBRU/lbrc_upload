@@ -8,7 +8,7 @@ from upload.database import db
 from upload.admin import init_admin
 from upload.template_filters import init_template_filters
 from upload.standard_views import init_standard_views
-from upload.security import init_security, security
+from upload.security import init_security
 
 def create_app(config):
     """ Used to create flask application"""

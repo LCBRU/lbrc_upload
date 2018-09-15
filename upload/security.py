@@ -1,4 +1,6 @@
 import string
+import random
+from sqlalchemy.exc import IntegrityError
 from flask_security import Security, SQLAlchemyUserDatastore
 from flask_security.forms import (
     EqualTo,
@@ -7,7 +9,7 @@ from flask_security.forms import (
     get_form_field_label,
     ValidatorMixin,
     Form,
-    PasswordFormMixin
+    PasswordFormMixin,
 )
 from flask_security.utils import verify_and_update_password, get_message
 from flask_login import current_user
@@ -77,13 +79,31 @@ class ChangePasswordForm(Form, PasswordFormMixin):
             return False
         return True
 
-security = None
-
 def init_security(app):
     user_datastore = SQLAlchemyUserDatastore(db, User, Role)
-    security = Security(
+    Security(
         app,
         user_datastore,
         reset_password_form=ResetPasswordForm,
         change_password_form=ChangePasswordForm,
     )
+
+    @app.before_first_request
+    def init_security():
+        user_datastore.find_or_create_role(
+            name=Role.ADMIN_ROLENAME,
+            description='Administration')
+
+        for a in app.config['ADMIN_EMAIL_ADDRESSES'].split(';'):
+            if not user_datastore.find_user(email=a):
+                print('Creating administrator "{}"'.format(a))
+                user_datastore.create_user(
+                    email=a,
+                    password=''.join(random.SystemRandom().choice(
+                        string.ascii_lowercase +
+                        string.ascii_uppercase +
+                        string.digits +
+                        string.punctuation) for _ in range(15))
+                )
+
+        db.session.commit()

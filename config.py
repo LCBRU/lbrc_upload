@@ -16,7 +16,7 @@ class DevConfig(object):
     SECURITY_TRACKABLE = 'True'
     SMTP_SERVER = 'localhost'
     APPLICATION_EMAIL_ADDRESS = "lcdruit@leicester.le.ac.uk"
-    ADMIN_EMAIL_ADDRESSES = "lcdruit@leicester.le.ac.uk"
+    ADMIN_EMAIL_ADDRESSES = "rab63@le.le.ac.uk;richard.a.bramley@uhl-tr.nhs.uk"
     ERROR_EMAIL_SUBJECT = 'LBRC Study Data Upload Error'
     SECURITY_CHANGEABLE = True
     SECURITY_RECOVERABLE = True
