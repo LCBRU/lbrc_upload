@@ -15,6 +15,7 @@ class CustomView(ModelView):
 class StudyView(CustomView):
 
     form_excluded_columns = ['date_created',]
+    form_columns = ['name', 'owners', 'uploaders']
 
 
 class UserView(CustomView):

@@ -108,6 +108,18 @@ studies_owners = db.Table(
         db.ForeignKey('user.id')))
 
 
+studies_uploaders = db.Table(
+    'studies_uploaders',
+    db.Column(
+        'study_id',
+        db.Integer(),
+        db.ForeignKey('study.id')),
+    db.Column(
+        'user_id',
+        db.Integer(),
+        db.ForeignKey('user.id')))
+
+
 class Study(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
@@ -121,6 +133,10 @@ class Study(db.Model):
         'User',
         secondary=studies_owners,
         backref=db.backref('owned_studies', lazy='dynamic'))
+    uploaders = db.relationship(
+        'User',
+        secondary=studies_uploaders,
+        backref=db.backref('uploader_studies', lazy='dynamic'))
 
     def __str__(self):
         return self.name
