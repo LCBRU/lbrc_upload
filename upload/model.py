@@ -5,17 +5,6 @@ from upload.database import db
 from flask_security import UserMixin, RoleMixin
 
 
-class Study(db.Model):
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(100))
-    date_created = db.Column(
-        db.DateTime,
-        nullable=False,
-        default=datetime.utcnow
-    )
-
-
 class Upload(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
@@ -102,3 +91,36 @@ class User(db.Model, UserMixin):
     @property
     def full_name(self):
         return '{} {}'.format(self.first_name or '', self.last_name or '')
+
+    def __str__(self):
+        return self.email
+
+
+studies_owners = db.Table(
+    'studies_owners',
+    db.Column(
+        'study_id',
+        db.Integer(),
+        db.ForeignKey('study.id')),
+    db.Column(
+        'user_id',
+        db.Integer(),
+        db.ForeignKey('user.id')))
+
+
+class Study(db.Model):
+
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(100))
+    date_created = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+    owners = db.relationship(
+        'User',
+        secondary=studies_owners,
+        backref=db.backref('owned_studies', lazy='dynamic'))
+
+    def __str__(self):
+        return self.name
