@@ -31,7 +31,7 @@ class SearchForm(FlashingForm):
 
 class UploadForm(FlashingForm):
     study_number = StringField('Study Number', validators=[Required(), Length(max=100)])
-    protocol_followed = RadioField('Was the study protocol followed?', choices=[(1, 'Yes'), (0, 'No')], coerce=int, validators=[Required()])
+    protocol_followed = RadioField('Was the study protocol followed?', choices=[('True', 'Yes'), ('False', 'No')], validators=[Required()])
     protocol_deviation_description = TextAreaField('If No, please detail why', validators=[Length(max=500)])
     comments = TextAreaField('Any additional comments?  E.g., image quality, motion artifacts, etc', validators=[Length(max=500)])
     study_file = FileField(

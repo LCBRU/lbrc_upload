@@ -7,7 +7,7 @@
 
     {{ formhelper.render_form_errors(form)  }}
     
-    <form method="POST" class="form" enctype="multipart/form-data">
+    <form id="study_data_upload" method="POST" class="form" enctype="multipart/form-data">
         <fieldset>
             <legend>{{ study.name }} Upload</legend>
                 {{ form.hidden_tag() }}
@@ -24,4 +24,52 @@
     </form>
 </div>
 
+
+<!--
+<div class="progress">
+    <div class="bar"></div >
+    <div class="percent">0%</div >
+</div>
+
+<div id="status"></div>
+-->
+{% endblock %}
+
+{% block js %}
+<!--
+
+<script>
+
+$("form#study_data_upload").submit(function(e){
+    var formData = new FormData($(this)[0]);
+    //append some non-form data also
+    $.ajax({
+        type: "POST",
+        data: formData,
+        processData: false,
+        contentType: false,
+        enctype: 'multipart/form-data',
+        progress: function(event) {
+            var percentComplete = evt.loaded / evt.total;
+            percentComplete = parseInt(percentComplete * 100);
+            var percentVal = percentComplete + '%';
+            bar.width(percentVal);
+            percent.html(percentVal);
+        },
+        success: function(data, textStatus, jqXHR) {
+            alert('done');
+           //process data
+        },
+        error: function(data, textStatus, jqXHR) {
+            alert('Failed');
+           //process error msg
+        },
+    });
+
+   e.preventDefault();
+});
+
+
+</script>    
+-->
 {% endblock %}

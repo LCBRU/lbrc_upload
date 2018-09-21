@@ -106,3 +106,4 @@ venv.bak/
 # Dev files
 database.sqlite3
 file_uploads
+.vscode

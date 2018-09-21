@@ -8,3 +8,4 @@ sqlalchemy-migrate
 flask_admin
 flask_security
 bcrypt
+python-dotenv
