@@ -96,6 +96,7 @@ def upload_data(study_id):
         u = Upload(
             study=study,
             study_number=form.data['study_number'],
+            uploader=current_user,
             protocol_followed=form.data['protocol_followed']=='True',
             protocol_deviation_description=form.data['protocol_deviation_description'],
             comments=form.data['comments'],

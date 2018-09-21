@@ -11,12 +11,12 @@
 <ul class="list-group">
     {% for u in uploads.items %}
         <li class="list-group-item">
-            <div>
+            <div class='upload_details'>
+                <header>
+                    <h1>Study Number: {{ u.study_number }}</h3>
+                    <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h4>
+                </header>
                 <dl>
-                    <dt>Study Number</dt>
-                    <dd>{{ u.study_number }}</dd>
-                    <dt>Date Uploaded</dt>
-                    <dd>{{ u.date_created | date_format }}</dd>
                     <dt>Was the study protocol followed?</dt>
                     <dd>{{ u.protocol_followed | yes_no }}</dd>
                     <dt>If No, please detail why</dt>
@@ -26,8 +26,8 @@
                 </dl>
             </div>
             <div>
-                <a href="{{ url_for('ui.study_file', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Study File</a>
-                <a href="{{ url_for('ui.cmr_data_recording_form_filepath', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CMR Data Recording Form</a>
+                <a class='download' href="{{ url_for('ui.study_file', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Study File</a>
+                <a class='download' href="{{ url_for('ui.cmr_data_recording_form_filepath', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CMR Data Recording Form</a>
             </div>
         </li>
     {% endfor %}

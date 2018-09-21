@@ -16,7 +16,7 @@ from flask_security.utils import verify_and_update_password, get_message
 from flask_login import current_user
 from wtforms.validators import ValidationError
 from wtforms import PasswordField, SubmitField
-from upload.model import User, Role, Study, Upload
+from upload.model import User, Role, Study, Upload, Site
 from upload.database import db
 
 
@@ -91,6 +91,12 @@ def init_security(app):
 
     @app.before_first_request
     def init_security():
+        lbrc = Site.query.filter(Site.name == Site.LBRC).first()
+        if not lbrc:
+            print('Creating LBRC Site')
+            lbrc = Site(name=Site.LBRC)
+            db.session.add(lbrc)
+
         admin_role = user_datastore.find_or_create_role(
             name=Role.ADMIN_ROLENAME,
             description='Administration')
@@ -98,7 +104,7 @@ def init_security(app):
         for a in app.config['ADMIN_EMAIL_ADDRESSES'].split(';'):
             if not user_datastore.find_user(email=a):
                 print('Creating administrator "{}"'.format(a))
-                user = user_datastore.create_user(email=a)
+                user = user_datastore.create_user(email=a, site=lbrc)
                 user_datastore.add_role_to_user(user, admin_role)
 
         db.session.commit()

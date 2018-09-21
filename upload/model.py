@@ -41,9 +41,34 @@ def random_password():
                         string.punctuation) for _ in range(15))
 
 
+class Site(db.Model):
+
+    LBRC = 'Leicester Biomedical Research Centre'
+
+    id = db.Column(db.Integer(), primary_key=True)
+    name = db.Column(db.String(255))
+    number = db.Column(db.String(20))
+    date_created = db.Column(
+        db.DateTime,
+        nullable=False,
+        default=datetime.utcnow
+    )
+
+    def __str__(self):
+        return self.name
+
+    @property
+    def name_and_number(self):
+        number_portion = ''
+        if self.number:
+            number_portion = ' ({})'.format(self.number) 
+        return self.name + number_portion
+
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(255), unique=True)
+    site_id = db.Column(db.Integer, db.ForeignKey(Site.id))
     password = db.Column(
         db.String(255),
         nullable=False,
@@ -67,13 +92,16 @@ class User(db.Model, UserMixin):
         'Role',
         secondary=roles_users,
         backref=db.backref('users', lazy='dynamic'))
+    site = db.relationship(Site)
 
     def is_admin(self):
         return self.has_role(Role.ADMIN_ROLENAME)
 
     @property
     def full_name(self):
-        return '{} {}'.format(self.first_name or '', self.last_name or '')
+        full_name = ' '.join(filter(None, [self.first_name, self.last_name]))
+
+        return full_name or self.email
 
     def __str__(self):
         return self.email
@@ -130,6 +158,7 @@ class Upload(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))
     study_number = db.Column(db.String(20))
+    uploader_id = db.Column(db.Integer(), db.ForeignKey(User.id))
     protocol_followed = db.Column(db.Boolean)
     protocol_deviation_description = db.Column(db.String(500))
     comments = db.Column(db.String(500))
@@ -141,3 +170,4 @@ class Upload(db.Model):
         default=datetime.utcnow
     )
     study = db.relationship(Study)
+    uploader = db.relationship(User)
