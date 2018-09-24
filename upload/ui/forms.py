@@ -5,6 +5,8 @@ from wtforms import (
     StringField,
     RadioField,
     TextAreaField,
+    HiddenField,
+    BooleanField,
 )
 from wtforms.validators import Length, Required
 from flask_wtf.file import FileField, FileRequired, FileAllowed
@@ -29,6 +31,10 @@ class SearchForm(FlashingForm):
     page = IntegerField('Page', default=1)
     
 
+class ConfirmForm(FlashingForm):
+    id = HiddenField('id', validators=[Required()])
+    
+
 class UploadForm(FlashingForm):
     study_number = StringField('Study Number', validators=[Required(), Length(max=100)])
     protocol_followed = RadioField('Was the study protocol followed?', choices=[('True', 'Yes'), ('False', 'No')], validators=[Required()])
@@ -46,3 +52,10 @@ class UploadForm(FlashingForm):
             FileRequired(),
             FileAllowed(['pdf'], 'PDF files only'),
         ])
+
+
+class UploadSearchForm(FlashingForm):
+    search = StringField('Search', validators=[Length(max=20)])
+    showCompleted = BooleanField('Show Completed')
+    page = IntegerField('Page', default=1)
+    

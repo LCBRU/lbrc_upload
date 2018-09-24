@@ -50,10 +50,17 @@
 
 {% endmacro %}
 
-{% macro render_search(searchForm, searchview, buttons) %}
+{% macro render_search(searchForm, searchview, buttons={}, checkboxes={}) %}
 <form method="GET" class="form-horizontal" action="{{ url_for(searchview, **kwargs) }}">
+
   <div class="input-group">
-      {{ searchForm.search(class="form-control") | safe }}
+      {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
+      {% for key, value in checkboxes.items() %}
+        <span class="input-group-addon">
+            <input type="checkbox" id="{{ key }}" aria-label="{{ value }}">
+            <span>{{ value }}</span>
+        </span>
+      {% endfor %}
       <div class="input-group-btn">
         <button type="submit" class="btn btn-primary">Search</button>
         <a class="btn btn-primary" href="{{ url_for(searchview, **kwargs) }}">Clear Search</a>

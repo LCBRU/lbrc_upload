@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, func
 from upload.database import db
 from upload.model import Study, Upload
-from upload.ui.forms import UploadForm, SearchForm
+from upload.ui.forms import UploadForm, UploadSearchForm, ConfirmForm
 from upload.security import (
     must_be_study_owner,
     must_be_study_collaborator,
@@ -60,9 +60,14 @@ def index():
 def study(study_id):
     study = Study.query.get_or_404(study_id)
 
-    searchForm = SearchForm(formdata = request.args)
+    searchForm = UploadSearchForm(formdata = request.args)
 
-    q = Upload.query.filter(Upload.study_id == study_id)
+    q = Upload.query
+    q = q.filter(Upload.study_id == study_id)
+    q = q.filter(Upload.deleted == 0)
+
+    if not searchForm.showCompleted.data:
+        q = q.filter(Upload.completed == 0)
 
     if searchForm.search.data:
         q = q.filter(or_(
@@ -82,7 +87,8 @@ def study(study_id):
         'ui/study.html',
         study=study,
         uploads=uploads,
-        searchForm=searchForm
+        searchForm=searchForm,
+        confirm_form=ConfirmForm(),
     )
 
 @blueprint.route('/study/<int:study_id>/upload', methods=['GET', 'POST'])
@@ -142,6 +148,34 @@ def cmr_data_recording_form_filepath(upload_id):
         as_attachment=True,
         attachment_filename=upload.cmr_data_recording_form_filename
     )
+
+
+@blueprint.route('/upload_delete', methods=['POST'])
+def upload_delete():
+    form = ConfirmForm()
+
+    if form.validate_on_submit():
+        upload = Upload.query.get_or_404(form.id.data)
+
+        upload.deleted = 1
+
+        db.session.commit()
+
+    return redirect(request.referrer)
+
+
+@blueprint.route('/upload_complete', methods=['POST'])
+def upload_complete():
+    form = ConfirmForm()
+
+    if form.validate_on_submit():
+        upload = Upload.query.get_or_404(form.id.data)
+
+        upload.completed = 1
+
+        db.session.commit()
+
+    return redirect(request.referrer)
 
 
 def get_study_file_filepath(study_id, filename):

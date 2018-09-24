@@ -4,7 +4,7 @@
 
 /* Move down content because we have a fixed navbar that is 50px tall */
 body {
-  padding-top: 80px;
+  padding-top: 60px;
 }
 
 
@@ -119,10 +119,8 @@ body {
   right: 0;
 }
 
-.outer {
-	background-image: url("../img/nihr-logo.png");
-	background-repeat: no-repeat;
-	background-position: right 20px;
+#nihrLogo {
+  float: right;
 }
 
 textarea {

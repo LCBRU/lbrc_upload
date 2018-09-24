@@ -171,3 +171,5 @@ class Upload(db.Model):
     )
     study = db.relationship(Study)
     uploader = db.relationship(User)
+    completed = db.Column(db.Boolean, default=0)
+    deleted = db.Column(db.Boolean, default=0)
