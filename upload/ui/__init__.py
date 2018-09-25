@@ -1,4 +1,7 @@
 import os
+import tempfile
+import datetime
+import csv
 import pathlib
 from flask import (
     current_app,
@@ -14,7 +17,12 @@ from werkzeug.utils import secure_filename
 from sqlalchemy import or_, func
 from upload.database import db
 from upload.model import Study, Upload
-from upload.ui.forms import UploadForm, UploadSearchForm, ConfirmForm
+from upload.ui.forms import (
+    UploadForm,
+    UploadSearchForm,
+    ConfirmForm,
+    SearchForm,
+)
 from upload.security import (
     must_be_study_owner,
     must_be_study_collaborator,
@@ -22,7 +30,7 @@ from upload.security import (
 )
 
 
-blueprint = Blueprint('ui', __name__)
+blueprint = Blueprint('ui', __name__, template_folder='templates')
 
 
 # Login required for all views
@@ -62,19 +70,7 @@ def study(study_id):
 
     searchForm = UploadSearchForm(formdata = request.args)
 
-    q = Upload.query
-    q = q.filter(Upload.study_id == study_id)
-    q = q.filter(Upload.deleted == 0)
-
-    if not searchForm.showCompleted.data:
-        q = q.filter(Upload.completed == 0)
-
-    if searchForm.search.data:
-        q = q.filter(or_(
-            Upload.study_number == searchForm.search.data,
-            Upload.protocol_deviation_description.like("%{}%".format(searchForm.search.data)),
-            Upload.comments.like("%{}%".format(searchForm.search.data)),
-        ))
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data)
 
     uploads = (q.order_by(Upload.date_created.desc())
          .paginate(
@@ -91,13 +87,51 @@ def study(study_id):
         confirm_form=ConfirmForm(),
     )
 
+
+@blueprint.route('/study/<int:study_id>/my_uploads')
+@must_be_study_collaborator()
+def study_my_uploads(study_id):
+    study = Study.query.get_or_404(study_id)
+
+    searchForm = SearchForm(formdata = request.args)
+
+    q = get_study_uploads_query(study_id, searchForm, True)
+    q = q.filter(Upload.uploader == current_user)
+
+    uploads = (q.order_by(Upload.date_created.desc())
+         .paginate(
+            page=searchForm.page.data,
+            per_page=5,
+            error_out=False
+        ))
+
+    return render_template(
+        'ui/my_uploads.html',
+        study=study,
+        uploads=uploads,
+        searchForm=searchForm,
+    )
+
+
 @blueprint.route('/study/<int:study_id>/upload', methods=['GET', 'POST'])
 @must_be_study_collaborator()
 def upload_data(study_id):
     study = Study.query.get_or_404(study_id)
     form = UploadForm()
 
-    if form.validate_on_submit():
+    q = Upload.query
+    q = q.filter(Upload.study_id == study_id)
+    q = q.filter(Upload.deleted == 0)
+    q = q.filter(Upload.study_number == form.study_number.data)
+
+    duplicate = q.count() > 0
+
+    form.validate_on_submit()
+
+    if duplicate:
+        form.study_number.errors.append('this study number already exists for this study')
+
+    if len(form.errors) == 0 and form.is_submitted():
 
         u = Upload(
             study=study,
@@ -122,6 +156,8 @@ def upload_data(study_id):
         return redirect(url_for('ui.index'))
 
     else:
+        print(form.study_number.errors)
+
 
         return render_template('ui/upload.html', form=form, study=study)
 
@@ -148,6 +184,34 @@ def cmr_data_recording_form_filepath(upload_id):
         as_attachment=True,
         attachment_filename=upload.cmr_data_recording_form_filename
     )
+
+
+@blueprint.route('/study/<int:study_id>/csv')
+@login_required
+@must_be_study_owner()
+def study_csv(study_id):
+    study = Study.query.get_or_404(study_id)
+
+    searchForm = UploadSearchForm(formdata = request.args)
+
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data)
+
+    csv_filename = tempfile.NamedTemporaryFile()
+
+    try:
+        write_study_upload_csv(csv_filename.name, q)
+
+        return send_file(
+            csv_filename.name,
+            as_attachment=True,
+            attachment_filename="{0}_{1:%Y%M%d%H%m%S}.csv".format(
+                study.name,
+                datetime.datetime.now(),
+            )
+        )
+
+    finally:
+        csv_filename.close()
 
 
 @blueprint.route('/upload_delete', methods=['POST'])
@@ -194,3 +258,60 @@ def get_filepath(study_id, file_type, filename):
             file_type,
             filename,
         ))
+
+
+def get_study_uploads_query(study_id, search_form, show_completed):
+    q = Upload.query
+    q = q.filter(Upload.study_id == study_id)
+    q = q.filter(Upload.deleted == 0)
+
+    if not show_completed:
+        q = q.filter(Upload.completed == 0)
+
+    if search_form.search.data:
+        q = q.filter(or_(
+            Upload.study_number == search_form.search.data,
+            Upload.protocol_deviation_description.like("%{}%".format(search_form.search.data)),
+            Upload.comments.like("%{}%".format(search_form.search.data)),
+        ))
+
+    return q
+
+
+def write_study_upload_csv(filename, query):
+    COL_UPLOAD_ID = 'upload_id'
+    COL_STUDY_NAME = 'study_name'
+    COL_STUDY_NUMBER = 'study_number'
+    COL_UPLOADER = 'uploaded_by'
+    COL_PROTOCOL_FOLLOWED = 'protocol_followed'
+    COL_PROTOCOL_DEVIATION_DESCRIPTION = 'protocol_deviation_description'
+    COL_COMMENTS = 'comments'
+    COL_DATE_CREATED = 'date_created'
+
+    fieldnames = [
+        COL_UPLOAD_ID,
+        COL_STUDY_NAME,
+        COL_STUDY_NUMBER,
+        COL_UPLOADER,
+        COL_PROTOCOL_FOLLOWED,
+        COL_PROTOCOL_DEVIATION_DESCRIPTION,
+        COL_COMMENTS,
+        COL_DATE_CREATED,
+    ]
+
+    with open(filename, 'w', newline='') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+
+        writer.writeheader()
+
+        for u in query.all():
+            writer.writerow({
+                COL_UPLOAD_ID: u.id,
+                COL_STUDY_NAME: u.study.name,
+                COL_STUDY_NUMBER: u.study_number,
+                COL_UPLOADER: u.uploader.full_name,
+                COL_PROTOCOL_FOLLOWED: u.protocol_followed,
+                COL_PROTOCOL_DEVIATION_DESCRIPTION: u.protocol_deviation_description,
+                COL_COMMENTS: u.comments,
+                COL_DATE_CREATED: u.date_created,
+            })

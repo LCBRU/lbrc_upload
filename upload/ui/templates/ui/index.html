@@ -1,0 +1,57 @@
+{% extends "_base.html" %}
+
+{% block content %}
+
+{% if owned_studies.count() > 0 %}
+    <h2>Owned Studies</h2>
+    <table class="table study_list">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Study</th>
+                <th>Uploads</th>
+                <th>Outstanding</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in owned_studies %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('ui.study', study_id=s.id) }}"><span class="glyphicon glyphicon-th-list" aria-hidden="true" title="View Study Uploads"></span></a>
+                    <a href="{{ url_for('ui.study_csv', study_id=s.id) }}"><span class="glyphicon glyphicon-cloud-download" aria-hidden="true" title="Download Upload Details" ></span></a>
+                </td>
+                <td>{{ s.name }}</td>
+                <td>{{ s.upload_count }}</td>
+                <td>{{ s.outstanding_upload_count }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+    
+{% if collaborator_studies.count() > 0 %}
+    <h2>Collaborating Studies</h2>
+    <table class="table study_list">
+        <thead>
+            <tr>
+                <th></th>
+                <th>Study</th>
+                <th>My Uploads</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for s in collaborator_studies %}
+            <tr>
+                <td>
+                    <a href="{{ url_for('ui.study_my_uploads', study_id=s.id) }}"><span class="glyphicon glyphicon-th-list" aria-hidden="true" title="View My Study Uploads"></span></a>
+                    <a href="{{ url_for('ui.upload_data', study_id=s.id) }}"><span class="glyphicon glyphicon-cloud-upload" aria-hidden="true" title="Upload Data" ></span></a>
+                </td>
+                <td>{{ s.name }}</td>
+                <td>{{ s.upload_count_for_user(current_user) }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% endif %}
+    
+{% endblock %}

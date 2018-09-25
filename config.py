@@ -10,6 +10,7 @@ class DevConfig(object):
     print("Database at " + DB_FILE)
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
     SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SQLALCHEMY_ECHO = False
     WTF_CSRF_ENABLED = True
     SECRET_KEY = "secret"
     SECURITY_PASSWORD_SALT = "sale"

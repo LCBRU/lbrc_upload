@@ -14,7 +14,7 @@ upload = Table(
     'upload', meta,
     Column('id', Integer, primary_key=True),
     Column('study_id', Integer),
-    Column('study_number', NVARCHAR(20)),
+    Column('study_number', NVARCHAR(20), unique=True),
     Column('protocol_followed', Boolean),
     Column('protocol_deviation_description', NVARCHAR(500)),
     Column('comments', NVARCHAR(500)),

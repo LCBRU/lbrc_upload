@@ -1,5 +1,7 @@
 import random
 import string
+from sqlalchemy.ext.hybrid import hybrid_property
+from sqlalchemy.sql import select, func
 from datetime import datetime, timezone
 from upload.database import db
 from flask_security import UserMixin, RoleMixin
@@ -152,6 +154,17 @@ class Study(db.Model):
     def __str__(self):
         return self.name
 
+    @property
+    def upload_count(self):
+        return len([u for u in self.uploads if not u.deleted])
+
+    def upload_count_for_user(self, user):
+        return len([u for u in self.uploads if not u.deleted and u.uploader == user])
+
+    @property
+    def outstanding_upload_count(self):
+        return len([u for u in self.uploads if not u.deleted and not u.completed])
+
 
 class Upload(db.Model):
 
@@ -169,7 +182,9 @@ class Upload(db.Model):
         nullable=False,
         default=datetime.utcnow
     )
-    study = db.relationship(Study)
+    study = db.relationship(
+        Study,
+        backref=db.backref('uploads'))
     uploader = db.relationship(User)
     completed = db.Column(db.Boolean, default=0)
     deleted = db.Column(db.Boolean, default=0)

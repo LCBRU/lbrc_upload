@@ -138,6 +138,9 @@ dd {
 
 .study_list li {
   list-style: none;
+}
+
+.study_list a {
   font-size: 20px;
 }
 
