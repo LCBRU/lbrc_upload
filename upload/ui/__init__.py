@@ -156,9 +156,6 @@ def upload_data(study_id):
         return redirect(url_for('ui.index'))
 
     else:
-        print(form.study_number.errors)
-
-
         return render_template('ui/upload.html', form=form, study=study)
 
 
