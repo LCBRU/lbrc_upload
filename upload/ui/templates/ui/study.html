@@ -6,7 +6,7 @@
     <div class="page-header">
         <h1>{{ study.name }} Uploads</h1>
 
-        <form method="GET" class="form-horizontal" action="{{ url_for('ui.study', study_id=study.id) }}">
+        <form method="GET" id="searchForm" class="form-horizontal" action="{{ url_for('ui.study', study_id=study.id) }}">
 
             <div class="input-group">
                 {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
@@ -138,5 +138,10 @@
         var modal = $(this)
         modal.find('.modal-footer input#id').val(id)
     })
+
+    $('#showCompleted').click(function (event) {
+        $("#searchForm").submit();
+    })
+
 </script>
 {% endblock %}
