@@ -3,44 +3,48 @@
 
 {% block content %}
 
-<div class="page-header">
-    <h1>{{ study.name }} Uploads</h1>
+<section>
 
-    <form method="GET" class="form-horizontal" action="{{ url_for('ui.study_my_uploads', study_id=study.id) }}">
+    <div class="page-header">
+        <h1>{{ study.name }} Uploads</h1>
 
-        <div class="input-group">
-            {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
-            <div class="input-group-btn">
-                <button type="submit" class="btn btn-primary">Search</button>
-                <a class="btn btn-primary" href="{{ url_for('ui.study_my_uploads', study_id=study.id) }}">Clear Search</a>
-            </div>
-        </div>
-    </form>
-</div>
+        <form method="GET" class="form-horizontal" action="{{ url_for('ui.study_my_uploads', study_id=study.id) }}">
 
-<ul class="list-group">
-    {% for u in uploads.items %}
-        <li class="list-group-item">
-            <div class='upload_details'>
-                <div>
+            <div class="input-group">
+                {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
+                <div class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a class="btn btn-primary" href="{{ url_for('ui.study_my_uploads', study_id=study.id) }}">Clear Search</a>
                 </div>
-                <header>
-                    <h1>
-                        <span class="hidden-xs">Study Number: </span>{{ u.study_number }}
-                    </h1>
-                    <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
-                </header>
-                <dl>
-                    <dt>Was the study protocol followed?</dt>
-                    <dd>{{ u.protocol_followed | yes_no }}</dd>
-                    <dt>If No, please detail why</dt>
-                    <dd>{{ u.protocol_deviation_description }}</dd>
-                    <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
-                    <dd>{{ u.comments }}</dd>
-                </dl>
             </div>
-        </li>
-    {% endfor %}
-</ul>
+        </form>
+    </div>
+
+    <ul class="list-group">
+        {% for u in uploads.items %}
+            <li class="list-group-item">
+                <div class='upload_details'>
+                    <div>
+                    </div>
+                    <header>
+                        <h1>
+                            <span class="hidden-xs">Study Number: </span>{{ u.study_number }}
+                        </h1>
+                        <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
+                    </header>
+                    <dl>
+                        <dt>Was the study protocol followed?</dt>
+                        <dd>{{ u.protocol_followed | yes_no }}</dd>
+                        <dt>If No, please detail why</dt>
+                        <dd>{{ u.protocol_deviation_description }}</dd>
+                        <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
+                        <dd>{{ u.comments }}</dd>
+                    </dl>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+    
+</section>
 
 {% endblock %}

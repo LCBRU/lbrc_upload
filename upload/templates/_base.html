@@ -3,24 +3,22 @@
 {% block base_content %}
 
 <div class="outer">
-  <nav class="navbar navbar-inverse navbar-fixed-top">
-    <div class="container-fluid">
-      <div class="navbar-header">
-        <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-          <span class="sr-only">Toggle navigation</span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-          <span class="icon-bar"></span>
-        </button>
-        <a class="navbar-brand" href="{{ url_for('ui.index') }}">Leicester BRC Data Upload</a>
-      </div>
+  <header class="pageheader">
+      <h1>Leicester<br>
+          <span class="hidden-xs">Biomedical Research Centre</span>
+          <span class="hidden-sm hidden-md hidden-lg">BRC</span>
+      </h1>
+  </header>
 
-      {% if current_user.is_active %}
-      <div id="navbar" class="navbar-collapse collapse">
-        <ul class="nav navbar-nav navbar-right">
-          <li><a href="{{ url_for('ui.index') }}">Studies</a></li>
+  <nav class="navbar navbar-expand-lg navbar-light bg-light">
+    {% if current_user.is_active %}
+      <ul class="nav navbar-nav">
+        <li><a class="navbar-brand fas fa-home" href="{{ url_for('ui.index') }}"></a></li>
+        <li><a href="{{ url_for('ui.index') }}">Studies</a></li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
           <li class="dropdown">
-              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">User <span class="caret"></span></a>
+              <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.full_name }} <span class="caret"></span></a>
               <ul class="dropdown-menu">
                 <li><a href="{{ url_for_security('change_password') }}">Change Password</a></li>
                 <li role="separator" class="divider"></li>
@@ -28,16 +26,10 @@
               </ul>
           </li>
         </ul>
-      </div>
       {% endif %}
-    </div>
   </nav>
 
-  <a id="nihrLogo" href="https://www.nihr.ac.uk/" target="_new">
-    <img src="/static/img/nihr-logo_sm.png" alt="NIHR">
-  </a>
-
-  <div class="container">
+  <div>
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
 
@@ -67,7 +59,14 @@
       {% endwith %}
       
       {% block content %}{% endblock %}
-  </div>
+
+    </div>
+
+    <footer>
+        <p>
+            Copyright &copy; 2018 NIHR Leicester Biomedical Research Centre
+        </p>
+    </footer>
 </div>
 {% endblock %}
 

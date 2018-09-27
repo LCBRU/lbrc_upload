@@ -2,70 +2,72 @@
 {% import "_formHelpers.html" as formhelper %}
 
 {% block content %}
+<section>
+    <div class="page-header">
+        <h1>{{ study.name }} Uploads</h1>
 
-<div class="page-header">
-    <h1>{{ study.name }} Uploads</h1>
+        <form method="GET" class="form-horizontal" action="{{ url_for('ui.study', study_id=study.id) }}">
 
-    <form method="GET" class="form-horizontal" action="{{ url_for('ui.study', study_id=study.id) }}">
-
-        <div class="input-group">
-            {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
-            <span class="input-group-addon">
-                {{ searchForm.showCompleted() | safe }}
-                <span>Show Completed</span>
-            </span>
-            <div class="input-group-btn">
-                <button type="submit" class="btn btn-primary">Search</button>
-                <a class="btn btn-primary" href="{{ url_for('ui.study', study_id=study.id) }}">Clear Search</a>
+            <div class="input-group">
+                {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
+                <span class="input-group-addon">
+                    {{ searchForm.showCompleted() | safe }}
+                    <span>Show Completed</span>
+                </span>
+                <div class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a class="btn btn-primary" href="{{ url_for('ui.study', study_id=study.id) }}">Clear Search</a>
+                </div>
             </div>
-        </div>
-    </form>
-</div>
+        </form>
+    </div>
 
-<ul class="list-group">
-    {% for u in uploads.items %}
-        <li class="list-group-item">
-            <div class='upload_details'>
+    <ul class="list-group">
+        {% for u in uploads.items %}
+            <li class="list-group-item">
+                <div class='upload_details'>
+                    <div>
+                    </div>
+                    <header>
+                        <h1>
+                            <div class="pull-right">
+                                {% if u.completed %}
+                                    <span class="label label-default">Completed</span>
+                                {% endif %}
+                            </div>
+                            <span class="hidden-xs">Study Number: </span>{{ u.study_number }}
+                        </h1>
+                        <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
+                    </header>
+                    <dl>
+                        <dt>Was the study protocol followed?</dt>
+                        <dd>{{ u.protocol_followed | yes_no }}</dd>
+                        <dt>If No, please detail why</dt>
+                        <dd>{{ u.protocol_deviation_description }}</dd>
+                        <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
+                        <dd>{{ u.comments }}</dd>
+                    </dl>
+                </div>
                 <div>
+                    <div class="pull-left">
+                        <a class='download' href="{{ url_for('ui.study_file', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Study File</a>
+                        <a class='download' href="{{ url_for('ui.cmr_data_recording_form_filepath', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CMR Data Recording Form</a>
+                    </div>
+                    <div class="pull-right">
+                        {% if not u.completed %}
+                            <a class="btn btn-primary" data-toggle="modal" data-target="#completeUploadModal" data-id="{{ u.id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Complete</a>
+                        {% endif %}
+                        {% if not u.deleted %}
+                            <a class="btn btn-danger" data-toggle="modal" data-target="#deleteUploadModal" data-id="{{ u.id }}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</a>
+                        {% endif %}
+                    </div>
+                    <div class="clearfix"></div>
                 </div>
-                <header>
-                    <h1>
-                        <div class="pull-right">
-                            {% if u.completed %}
-                                <span class="label label-default">Completed</span>
-                            {% endif %}
-                        </div>
-                        <span class="hidden-xs">Study Number: </span>{{ u.study_number }}
-                    </h1>
-                    <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
-                </header>
-                <dl>
-                    <dt>Was the study protocol followed?</dt>
-                    <dd>{{ u.protocol_followed | yes_no }}</dd>
-                    <dt>If No, please detail why</dt>
-                    <dd>{{ u.protocol_deviation_description }}</dd>
-                    <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
-                    <dd>{{ u.comments }}</dd>
-                </dl>
-            </div>
-            <div>
-                <div class="pull-left">
-                    <a class='download' href="{{ url_for('ui.study_file', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Study File</a>
-                    <a class='download' href="{{ url_for('ui.cmr_data_recording_form_filepath', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CMR Data Recording Form</a>
-                </div>
-                <div class="pull-right">
-                    {% if not u.completed %}
-                        <a class="btn btn-primary" data-toggle="modal" data-target="#completeUploadModal" data-id="{{ u.id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Complete</a>
-                    {% endif %}
-                    {% if not u.deleted %}
-                        <a class="btn btn-danger" data-toggle="modal" data-target="#deleteUploadModal" data-id="{{ u.id }}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</a>
-                    {% endif %}
-                </div>
-                <div class="clearfix"></div>
-            </div>
-        </li>
-    {% endfor %}
-</ul>
+            </li>
+        {% endfor %}
+    </ul>
+        
+</section>
 
 <!-- Delete Confirmation Dialog -->
 <div class="modal fade" id="deleteUploadModal" tabindex="-1" role="dialog" aria-labelledby="deleteUploadModal" aria-hidden="true">

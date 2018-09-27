@@ -3,13 +3,12 @@
 
 {% block content %}
 
-<div class="well col-md-offset-1 col-md-10">
+<div class="panel panel-primary">
 
-    {{ formhelper.render_form_errors(form)  }}
-    
+    <div class="panel-heading">{{ site_name }}: Upload</div>
+
     <form id="study_data_upload" method="POST" class="form" enctype="multipart/form-data">
         <fieldset>
-            <legend>{{ study.name }} Upload</legend>
                 {{ form.hidden_tag() }}
                 {{ formhelper.render_field(form.study_number) }}
                 {{ formhelper.render_field(form.protocol_followed) }}

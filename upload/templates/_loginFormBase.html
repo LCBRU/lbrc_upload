@@ -2,7 +2,7 @@
 
 {% block base_content %}
 
-  <div class="container">
+  <div class="errors col-md-8 col-md-offset-2">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
 
@@ -21,23 +21,27 @@
           {% endif %}
 
 
-          <div class="alert {{class}}" role="alert">
-            <span class="glyphicon {{gliph}}" aria-hidden="true"></span>
-            <span class="sr-only">{{category}}:</span>
-            {{message}}
+          <div class="row">
+              <div class="alert {{class}}" role="alert">
+                  <span class="glyphicon {{gliph}}" aria-hidden="true"></span>
+                  <span class="sr-only">{{category}}:</span>
+                  {{message}}
+              </div>
           </div>
         {% endfor %}
       {% endwith %}
-      
-      <div class="jumbotron">
-        <div class="container">
-          <h1 class="text-center">{{ site_name }}</h1>
 
-          {% block content %}{% endblock %}
+      {% block errors %}{% endblock %}
+  </div>
 
+  <div class="panel panel-primary login-form">
+      <div class="panel-heading">{{ site_name }}: {% block formname %}{% endblock %}</div>
+      <div class="panel-body">
+        <div class="login-form-body">
+            {% block content %}{% endblock %}
         </div>
-      </div>
 
+      </div>
   </div>
 
 {% endblock %}
