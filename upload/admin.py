@@ -1,6 +1,6 @@
 import flask_admin as admin
 from flask_security import current_user
-from flask import current_app
+from flask import current_app, redirect
 from flask_admin.contrib.sqla import ModelView
 from upload.database import db
 from upload.model import Study, User, Role, Site
@@ -29,7 +29,8 @@ class SiteView(CustomView):
 
 
 def init_admin(app):
-    flask_admin = admin.Admin(app, name='Leicester BRC data Upload', url='/admin/')
+    flask_admin = admin.Admin(app, name='Leicester BRC data Upload', url='/admin')
     flask_admin.add_view(StudyView(Study, db.session))
     flask_admin.add_view(UserView(User, db.session))
     flask_admin.add_view(SiteView(Site, db.session))
+
