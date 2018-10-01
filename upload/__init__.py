@@ -9,11 +9,13 @@ from upload.admin import init_admin
 from upload.template_filters import init_template_filters
 from upload.standard_views import init_standard_views
 from upload.security import init_security
+from config import BaseConfig
 
-def create_app(config):
+def create_app(config=BaseConfig):
     """ Used to create flask application"""
     app = Flask(__name__)
     app.config.from_object(config)
+    app.config.from_pyfile('application.cfg', silent=True)
 
     with app.app_context():
         db.init_app(app)
