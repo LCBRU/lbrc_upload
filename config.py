@@ -28,10 +28,11 @@ class DevConfig(BaseConfig):
 class LiveConfig(BaseConfig):
     """Standard configuration options"""
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', '')
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URI', '')
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SECRET_KEY = os.getenv('FLASK_SECRET_KEY', '')
     SECURITY_PASSWORD_SALT = os.getenv('FLASK_SALT', '')
+    print(SECURITY_PASSWORD_SALT)
 
 class TestConfig(DevConfig):
     """Configuration for general testing"""
