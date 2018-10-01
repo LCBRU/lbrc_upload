@@ -3,4 +3,4 @@
 from upload import create_app
 from config import LiveConfig
 
-application = create_app(LiveConfig())
+application = create_app()
