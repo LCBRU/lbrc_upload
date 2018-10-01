@@ -1,19 +1,11 @@
 import os
 
 
-class DevConfig(object):
-    """Standard configuration options"""
-    DEBUG = True
+class BaseConfig(object):
     BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    DB_FILE = os.path.join(BASE_DIR, 'database.sqlite3')
     FILE_UPLOAD_DIRECTORY = os.path.join(BASE_DIR, 'file_uploads')
-    print("Database at " + DB_FILE)
-    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
     SQLALCHEMY_ECHO = False
     WTF_CSRF_ENABLED = True
-    SECRET_KEY = "secret"
-    SECURITY_PASSWORD_SALT = "sale"
     SECURITY_TRACKABLE = 'True'
     SMTP_SERVER = 'localhost'
     APPLICATION_EMAIL_ADDRESS = "lcbruit@leicester.le.ac.uk"
@@ -21,6 +13,26 @@ class DevConfig(object):
     ERROR_EMAIL_SUBJECT = 'LBRC Study Data Upload Error'
     SECURITY_CHANGEABLE = True
     SECURITY_RECOVERABLE = True
+
+
+class DevConfig(BaseConfig):
+    """Standard configuration options"""
+    DEBUG = True
+    DB_FILE = os.path.join(BaseConfig.BASE_DIR, 'database.sqlite3')
+    print("Database at " + DB_FILE)
+    SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
+    SQLALCHEMY_TRACK_MODIFICATIONS = True
+    SECRET_KEY = "secret"
+    SECURITY_PASSWORD_SALT = "sale"
+
+
+class LiveConfig(BaseConfig):
+    """Standard configuration options"""
+    DEBUG = False
+    SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', '')
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
+    SECRET_KEY = os.getenv('FLASK_SECRET_KEY', '')
+    SECURITY_PASSWORD_SALT = os.getenv('FLASK_SALT', '')
 
 class TestConfig(DevConfig):
     """Configuration for general testing"""
