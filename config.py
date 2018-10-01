@@ -19,7 +19,6 @@ class DevConfig(BaseConfig):
     """Standard configuration options"""
     DEBUG = True
     DB_FILE = os.path.join(BaseConfig.BASE_DIR, 'database.sqlite3')
-    print("Database at " + DB_FILE)
     SQLALCHEMY_DATABASE_URI = 'sqlite:///' + DB_FILE
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     SECRET_KEY = "secret"
