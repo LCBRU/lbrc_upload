@@ -28,6 +28,7 @@ from upload.security import (
     must_be_study_collaborator,
     must_be_upload_study_owner,
 )
+from upload.emailing import email
 
 
 blueprint = Blueprint('ui', __name__, template_folder='templates')
@@ -52,6 +53,7 @@ def index():
     # If the user is only associated with one study,
     # just take them to the relevant action page for
     # that study
+    email('Draewn', 'Drawn to the flame')
     if current_user.owned_studies.count() == 0 and current_user.collaborator_studies.count() == 1:
         return redirect(url_for('ui.upload_data', study_id=current_user.collaborator_studies[0].id))
     if current_user.owned_studies.count() == 1 and current_user.collaborator_studies.count() == 0:
