@@ -156,11 +156,8 @@ def upload_data(study_id, post_type=''):
         form.data['cmr_data_recording_form'].save(get_cmr_data_recording_form_filepath(study_id=u.id, filename=u.cmr_data_recording_form_filename))
 
         email(
-            subject='{} Upload'.format(study.name),
-            message='A new file has been uploaded for the {} study.  See {}'.format(
-                study.name,
-                url_for('ui.study', study_id=study.id)
-            ),
+            subject='BRC Upload: {}'.format(study.name),
+            message='A new set of files has been uploaded for the {} study.'.format(study.name),
             recipients=';'.join([r.email for r in study.owners]),
         )
 
