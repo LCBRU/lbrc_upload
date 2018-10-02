@@ -53,7 +53,6 @@ def index():
     # If the user is only associated with one study,
     # just take them to the relevant action page for
     # that study
-    email('Draewn', 'Drawn to the flame')
     if current_user.owned_studies.count() == 0 and current_user.collaborator_studies.count() == 1:
         return redirect(url_for('ui.upload_data', study_id=current_user.collaborator_studies[0].id))
     if current_user.owned_studies.count() == 1 and current_user.collaborator_studies.count() == 0:
@@ -154,6 +153,15 @@ def upload_data(study_id):
 
         form.data['study_file'].save(get_study_file_filepath(study_id=u.id, filename=u.study_file_filename))
         form.data['cmr_data_recording_form'].save(get_cmr_data_recording_form_filepath(study_id=u.id, filename=u.cmr_data_recording_form_filename))
+
+        email(
+            subject='{} Upload'.format(study.name),
+            message='A new file has been uploaded for the {} study.  See {}'.format(
+                study.name,
+                url_for('ui.study', study_id=study.id)
+            ),
+            recipients=';'.join([r.email for r in study.owners]),
+        )
 
         return redirect(url_for('ui.index'))
 

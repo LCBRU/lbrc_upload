@@ -6,16 +6,11 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
 
-def email(subject, message):
+def email(subject, message, recipients):
     msg = MIMEMultipart()
     msg['Subject'] = subject
-    msg['To'] = current_app.config['ADMIN_EMAIL_ADDRESSES']
+    msg['To'] = recipients
     msg['From'] = current_app.config['APPLICATION_EMAIL_ADDRESS']
-
-
-    print(current_app.config['ADMIN_EMAIL_ADDRESSES'])
-    print(current_app.config['APPLICATION_EMAIL_ADDRESS'])
-    print(current_app.config['SMTP_SERVER'])
 
     msg.attach(MIMEText(message))
 
