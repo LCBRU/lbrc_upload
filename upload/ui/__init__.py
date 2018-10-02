@@ -114,9 +114,9 @@ def study_my_uploads(study_id):
     )
 
 
-@blueprint.route('/study/<int:study_id>/upload', methods=['GET', 'POST'])
+@blueprint.route('/study/<int:study_id>/upload/<bool:async>', methods=['GET', 'POST'])
 @must_be_study_collaborator()
-def upload_data(study_id):
+def upload_data(study_id, async=False):
     study = Study.query.get_or_404(study_id)
     form = UploadForm()
 
@@ -163,7 +163,10 @@ def upload_data(study_id):
             recipients=';'.join([r.email for r in study.owners]),
         )
 
-        return redirect(url_for('ui.index'))
+        if async:
+            return 'OK'
+        else:
+            return redirect(url_for('ui.index'))
 
     else:
         return render_template('ui/upload.html', form=form, study=study)
