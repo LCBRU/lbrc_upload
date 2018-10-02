@@ -114,6 +114,7 @@ def study_my_uploads(study_id):
     )
 
 
+@blueprint.route('/study/<int:study_id>/upload', methods=['GET', 'POST'])
 @blueprint.route('/study/<int:study_id>/upload/<string:post_type>', methods=['GET', 'POST'])
 @must_be_study_collaborator()
 def upload_data(study_id, post_type=''):
