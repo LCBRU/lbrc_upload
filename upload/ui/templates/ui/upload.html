@@ -56,7 +56,7 @@
         var ajax = new XMLHttpRequest();
         ajax.upload.addEventListener("progress", progressHandler, false);
         ajax.addEventListener("load", completeHandler, false);
-        ajax.open("POST", "{{ url_for('ui.upload_data', study_id=study.id, async=True) }}");
+        ajax.open("POST", "{{ url_for('ui.upload_data', study_id=study.id, post_type='async') }}");
         ajax.send(formData);
 
         $('#uploadProgressModal').modal('show');
