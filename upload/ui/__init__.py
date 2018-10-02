@@ -163,7 +163,7 @@ def upload_data(study_id, post_type=''):
             recipients=';'.join([r.email for r in study.owners]),
         )
 
-        if post_type='async':
+        if post_type=='async':
             return 'OK'
         else:
             return redirect(url_for('ui.index'))
