@@ -8,7 +8,7 @@ class BaseConfig(object):
     WTF_CSRF_ENABLED = True
     SECURITY_TRACKABLE = 'True'
     SMTP_SERVER = 'localhost'
-    APPLICATION_EMAIL_ADDRESS = "lcbruit@leicester.le.ac.uk"
+    APPLICATION_EMAIL_ADDRESS = "lcbruit@leicester.ac.uk"
     ADMIN_EMAIL_ADDRESSES = "rab63@le.ac.uk"
     ERROR_EMAIL_SUBJECT = 'LBRC Study Data Upload Error'
     SECURITY_CHANGEABLE = True
