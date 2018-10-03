@@ -195,7 +195,6 @@ def cmr_data_recording_form_filepath(upload_id):
 
 
 @blueprint.route('/study/<int:study_id>/csv')
-@login_required
 @must_be_study_owner()
 def study_csv(study_id):
     study = Study.query.get_or_404(study_id)
@@ -223,6 +222,7 @@ def study_csv(study_id):
 
 
 @blueprint.route('/upload_delete', methods=['POST'])
+@must_be_upload_study_owner()
 def upload_delete():
     form = ConfirmForm()
 
@@ -237,6 +237,7 @@ def upload_delete():
 
 
 @blueprint.route('/upload_complete', methods=['POST'])
+@must_be_upload_study_owner()
 def upload_complete():
     form = ConfirmForm()
 

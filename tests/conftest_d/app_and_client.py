@@ -4,6 +4,7 @@ import json
 import pytest
 import datetime
 import upload
+import flask_security
 from flask import Response
 from flask.testing import FlaskClient
 from upload.database import db
@@ -48,9 +49,18 @@ class CustomClient(FlaskClient):
 
 
 def add_studies(faker):
-    db.session.add(faker.study_details())
-    db.session.add(faker.study_details())
+    for _ in range(5):
+        db.session.add(faker.study_details())
+
     db.session.commit()
+
+
+def add_users(faker):
+    for _ in range(5):
+        db.session.add(faker.user_details())
+    
+    db.session.commit()
+
 
 @pytest.yield_fixture(scope='function')
 def app(faker):
@@ -59,8 +69,6 @@ def app(faker):
     context = app.app_context()
     context.push()
     db.create_all()
-
-    add_studies(faker)
 
     yield app
 

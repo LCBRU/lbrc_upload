@@ -15,6 +15,13 @@ def init_standard_views(app):
         """
         return render_template('404.html'), 404
 
+    @app.errorhandler(403)
+    def forbidden_page(exception):
+        """Catch internal 404 errors, display
+            a nice error page and log the error.
+        """
+        return render_template('404.html'), 403
+
     @app.errorhandler(500)
     @app.errorhandler(Exception)
     def internal_error(exception):

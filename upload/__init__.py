@@ -11,6 +11,7 @@ from upload.standard_views import init_standard_views
 from upload.security import init_security
 from config import BaseConfig
 
+
 def create_app(config=BaseConfig):
     """ Used to create flask application"""
     app = Flask(__name__)

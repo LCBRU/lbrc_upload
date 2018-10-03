@@ -30,6 +30,7 @@ class TestConfig(DevConfig):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     WTF_CSRF_ENABLED = False
+    FILE_UPLOAD_DIRECTORY = os.path.join(BaseConfig.BASE_DIR, 'tests', 'file_uploads')
 
 
 class TestConfigCRSF(TestConfig):

@@ -117,7 +117,7 @@ def must_be_study_owner():
             study = Study.query.get_or_404(request.view_args.get('study_id'))
 
             if current_user not in study.owners:
-                abort(404)
+                abort(403)
 
             return f(*args, **kwargs)
 
@@ -132,7 +132,7 @@ def must_be_upload_study_owner():
             upload = Upload.query.get_or_404(request.view_args.get('upload_id'))
 
             if current_user not in upload.study.owners:
-                abort(404)
+                abort(403)
 
             return f(*args, **kwargs)
 
@@ -147,7 +147,7 @@ def must_be_study_collaborator():
             study = Study.query.get_or_404(request.view_args.get('study_id'))
 
             if current_user not in study.collaborators:
-                abort(404)
+                abort(403)
 
             return f(*args, **kwargs)
 

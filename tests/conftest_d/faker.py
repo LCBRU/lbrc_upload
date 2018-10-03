@@ -3,7 +3,7 @@
 import pytest
 from faker import Faker
 from faker.providers import BaseProvider
-from upload.model import Study
+from upload.model import Study, User, Upload
 
 
 class UploadFakerProvider(BaseProvider):
@@ -11,6 +11,25 @@ class UploadFakerProvider(BaseProvider):
         return Study(
             name=self.generator.pystr(min_chars=5, max_chars=10).upper()
         )
+
+    def user_details(self):
+        u = User(
+            first_name=self.generator.first_name(),
+            last_name=self.generator.last_name(),
+            email=self.generator.email(),
+            active=True,
+        )
+        return u
+
+    def upload_details(self):
+        u = Upload(
+            protocol_followed=self.generator.boolean(),
+            protocol_deviation_description=self.generator.text(),
+            comments=self.generator.text(),
+            study_file_filename=self.generator.file_name(),
+            cmr_data_recording_form_filename=self.generator.file_name(),
+        )
+        return u
 
 
 @pytest.yield_fixture(scope='function')
