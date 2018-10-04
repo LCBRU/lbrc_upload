@@ -2,7 +2,6 @@
 
 import pytest
 import re
-from bs4 import BeautifulSoup
 from upload.database import db
 from tests import login, add_content_for_all_areas
 
@@ -22,18 +21,17 @@ def test__boilerplate__html_standards(client, faker, path):
     path = re.sub(r'<int:study_id>', str(upload.id), path)
 
     resp = client.get(path)
-    soup = BeautifulSoup(resp.data, 'html.parser')
 
-    assert soup.html is not None
-    assert soup.html['lang'] == "en"
-    assert soup.head is not None
-    assert soup.find(
+    assert resp.soup.html is not None
+    assert resp.soup.html['lang'] == "en"
+    assert resp.soup.head is not None
+    assert resp.soup.find(
         lambda tag: tag.name == "meta" and
         tag.has_attr('charset') and
         tag['charset'] == "utf-8"
     ) is not None
-    assert soup.title is not None
-    assert soup.body is not None
+    assert resp.soup.title is not None
+    assert resp.soup.body is not None
 
 
 @pytest.mark.parametrize("path", [
@@ -50,9 +48,8 @@ def test__boilerplate__forms_csrf_token(client_with_crsf, faker, path):
     db.session.commit()
 
     resp = client.get(path.format(study.id))
-    soup = BeautifulSoup(resp.data, 'html.parser')
 
-    assert soup.find(
+    assert resp.soup.find(
         'input',
         {'name': 'csrf_token'},
         type='hidden',
@@ -75,11 +72,10 @@ def test__boilerplate__basic_navigation(client, faker, path):
     path = re.sub(r'<int:study_id>', str(upload.id), path)
 
     resp = client.get(path)
-    soup = BeautifulSoup(resp.data, 'html.parser')
 
-    soup.nav is not None
-    soup.nav.find('a', href="/") is not None
-    soup.nav.find('a', string=user.full_name) is not None
-    soup.nav.find('a', string=user.full_name) is not None
-    soup.nav.find('a', href="/change") is not None
-    soup.nav.find('a', href="/logout") is not None
+    resp.soup.nav is not None
+    resp.soup.nav.find('a', href="/") is not None
+    resp.soup.nav.find('a', string=user.full_name) is not None
+    resp.soup.nav.find('a', string=user.full_name) is not None
+    resp.soup.nav.find('a', href="/change") is not None
+    resp.soup.nav.find('a', href="/logout") is not None

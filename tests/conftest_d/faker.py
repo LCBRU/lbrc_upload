@@ -23,6 +23,7 @@ class UploadFakerProvider(BaseProvider):
 
     def upload_details(self):
         u = Upload(
+            study_number=self.generator.pystr(min_chars=5, max_chars=10).upper(),
             protocol_followed=self.generator.boolean(),
             protocol_deviation_description=self.generator.text(),
             comments=self.generator.text(),

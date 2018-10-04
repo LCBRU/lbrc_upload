@@ -7,6 +7,7 @@ import upload
 import flask_security
 from flask import Response
 from flask.testing import FlaskClient
+from bs4 import BeautifulSoup
 from upload.database import db
 from config import TestConfig, TestConfigCRSF
 
@@ -19,15 +20,23 @@ class DateTimeEncoder(json.JSONEncoder):
         return json.JSONEncoder.default(self, o)
 
 
-class JsonResponse(Response):
+class CustomResponse(Response):
     def __init__(self, baseObject):
         self.__class__ = type(baseObject.__class__.__name__,
                               (self.__class__, baseObject.__class__),
                               {})
         self.__dict__ = baseObject.__dict__
+        self._soup = None
 
     def get_json(self):
         return json.loads(self.get_data().decode('utf8'))
+
+    @property
+    def soup(self):
+        if not self._soup:
+            self._soup = BeautifulSoup(self.data, 'html.parser')
+
+        return self._soup
 
 
 class CustomClient(FlaskClient):
@@ -39,13 +48,13 @@ class CustomClient(FlaskClient):
         kwargs['data'] = json.dumps(kwargs.get('data'), cls=DateTimeEncoder)
         kwargs['content_type'] = 'application/json'
 
-        return JsonResponse(super(CustomClient, self).post(*args, **kwargs))
+        return CustomResponse(super(CustomClient, self).post(*args, **kwargs))
 
     def get(self, *args, **kwargs):
-        return JsonResponse(super(CustomClient, self).get(*args, **kwargs))
+        return CustomResponse(super(CustomClient, self).get(*args, **kwargs))
 
     def post(self, *args, **kwargs):
-        return JsonResponse(super(CustomClient, self).post(*args, **kwargs))
+        return CustomResponse(super(CustomClient, self).post(*args, **kwargs))
 
 
 def add_studies(faker):
@@ -85,6 +94,7 @@ def client(app):
 @pytest.yield_fixture(scope='function')
 def client_with_crsf(faker):
     app = upload.create_app(TestConfigCRSF)
+    app.test_client_class = CustomClient
     context = app.test_request_context()
     context.push()
     db.create_all()

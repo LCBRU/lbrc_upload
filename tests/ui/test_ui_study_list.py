@@ -4,11 +4,9 @@ import pytest
 import re
 import os
 from itertools import cycle
-from bs4 import BeautifulSoup
 from flask import url_for
 from tests import login
 from upload.database import db
-from upload.ui import get_study_file_filepath, get_cmr_data_recording_form_filepath
 
 
 def test__study_list__no_studies__no_display(client, faker):
@@ -17,10 +15,9 @@ def test__study_list__no_studies__no_display(client, faker):
     resp = client.get('/')
 
     assert resp.status_code == 200
-    soup = BeautifulSoup(resp.data, 'html.parser')
-    assert soup.find('h2', string='Owned Studies') is None
-    assert soup.find('h2', string='Collaborating Studies') is None
-    assert len(soup.find_all('table', 'table study_list')) == 0
+    assert resp.soup.find('h2', string='Owned Studies') is None
+    assert resp.soup.find('h2', string='Collaborating Studies') is None
+    assert len(resp.soup.find_all('table', 'table study_list')) == 0
 
 
 def test__study_list__owns_1_study_redirects(client, faker):
@@ -58,16 +55,15 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
     resp = client.get('/')
 
     assert resp.status_code == 200
-    soup = BeautifulSoup(resp.data, 'html.parser')
-    assert soup.find('h2', string='Owned Studies') is not None
-    assert soup.find('h2', string='Collaborating Studies') is None
-    assert len(soup.select('table.study_list')) == 1
-    assert len(soup.select('table.study_list > tbody > tr')) == study_count
+    assert resp.soup.find('h2', string='Owned Studies') is not None
+    assert resp.soup.find('h2', string='Collaborating Studies') is None
+    assert len(resp.soup.select('table.study_list')) == 1
+    assert len(resp.soup.select('table.study_list > tbody > tr')) == study_count
 
     for s in studies:
-        assert soup.find('a', href=url_for('ui.study', study_id=s.id)) is not None
-        assert soup.find('a', href=url_for('ui.study_csv', study_id=s.id)) is not None
-        assert soup.find('td', string=s.name) is not None
+        assert resp.soup.find('a', href=url_for('ui.study', study_id=s.id)) is not None
+        assert resp.soup.find('a', href=url_for('ui.study_csv', study_id=s.id)) is not None
+        assert resp.soup.find('td', string=s.name) is not None
 
 
 @pytest.mark.parametrize(["outstanding", "completed", "deleted"], [
@@ -126,9 +122,8 @@ def test__study_list__owned_study__upload_count(client, faker, outstanding, comp
     resp = client.get('/')
 
     assert resp.status_code == 200
-    soup = BeautifulSoup(resp.data, 'html.parser')
 
-    study_row = soup.find('td', string=study.name).parent
+    study_row = resp.soup.find('td', string=study.name).parent
 
     assert study_row.find_all('td')[2].string == str(outstanding + completed)
     assert study_row.find_all('td')[3].string == str(outstanding)
@@ -169,16 +164,15 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
     resp = client.get('/')
 
     assert resp.status_code == 200
-    soup = BeautifulSoup(resp.data, 'html.parser')
-    assert soup.find('h2', string='Owned Studies') is None
-    assert soup.find('h2', string='Collaborating Studies') is not None
-    assert len(soup.select('table.study_list')) == 1
-    assert len(soup.select('table.study_list > tbody > tr')) == study_count
+    assert resp.soup.find('h2', string='Owned Studies') is None
+    assert resp.soup.find('h2', string='Collaborating Studies') is not None
+    assert len(resp.soup.select('table.study_list')) == 1
+    assert len(resp.soup.select('table.study_list > tbody > tr')) == study_count
 
     for s in studies:
-        assert soup.find('a', href=url_for('ui.study_my_uploads', study_id=s.id)) is not None
-        assert soup.find('a', href=url_for('ui.upload_data', study_id=s.id)) is not None
-        assert soup.find('td', string=s.name) is not None
+        assert resp.soup.find('a', href=url_for('ui.study_my_uploads', study_id=s.id)) is not None
+        assert resp.soup.find('a', href=url_for('ui.upload_data', study_id=s.id)) is not None
+        assert resp.soup.find('td', string=s.name) is not None
 
 
 @pytest.mark.parametrize(["me", "someone_else", "deleted"], [
@@ -237,8 +231,7 @@ def test__study_list__owned_study__upload_count(client, faker, me, someone_else,
     resp = client.get('/')
 
     assert resp.status_code == 200
-    soup = BeautifulSoup(resp.data, 'html.parser')
 
-    study_row = soup.find('td', string=study.name).parent
+    study_row = resp.soup.find('td', string=study.name).parent
 
     assert study_row.find_all('td')[2].string == str(me)
