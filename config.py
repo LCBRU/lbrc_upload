@@ -31,6 +31,7 @@ class TestConfig(DevConfig):
     SQLALCHEMY_DATABASE_URI = 'sqlite://'
     WTF_CSRF_ENABLED = False
     FILE_UPLOAD_DIRECTORY = os.path.join(BaseConfig.BASE_DIR, 'tests', 'file_uploads')
+    SMTP_SERVER = None
 
 
 class TestConfigCRSF(TestConfig):

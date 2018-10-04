@@ -153,8 +153,8 @@ def upload_data(study_id, post_type=''):
 
         pathlib.Path(current_app.config['FILE_UPLOAD_DIRECTORY']).mkdir(parents=True, exist_ok=True)
 
-        form.data['study_file'].save(get_study_file_filepath(study_id=u.id, filename=u.study_file_filename))
-        form.data['cmr_data_recording_form'].save(get_cmr_data_recording_form_filepath(study_id=u.id, filename=u.cmr_data_recording_form_filename))
+        form.data['study_file'].save(get_study_file_filepath(upload_id=u.id, filename=u.study_file_filename))
+        form.data['cmr_data_recording_form'].save(get_cmr_data_recording_form_filepath(upload_id=u.id, filename=u.cmr_data_recording_form_filename))
 
         email(
             subject='BRC Upload: {}'.format(study.name),
@@ -252,12 +252,12 @@ def upload_complete():
     return redirect(request.referrer)
 
 
-def get_study_file_filepath(study_id, filename):
-    return get_filepath(study_id, 'sf', filename)
+def get_study_file_filepath(upload_id, filename):
+    return get_filepath(upload_id, 'sf', filename)
 
 
-def get_cmr_data_recording_form_filepath(study_id, filename):
-    return get_filepath(study_id, 'cmr', filename)
+def get_cmr_data_recording_form_filepath(upload_id, filename):
+    return get_filepath(upload_id, 'cmr', filename)
     
 
 def get_filepath(study_id, file_type, filename):

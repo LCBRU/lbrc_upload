@@ -7,6 +7,10 @@ from email.mime.text import MIMEText
 
 
 def email(subject, message, recipients):
+
+    if not current_app.config['SMTP_SERVER']:
+        return
+
     msg = MIMEMultipart()
     msg['Subject'] = subject
     msg['To'] = recipients
