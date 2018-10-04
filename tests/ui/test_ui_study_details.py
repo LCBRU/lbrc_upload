@@ -21,7 +21,10 @@ from upload.database import db
 def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     user = login(client, faker)
 
+    site2 = faker.site_details()
     user2 = faker.user_details()
+    user2.site = site2
+    db.session.add(site2)
     db.session.add(user2)
 
     study = faker.study_details()
@@ -87,7 +90,10 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
 def test__study_details_uploads_and_complete(client, faker, outstanding, completed, deleted):
     user = login(client, faker)
 
+    site2 = faker.site_details()
     user2 = faker.user_details()
+    user2.site = site2
+    db.session.add(site2)
     db.session.add(user2)
 
     study = faker.study_details()
@@ -253,6 +259,7 @@ def test__study_details_uploads__search_comment(client, faker):
 def upload_matches_li(upload, li):
     assert li.find('h1').find(string=re.compile(upload.study_number)) is not None
     assert li.find('h2').find(string=re.compile(upload.uploader.full_name)) is not None
+    assert li.find('h2').find(string=re.compile(upload.uploader.site.name)) is not None
     assert li.find('h2').find(string=re.compile(upload.date_created.strftime('%-d %b %Y'))) is not None
     assert (li.find_all('dd')[0].string == 'Yes') == upload.protocol_followed
     assert li.find_all('dd')[1].string == upload.protocol_deviation_description

@@ -2,7 +2,10 @@ from bs4 import BeautifulSoup
 from upload.database import db
 
 def login(client, faker):
+    s = faker.site_details()
     u = faker.user_details()
+    u.site = s
+    db.session.add(s)
     db.session.add(u)
     db.session.commit()
 

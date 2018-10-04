@@ -3,7 +3,7 @@
 import pytest
 from faker import Faker
 from faker.providers import BaseProvider
-from upload.model import Study, User, Upload
+from upload.model import Study, User, Upload, Site
 
 
 class UploadFakerProvider(BaseProvider):
@@ -20,6 +20,12 @@ class UploadFakerProvider(BaseProvider):
             active=True,
         )
         return u
+
+    def site_details(self):
+        return Site(
+            name=self.generator.company(),
+            number=self.generator.pystr(min_chars=5, max_chars=10),
+        )
 
     def upload_details(self):
         u = Upload(
