@@ -10,3 +10,5 @@ flask_admin
 flask_security
 bcrypt
 python-dotenv
+coverage
+pytest-cov
