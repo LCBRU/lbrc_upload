@@ -27,3 +27,22 @@ def login(client, faker):
     client.post('/login', data=data, follow_redirects=True)
 
     return u
+
+
+def add_content_for_all_areas(faker, user):
+    study = faker.study_details()
+    study.owners.append(user)
+    study.collaborators.append(user)
+
+    db.session.add(study)
+
+    upload = faker.upload_details()
+    upload.completed = False
+    upload.study = study
+    upload.uploader = user
+
+    db.session.add(upload)
+
+    db.session.commit()
+    
+    return (study, upload)

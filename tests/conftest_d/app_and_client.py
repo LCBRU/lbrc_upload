@@ -66,7 +66,7 @@ def add_users(faker):
 def app(faker):
     app = upload.create_app(TestConfig)
     app.test_client_class = CustomClient
-    context = app.app_context()
+    context = app.test_request_context()
     context.push()
     db.create_all()
 
@@ -85,7 +85,7 @@ def client(app):
 @pytest.yield_fixture(scope='function')
 def client_with_crsf(faker):
     app = upload.create_app(TestConfigCRSF)
-    context = app.app_context()
+    context = app.test_request_context()
     context.push()
     db.create_all()
 

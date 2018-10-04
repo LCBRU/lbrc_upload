@@ -54,7 +54,7 @@ def index():
     # just take them to the relevant action page for
     # that study
     if current_user.owned_studies.count() == 0 and current_user.collaborator_studies.count() == 1:
-        return redirect(url_for('ui.upload_data', study_id=current_user.collaborator_studies[0].id))
+        return redirect(url_for('ui.study_my_uploads', study_id=current_user.collaborator_studies[0].id))
     if current_user.owned_studies.count() == 1 and current_user.collaborator_studies.count() == 0:
         return redirect(url_for('ui.study', study_id=current_user.owned_studies[0].id))
 
@@ -121,17 +121,18 @@ def upload_data(study_id, post_type=''):
     study = Study.query.get_or_404(study_id)
     form = UploadForm()
 
-    q = Upload.query
-    q = q.filter(Upload.study_id == study_id)
-    q = q.filter(Upload.deleted == 0)
-    q = q.filter(Upload.study_number == form.study_number.data)
+    if request.method == 'POST':
+        q = Upload.query
+        q = q.filter(Upload.study_id == study_id)
+        q = q.filter(Upload.deleted == 0)
+        q = q.filter(Upload.study_number == form.study_number.data)
 
-    duplicate = q.count() > 0
+        duplicate = q.count() > 0
 
-    form.validate_on_submit()
+        form.validate_on_submit()
 
-    if duplicate:
-        form.study_number.errors.append('this study number already exists for this study')
+        if duplicate:
+            form.study_number.errors.append('this study number already exists for this study')
 
     if len(form.errors) == 0 and form.is_submitted():
 

@@ -1,16 +1,25 @@
 # -*- coding: utf-8 -*-
 
 import pytest
+import re
 from bs4 import BeautifulSoup
 from upload.database import db
-from tests import login
+from tests import login, add_content_for_all_areas
 
 
 @pytest.mark.parametrize("path", [
     ('/'),
+    ('/study/<int:study_id>'),
+    ('/study/<int:study_id>/my_uploads'),
+    ('/study/<int:study_id>/upload'),
 ])
-def test_html_boilerplate(client, faker, path):
-    login(client, faker)
+def test__boilerplate__html_standards(client, faker, path):
+    user = login(client, faker)
+
+    study, upload = add_content_for_all_areas(faker, user)
+
+    path = re.sub(r'<int:study_id>', str(study.id), path)
+    path = re.sub(r'<int:study_id>', str(upload.id), path)
 
     resp = client.get(path)
     soup = BeautifulSoup(resp.data, 'html.parser')
@@ -30,7 +39,7 @@ def test_html_boilerplate(client, faker, path):
 @pytest.mark.parametrize("path", [
     ('/study/{}/upload'),
 ])
-def test_forms_csrf_token(client_with_crsf, faker, path):
+def test__boilerplate__forms_csrf_token(client_with_crsf, faker, path):
     client = client_with_crsf
     user = login(client, faker)
 
@@ -49,3 +58,28 @@ def test_forms_csrf_token(client_with_crsf, faker, path):
         type='hidden',
         id='csrf_token',
     ) is not None
+
+
+@pytest.mark.parametrize("path", [
+    ('/'),
+    ('/study/<int:study_id>'),
+    ('/study/<int:study_id>/my_uploads'),
+    ('/study/<int:study_id>/upload'),
+])
+def test__boilerplate__basic_navigation(client, faker, path):
+    user = login(client, faker)
+
+    study, upload = add_content_for_all_areas(faker, user)
+
+    path = re.sub(r'<int:study_id>', str(study.id), path)
+    path = re.sub(r'<int:study_id>', str(upload.id), path)
+
+    resp = client.get(path)
+    soup = BeautifulSoup(resp.data, 'html.parser')
+
+    soup.nav is not None
+    soup.nav.find('a', href="/") is not None
+    soup.nav.find('a', string=user.full_name) is not None
+    soup.nav.find('a', string=user.full_name) is not None
+    soup.nav.find('a', href="/change") is not None
+    soup.nav.find('a', href="/logout") is not None
