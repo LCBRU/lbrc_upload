@@ -160,8 +160,6 @@ def test__upload__delete__must_be_owner(client, faker):
 
     db.session.commit()
 
-    print(url_for('ui.upload_delete', upload_id=upload.id))
-
     resp = client.post(
         url_for('ui.upload_delete', upload_id=upload.id),
         data={
@@ -191,8 +189,6 @@ def test__upload__delete(client, faker):
     db.session.add(upload)
 
     db.session.commit()
-
-    print(url_for('ui.upload_delete', upload_id=upload.id))
 
     resp = client.post(
         url_for('ui.upload_delete', upload_id=upload.id),
@@ -226,8 +222,6 @@ def test__upload__complete__must_be_owner(client, faker):
 
     db.session.commit()
 
-    print(url_for('ui.upload_complete', upload_id=upload.id))
-
     resp = client.post(
         url_for('ui.upload_complete', upload_id=upload.id),
         data={
@@ -257,8 +251,6 @@ def test__upload__complete(client, faker):
     db.session.add(upload)
 
     db.session.commit()
-
-    print(url_for('ui.upload_complete', upload_id=upload.id))
 
     resp = client.post(
         url_for('ui.upload_complete', upload_id=upload.id),

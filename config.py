@@ -32,6 +32,7 @@ class TestConfig(DevConfig):
     WTF_CSRF_ENABLED = False
     FILE_UPLOAD_DIRECTORY = os.path.join(BaseConfig.BASE_DIR, 'tests', 'file_uploads')
     SMTP_SERVER = None
+    SECURITY_SEND_PASSWORD_CHANGE_EMAIL = False
 
 
 class TestConfigCRSF(TestConfig):
