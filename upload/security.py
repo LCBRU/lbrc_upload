@@ -1,5 +1,6 @@
 import string
 from functools import wraps
+from itertools import chain
 from sqlalchemy.exc import IntegrityError
 from flask import request, abort
 from flask_security import Security, SQLAlchemyUserDatastore
@@ -125,11 +126,12 @@ def must_be_study_owner():
     return decorator
 
 
-def must_be_upload_study_owner():
+def must_be_upload_study_owner(var_name):
     def decorator(f):
         @wraps(f)
         def decorated_function(*args, **kwargs):
-            upload = Upload.query.get_or_404(request.view_args.get('upload_id'))
+            all_args = {**request.view_args, **request.args, **request.form}
+            upload = Upload.query.get_or_404(all_args.get(var_name))
 
             if current_user not in upload.study.owners:
                 abort(403)
