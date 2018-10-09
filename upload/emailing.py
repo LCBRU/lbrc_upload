@@ -2,8 +2,15 @@
 
 import smtplib
 from flask import current_app
+from flask_mail import Mail
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+
+mail = Mail()
+
+
+def init_mail(app):
+    mail.init_app(app)
 
 
 def email(subject, message, recipients):
