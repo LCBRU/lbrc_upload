@@ -85,9 +85,13 @@ def test__upload___must_be_upload_study_owner_isnt(client, path, faker):
 
 def test__upload__upload(client, faker):
     user = login(client, faker)
+    user2 = faker.user_details()
+
+    db.session.add(user2)
 
     study = faker.study_details()
     study.collaborators.append(user)
+    study.owners.append(user)
 
     db.session.add(study)
     db.session.commit()

@@ -13,7 +13,7 @@ def email(subject, message, recipients):
 
     msg = Message(
         subject,
-        recipients=recipients,
+        recipients=[r.email for r in recipients],
         body=message,
     )
 

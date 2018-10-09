@@ -159,7 +159,7 @@ def upload_data(study_id, post_type=''):
         email(
             subject='BRC Upload: {}'.format(study.name),
             message='A new set of files has been uploaded for the {} study.'.format(study.name),
-            recipients=';'.join([r.email for r in study.owners]),
+            recipients=study.owners,
         )
 
         if post_type=='async':
