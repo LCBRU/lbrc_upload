@@ -1,6 +1,8 @@
 import os
 import traceback
-from flask import render_template, send_from_directory
+from flask import render_template, send_from_directory, current_app
+from upload.emailing import email
+
 
 def init_standard_views(app):
     @app.route('/favicon.ico')
@@ -30,4 +32,9 @@ def init_standard_views(app):
         """
         print(traceback.format_exc())
         app.logger.error(traceback.format_exc())
+        email(
+            subject=current_app.config['ERROR_EMAIL_SUBJECT'],
+            message=traceback.format_exc(),
+            recipients=current_app.config['ADMIN_EMAIL_ADDRESSES'].split(';'),
+        )
         return render_template('500.html'), 500
