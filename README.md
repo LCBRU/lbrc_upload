@@ -68,3 +68,18 @@ migrations and apply them to the database:
 ```bash
 ./manage_dev.py upgrade
 ```
+
+## Deployment
+
+The application is deployed on a University of Leicester LAMP server using
+the procedure set out in the Python 3 section of the [LCBRU Flask Application Installation page]
+(https://lcbru-trac.rcs.le.ac.uk/wiki/UoL%20LAMP%20HowTo%20Install%20Python%20Flask%20Applications).
+
+A script called `upgrade.sh` which downloads the repository, puts it in the correct location and copies
+in the configutaion file into the correct place is in the `deployment` directory.
+
+### Configuraion
+
+Configuration for the live application is stored in a `application.cfg` file in
+the `upload` directory.  An example `application.cfg` is contained in the `deployment`
+directory called `example.application.cfg`.
