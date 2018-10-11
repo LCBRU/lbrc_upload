@@ -43,12 +43,32 @@
 </div>
 
 
-{% endblock %}
+<!-- Upload Progress Dialog Simple-->
+<div class="modal fade" id="uploadProgressModalSimple" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModalSimple" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="uploadProgressModalLabel">Uploading data</h5>
+            </div>
+            <div class="modal-body">
+                <div class="loader"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
+
+{% endblock %}
 
 {% block js %}
 
 <script>
+    $("form#study_data_upload").submit(function(e){
+        $('#uploadProgressModalSimple').modal('show');
+    });
+</script>
+
+<!-- <script>
 
     $("form#study_data_upload").submit(function(e){
         var formData = new FormData($(this)[0]);
@@ -74,5 +94,5 @@
         window.location.replace("{{ url_for('ui.index') }}");
     }
 
-</script>    
+</script>     -->
 {% endblock %}
