@@ -82,3 +82,25 @@ in the configutaion file into the correct place is in the `deployment` directory
 Configuration for the live application is stored in a `application.cfg` file in
 the `upload` directory.  An example `application.cfg` is contained in the `deployment`
 directory called `example.application.cfg`.
+
+### Database
+
+The database upgrades are handled by SQLAlchemy-migrate and are run using the `manage_live.py` program
+once the configuration has been copied into place and the database created.
+
+#### Installation
+
+To initialise the database run the commands:
+
+```bash
+manage_live.py version_control
+manage_live.py upgrade
+```
+
+#### Upgrade
+
+To upgrade the database to the current version, run the command:
+
+```bash
+manage_live.py upgrade
+```
