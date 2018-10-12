@@ -26,14 +26,15 @@ def test__upload__study_file_download(client, faker):
     db.session.add(upload)
     db.session.commit()
 
-    filename = get_study_file_filepath(study.id, upload.study_file_filename)
-    
+    filename = get_study_file_filepath(upload, upload.study_file_filename)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)    
     with open(filename, 'w') as f:
         f.write(faker.text())
 
     resp = client.get(path.format(upload.id))
 
     os.unlink(filename)
+    os.rmdir(os.path.dirname(filename))
 
     assert resp.status_code == 200
 
@@ -52,13 +53,15 @@ def test__upload__cmr_data_recording_form_file_download(client, faker):
     db.session.add(upload)
     db.session.commit()
 
-    filename = get_cmr_data_recording_form_filepath(study.id, upload.cmr_data_recording_form_filename)
+    filename = get_cmr_data_recording_form_filepath(upload, upload.cmr_data_recording_form_filename)
+    os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, 'w') as f:
         f.write(faker.text())
 
     resp = client.get(path.format(upload.id))
 
     os.unlink(filename)
+    os.rmdir(os.path.dirname(filename))
 
     assert resp.status_code == 200
 
@@ -127,7 +130,7 @@ def test__upload__upload(client, faker):
 
     assert resp.status_code == 302
 
-    study_file_filename_saved = get_study_file_filepath(study.uploads[0].id, study_file_filename)
+    study_file_filename_saved = get_study_file_filepath(study.uploads[0], study_file_filename)
     
     assert os.path.isfile(study_file_filename_saved)
 
@@ -136,7 +139,7 @@ def test__upload__upload(client, faker):
 
     os.unlink(study_file_filename_saved)
 
-    cmr_data_recording_form_filename_saved = get_cmr_data_recording_form_filepath(study.uploads[0].id, cmr_data_recording_form_filename)
+    cmr_data_recording_form_filename_saved = get_cmr_data_recording_form_filepath(study.uploads[0], cmr_data_recording_form_filename)
     
     assert os.path.isfile(cmr_data_recording_form_filename_saved)
 
@@ -144,6 +147,7 @@ def test__upload__upload(client, faker):
         assert f.read() == cmr_data_recording_form_content
 
     os.unlink(cmr_data_recording_form_filename_saved)
+    os.rmdir(os.path.dirname(cmr_data_recording_form_filename_saved))
 
 
 def test__upload__delete__must_be_owner(client, faker):
