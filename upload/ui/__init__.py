@@ -167,6 +167,15 @@ def upload_data(study_id, post_type=''):
             recipients=[r.email for r in study.owners],
         )
 
+        email(
+            subject='BRC Upload: {}'.format(study.name),
+            message='Your files for participant "{}" on study "{}" have been successfully uploaded.'.format(
+                u.study_number,
+                study.name,
+            ),
+            recipients=[current_user.email],
+        )
+
         if post_type=='async':
             return 'OK'
         else:
