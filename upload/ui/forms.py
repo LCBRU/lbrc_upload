@@ -50,7 +50,7 @@ class UploadForm(FlashingForm):
         'Attach CMR data recording form',
         validators=[
             FileRequired(),
-            FileAllowed(['pdf'], 'PDF files only'),
+            FileAllowed(['pdf', 'docx'], 'PDF and Word files only'),
         ])
 
 
