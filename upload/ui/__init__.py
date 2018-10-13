@@ -22,6 +22,7 @@ from upload.ui.forms import (
     UploadSearchForm,
     ConfirmForm,
     SearchForm,
+    FormBuilder,
 )
 from upload.security import (
     must_be_study_owner,
@@ -64,6 +65,7 @@ def index():
         collaborator_studies=current_user.collaborator_studies,
     )
 
+
 @blueprint.route('/study/<int:study_id>')
 @must_be_study_owner()
 def study(study_id):
@@ -87,6 +89,19 @@ def study(study_id):
         searchForm=searchForm,
         confirm_form=ConfirmForm(),
     )
+
+
+@blueprint.route('/test', methods=['GET', 'POST'])
+def test():
+    builder = FormBuilder()
+    builder.addField(FormBuilder.TEXT, 'wsgi', 'WSGI', required=True, max_length=10, default='iuhgfiugw')
+    builder.addField(FormBuilder.PASSWORD, 'similarity', 'Similarity Search')
+    builder.addField(FormBuilder.RADIO, 'options', 'Choose One', choices=[('True', 'Yes'), ('False', 'No')])
+    builder.addField(FormBuilder.TEXTAREA, 'let', 'Type some stuff', default='hunky')
+
+    form = builder.form()
+
+    return render_template('ui/upload.html', form=form, study=None)
 
 
 @blueprint.route('/study/<int:study_id>/my_uploads')

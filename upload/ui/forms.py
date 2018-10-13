@@ -4,6 +4,8 @@ from wtforms import (
     IntegerField,
     StringField,
     RadioField,
+    TextField,
+    PasswordField,
     TextAreaField,
     HiddenField,
     BooleanField,
@@ -59,3 +61,95 @@ class UploadSearchForm(FlashingForm):
     showCompleted = BooleanField('Show Completed')
     page = IntegerField('Page', default=1)
     
+
+class FormBuilder():
+
+    BOOLEAN = 'Boolean'
+    HIDDEN = 'Hidden'
+    INTEGER = 'Integer'
+    PASSWORD = 'Password'
+    RADIO = 'Radio'
+    STRING = 'String'
+    TEXT = 'Text'
+    TEXTAREA = 'TextArea'
+
+    TEXTFIELDS = ['Password', 'String', 'Text', 'TextArea']
+
+    def __init__(self):
+        self._fields = {}
+        
+    def form(self):
+        class DynamicForm(FlashingForm): pass
+
+        for name, field in self._fields.items():
+            setattr(DynamicForm , name, field)
+
+        return DynamicForm()
+
+    def addField(self, type, name, label, **kwargs):
+        textfields = FormBuilder.TEXTFIELDS
+        field = None
+
+        validators = []
+        default = kwargs.get('default', '')
+
+        if kwargs.get('required', False):
+            validators.append(Required())
+
+        if kwargs.get('max_length', None) and type in textfields:
+            validators.append(Length(max=20))
+
+        if type == FormBuilder.BOOLEAN:
+            field = BooleanField(
+                label,
+                validators=validators,
+                default=default,
+            )
+        elif type == FormBuilder.HIDDEN:
+            field = HiddenField(
+                label,
+                validators=validators,
+                default=default,
+            )
+        elif type == FormBuilder.INTEGER:
+            field = IntegerField(
+                label,
+                validators=validators,
+                default=default,
+            )
+        elif type == FormBuilder.PASSWORD:
+            field = PasswordField(
+                label,
+                validators=validators,
+                default=default,
+            )
+        elif type == FormBuilder.RADIO:
+            choices = kwargs.get('choices', None)
+
+            if not choices:
+                raise ValueError('FormBuilder: Radio fields require a choice parameter.')
+
+            field = RadioField(
+                label,
+                validators=validators,
+                choices=choices,
+                default=default,
+            )
+        elif type == FormBuilder.TEXT:
+            field = TextField(
+                label,
+                validators=validators,
+                default=default,
+            )
+        elif type == FormBuilder.TEXTAREA:
+            field = TextAreaField(
+                label,
+                validators=validators,
+                default=default,
+            )
+        else:
+            raise ValueError('FormBuilder: field type not found ("{}")'.format(type))
+        
+        field.validators = validators
+
+        self._fields[name] = field
