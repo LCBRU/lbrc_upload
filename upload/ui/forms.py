@@ -87,7 +87,6 @@ class FormBuilder():
         return DynamicForm()
 
     def addField(self, type, name, label, **kwargs):
-        textfields = FormBuilder.TEXTFIELDS
         field = None
 
         validators = []
@@ -96,7 +95,7 @@ class FormBuilder():
         if kwargs.get('required', False):
             validators.append(Required())
 
-        if kwargs.get('max_length', None) and type in textfields:
+        if kwargs.get('max_length', None) and type in FormBuilder.TEXTFIELDS:
             validators.append(Length(max=20))
 
         if type == FormBuilder.BOOLEAN:
