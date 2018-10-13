@@ -9,39 +9,19 @@
 
     <form id="study_data_upload" method="POST" class="form" enctype="multipart/form-data">
         <fieldset>
-                {{ form.hidden_tag() }}
-                {{ formhelper.render_field(form.study_number) }}
-                {{ formhelper.render_field(form.protocol_followed) }}
-                {{ formhelper.render_field(form.protocol_deviation_description) }}
-                {{ formhelper.render_field(form.comments) }}
-                {{ formhelper.render_field(form.study_file) }}
-                {{ formhelper.render_field(form.cmr_data_recording_form) }}
     
-                {{ formhelper.render_button_bar('ui.index') }}
+            {{ form.hidden_tag() }}
+            
+            {% for f in form %}
+                {{ formhelper.render_field(f) }}
+            {% endfor %}
+    
+            {{ formhelper.render_button_bar('ui.index') }}
         </fieldset>
     
     </form>
+    
 </div>
-
-<!-- Upload Progress Dialog -->
-<div class="modal fade" id="uploadProgressModal" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModal" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="uploadProgressModalLabel">Uploading data</h5>
-            </div>
-            <div class="modal-body">
-                <p id="status"></p>
-
-                <div class="progress">
-                    <div class="progress-bar progress-bar progress-bar-striped active" role="progressbar" aria-valuenow="00" aria-valuemin="0" aria-valuemax="100" style="width: 0%">
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
 
 <!-- Upload Progress Dialog Simple-->
 <div class="modal fade" id="uploadProgressModalSimple" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModalSimple" aria-hidden="true">
@@ -68,31 +48,4 @@
     });
 </script>
 
-<!-- <script>
-
-    $("form#study_data_upload").submit(function(e){
-        var formData = new FormData($(this)[0]);
-
-        var ajax = new XMLHttpRequest();
-        ajax.upload.addEventListener("progress", progressHandler, false);
-        ajax.addEventListener("load", completeHandler, false);
-        ajax.open("POST", "{{ url_for('ui.upload_data', study_id=study.id, post_type='async') }}");
-        ajax.send(formData);
-
-        $('#uploadProgressModal').modal('show');
-        
-        e.preventDefault();
-    });
-
-    function progressHandler(event) {
-        $("#status").text("Uploaded " + event.loaded + " bytes of " + event.total);
-        var percent = Math.round((event.loaded / event.total) * 100);
-        $('.progress-bar').css('width', percent+'%').attr('aria-valuenow', percent);
-    }
-
-    function completeHandler(event) {
-        window.location.replace("{{ url_for('ui.index') }}");
-    }
-
-</script>     -->
 {% endblock %}

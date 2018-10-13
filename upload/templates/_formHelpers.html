@@ -1,7 +1,8 @@
 {% macro render_field(field, label=None) %}
   <div class="row">
     <div class="form-group{% if field.errors %} has-error{%endif%} col-md-offset-1 col-md-10">
-        {% if field.type == "BooleanField" %}
+        {% if field.type == "HiddenField" or field.type == "CSRFTokenField" %}
+        {% elif field.type == "BooleanField" %}
             {{ field.label(class="control-label", text=label) }}{{ render_checkbox_field_control(field, **kwargs) }}
         {% elif field.type == "RadioField" %}
             {{ field.label(class="control-label", text=label) }}{{ render_radio_field_control(field, **kwargs) }}
@@ -12,17 +13,21 @@
   </div>
 {% endmacro %}
 
+
 {% macro render_checkbox_field_control(field) %}
     {{ field(class="checkbox", **kwargs)|safe }}
 {% endmacro %}
+
 
 {% macro render_radio_field_control(field) %}
     {{ field(class="radio", **kwargs)|safe }}
 {% endmacro %}
 
+
 {% macro render_field_control(field) %}
     {{ field(class="form-control", **kwargs)|safe }}
 {% endmacro %}
+
 
 {% macro render_button_bar(cancelview) %}
       <div class="form-group text-right">
@@ -32,6 +37,7 @@
           </div>
       </div>
 {% endmacro %}
+
 
 {% macro render_form_errors(form) %}
     {% for field in form %}
@@ -49,6 +55,7 @@
     {% endfor %}
 
 {% endmacro %}
+
 
 {% macro render_search(searchForm, searchview, buttons={}, checkboxes={}) %}
 <form method="GET" class="form-horizontal" action="{{ url_for(searchview, **kwargs) }}">
@@ -72,6 +79,7 @@
   </div>
 </form>
 {% endmacro %}
+
 
 {% macro render_pagination(pagination, endpoint) %}
   {% if pagination.pages > 1 %}
