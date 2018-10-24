@@ -3,64 +3,61 @@
 import pytest
 from tests import login
 from upload.database import db
-from upload.ui import get_study_file_filepath, get_cmr_data_recording_form_filepath
 
 
 def test_missing_route(client):
-    resp = client.get('/uihfihihf')
+    resp = client.get("/uihfihihf")
     assert resp.status_code == 404
 
-@pytest.mark.parametrize("path", [
-    ('/static/css/main.css'),
-    ('/static/img/nihr-logo-70.png'),
-    ('/static/img/cropped-favicon-32x32.png'),
-    ('/static/img//cropped-favicon-192x192.png'),
-    ('/static/img//cropped-favicon-180x180.png'),
-    ('/static/img//cropped-favicon-270x270.png'),
-    ('/static/favicon.ico'),
-])
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("/static/css/main.css"),
+        ("/static/img/nihr-logo-70.png"),
+        ("/static/img/cropped-favicon-32x32.png"),
+        ("/static/img//cropped-favicon-192x192.png"),
+        ("/static/img//cropped-favicon-180x180.png"),
+        ("/static/img//cropped-favicon-270x270.png"),
+        ("/static/favicon.ico"),
+    ],
+)
 def test_url_exists_without_login(client, path):
     resp = client.get(path)
 
     assert resp.status_code == 200
 
 
-@pytest.mark.parametrize("path", [
-    ('/'),
-    ('/study/1'),
-    ('/study/1/my_uploads'),
-    ('/study/1/upload'),
-    ('/study/1/upload/async'),
-    ('/upload/1/study_file'),
-    ('/upload/1/cmr_data_recording_form'),
-    ('/study/1/csv'),
-])
+@pytest.mark.parametrize(
+    "path",
+    [
+        ("/"),
+        ("/study/1"),
+        ("/study/1/my_uploads"),
+        ("/study/1/upload"),
+        ("/upload/file/1"),
+        ("/study/1/csv"),
+    ],
+)
 def test_url_requires_login_get(client, path):
     resp = client.get(path)
     assert resp.status_code == 302
 
 
-@pytest.mark.parametrize("path", [
-    ('/upload_delete'),
-    ('/upload_complete'),
-])
+@pytest.mark.parametrize("path", [("/upload_delete"), ("/upload_complete")])
 def test_url_requires_login_post(client, path):
     resp = client.post(path)
     assert resp.status_code == 302
 
-@pytest.mark.parametrize("path", [
-    ('/'),
-])
+
+@pytest.mark.parametrize("path", [("/")])
 def test_url_requires_login_common_page(client, faker, path):
     login(client, faker)
     resp = client.get(path)
     assert resp.status_code == 200
 
 
-@pytest.mark.parametrize("path", [
-    ('/study/{}'),
-    ('/study/{}/csv'),
-])
+@pytest.mark.parametrize("path", [("/study/{}"), ("/study/{}/csv")])
 def test_must_be_study_owner_is(client, path, faker):
     user = login(client, faker)
 
@@ -73,10 +70,7 @@ def test_must_be_study_owner_is(client, path, faker):
     assert resp.status_code == 200
 
 
-@pytest.mark.parametrize("path", [
-    ('/study/{}'),
-    ('/study/{}/csv'),
-])
+@pytest.mark.parametrize("path", [("/study/{}"), ("/study/{}/csv")])
 def test_must_be_study_owner_isnt(client, path, faker):
     login(client, faker)
 
@@ -88,11 +82,9 @@ def test_must_be_study_owner_isnt(client, path, faker):
     assert resp.status_code == 403
 
 
-@pytest.mark.parametrize("path", [
-    ('/study/{}/my_uploads'),
-    ('/study/{}/upload'),
-    ('/study/{}/upload/async'),
-])
+@pytest.mark.parametrize(
+    "path", [("/study/{}/my_uploads"), ("/study/{}/upload")]
+)
 def test_must_be_study_collaborator_is(client, path, faker):
     user = login(client, faker)
 
@@ -105,11 +97,9 @@ def test_must_be_study_collaborator_is(client, path, faker):
     assert resp.status_code == 200
 
 
-@pytest.mark.parametrize("path", [
-    ('/study/{}/my_uploads'),
-    ('/study/{}/upload'),
-    ('/study/{}/upload/async'),
-])
+@pytest.mark.parametrize(
+    "path", [("/study/{}/my_uploads"), ("/study/{}/upload")]
+)
 def test_must_be_study_collaborator_isnt(client, path, faker):
     login(client, faker)
 

@@ -11,7 +11,7 @@
         <form method="GET" class="form-horizontal" action="{{ url_for('ui.study_my_uploads', study_id=study.id) }}">
 
             <div class="input-group">
-                {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
+                {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number") | safe }}
                 <div class="input-group-btn">
                     <button type="submit" class="btn btn-primary">Search</button>
                     <a class="btn btn-primary" href="{{ url_for('ui.study_my_uploads', study_id=study.id) }}">Clear Search</a>
@@ -34,12 +34,10 @@
                         <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
                     </header>
                     <dl>
-                        <dt>Was the study protocol followed?</dt>
-                        <dd>{{ u.protocol_followed | yes_no }}</dd>
-                        <dt>If No, please detail why</dt>
-                        <dd>{{ u.protocol_deviation_description }}</dd>
-                        <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
-                        <dd>{{ u.comments }}</dd>
+                        {% for d in u.data %}
+                            <dt>{{ d.field.field_name }}</dt>
+                            <dd>{{ d.value }}</dd>
+                        {% endfor %}
                     </dl>
                 </div>
             </li>

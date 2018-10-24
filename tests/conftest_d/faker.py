@@ -3,14 +3,12 @@
 import pytest
 from faker import Faker
 from faker.providers import BaseProvider
-from upload.model import Study, User, Upload, Site
+from upload.model import Study, User, Upload, Site, UploadFile, Field, FieldType
 
 
 class UploadFakerProvider(BaseProvider):
     def study_details(self):
-        return Study(
-            name=self.generator.pystr(min_chars=5, max_chars=10).upper()
-        )
+        return Study(name=self.generator.pystr(min_chars=5, max_chars=10).upper())
 
     def user_details(self):
         u = User(
@@ -30,18 +28,26 @@ class UploadFakerProvider(BaseProvider):
     def upload_details(self):
         u = Upload(
             study_number=self.generator.pystr(min_chars=5, max_chars=10).upper(),
-            protocol_followed=self.generator.boolean(),
-            protocol_deviation_description=self.generator.text(),
-            comments=self.generator.text(),
-            study_file_filename=self.generator.file_name(),
-            cmr_data_recording_form_filename=self.generator.file_name(),
         )
         return u
 
+    def upload_file_details(self):
+        uf = UploadFile(
+            filename=self.generator.file_name(),
+        )
+        return uf
 
-@pytest.yield_fixture(scope='function')
+    def file_field_details(self):
+        f = Field(
+            field_type=FieldType.query.filter(FieldType.is_file == 1).first(),
+            field_name=self.generator.file_name(),
+            allowed_file_extensions=self.generator.file_extension(),
+        )
+        return f
+
+@pytest.yield_fixture(scope="function")
 def faker():
-    result = Faker('en_GB')
+    result = Faker("en_GB")
     result.add_provider(UploadFakerProvider)
 
     yield result

@@ -10,7 +10,7 @@ from wtforms import (
     HiddenField,
     BooleanField,
 )
-from wtforms.validators import Length, Required
+from wtforms.validators import Length, DataRequired
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 
@@ -24,131 +24,70 @@ class FlashingForm(FlaskForm):
                     flash(
                         "Error in the {} field - {}".format(
                             getattr(self, field).label.text, error
-                        ), 'error')
+                        ),
+                        "error",
+                    )
         return result
 
 
 class SearchForm(FlashingForm):
-    search = StringField('Search', validators=[Length(max=20)])
-    page = IntegerField('Page', default=1)
-    
+    search = StringField("Search", validators=[Length(max=20)])
+    page = IntegerField("Page", default=1)
+
 
 class ConfirmForm(FlashingForm):
-    id = HiddenField('id', validators=[Required()])
-    
-
-class UploadForm(FlashingForm):
-    study_number = StringField('Study Number', validators=[Required(), Length(max=100)])
-    protocol_followed = RadioField('Was the study protocol followed?', choices=[('True', 'Yes'), ('False', 'No')], validators=[Required()])
-    protocol_deviation_description = TextAreaField('If No, please detail why', validators=[Length(max=500)])
-    comments = TextAreaField('Any additional comments?  E.g., image quality, motion artifacts, etc', validators=[Length(max=500)])
-    study_file = FileField(
-        'Attach study file here',
-        validators=[
-            FileRequired(),
-            FileAllowed(['dcm', 'dcm30', 'zip', 'pdf'], 'Images and zip files only.'),
-        ])
-    cmr_data_recording_form = FileField(
-        'Attach CMR data recording form',
-        validators=[
-            FileRequired(),
-            FileAllowed(['pdf', 'docx'], 'PDF and Word files only'),
-        ])
+    id = HiddenField("id", validators=[DataRequired()])
 
 
 class UploadSearchForm(FlashingForm):
-    search = StringField('Search', validators=[Length(max=20)])
-    showCompleted = BooleanField('Show Completed')
-    page = IntegerField('Page', default=1)
-    
+    search = StringField("Search", validators=[Length(max=20)])
+    showCompleted = BooleanField("Show Completed")
+    page = IntegerField("Page", default=1)
 
-class FormBuilder():
 
-    BOOLEAN = 'Boolean'
-    HIDDEN = 'Hidden'
-    INTEGER = 'Integer'
-    PASSWORD = 'Password'
-    RADIO = 'Radio'
-    STRING = 'String'
-    TEXT = 'Text'
-    TEXTAREA = 'TextArea'
-
-    TEXTFIELDS = ['Password', 'String', 'Text', 'TextArea']
-
+class UploadFormBuilder:
     def __init__(self):
-        self._fields = {}
-        
-    def form(self):
-        class DynamicForm(FlashingForm): pass
+        self._fields = {
+            "study_number": StringField(
+                "Study Number", validators=[DataRequired(), Length(max=100)]
+            )
+        }
+
+    def get_form(self):
+        class DynamicForm(FlashingForm):
+            pass
 
         for name, field in self._fields.items():
-            setattr(DynamicForm , name, field)
+            setattr(DynamicForm, name, field)
 
         return DynamicForm()
 
-    def addField(self, type, name, label, **kwargs):
-        field = None
+    def add_field(self, field):
+        form_field = None
 
-        validators = []
-        default = kwargs.get('default', '')
+        kwargs = {"validators": [], "default": field.default}
 
-        if kwargs.get('required', False):
-            validators.append(Required())
+        if field.required:
+            kwargs["validators"].append(DataRequired())
 
-        if kwargs.get('max_length', None) and type in FormBuilder.TEXTFIELDS:
-            validators.append(Length(max=20))
+        if field.max_length:
+            kwargs["validators"].append(Length(max=field.max_length))
 
-        if type == FormBuilder.BOOLEAN:
-            field = BooleanField(
-                label,
-                validators=validators,
-                default=default,
-            )
-        elif type == FormBuilder.HIDDEN:
-            field = HiddenField(
-                label,
-                validators=validators,
-                default=default,
-            )
-        elif type == FormBuilder.INTEGER:
-            field = IntegerField(
-                label,
-                validators=validators,
-                default=default,
-            )
-        elif type == FormBuilder.PASSWORD:
-            field = PasswordField(
-                label,
-                validators=validators,
-                default=default,
-            )
-        elif type == FormBuilder.RADIO:
-            choices = kwargs.get('choices', None)
+        if field.choices:
+            kwargs["choices"] = field.get_choices()
 
-            if not choices:
-                raise ValueError('FormBuilder: Radio fields require a choice parameter.')
+        if field.allowed_file_extensions:
+            kwargs["validators"].append(
+                FileAllowed(
+                    field.get_allowed_file_extensions(),
+                    'Only the following file extensions are allowed "{}".'.format(
+                        ", ".join(field.get_allowed_file_extensions())
+                    ),
+                )
+            )
 
-            field = RadioField(
-                label,
-                validators=validators,
-                choices=choices,
-                default=default,
-            )
-        elif type == FormBuilder.TEXT:
-            field = TextField(
-                label,
-                validators=validators,
-                default=default,
-            )
-        elif type == FormBuilder.TEXTAREA:
-            field = TextAreaField(
-                label,
-                validators=validators,
-                default=default,
-            )
-        else:
-            raise ValueError('FormBuilder: field type not found ("{}")'.format(type))
-        
-        field.validators = validators
+        module = __import__("wtforms")
+        class_ = getattr(module, field.field_type.name)
+        form_field = class_(field.field_name, **kwargs)
 
-        self._fields[name] = field
+        self._fields[field.field_name] = form_field

@@ -9,7 +9,7 @@
         <form method="GET" id="searchForm" class="form-horizontal" action="{{ url_for('ui.study', study_id=study.id) }}">
 
             <div class="input-group">
-                {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
+                {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number") | safe }}
                 <span class="input-group-addon">
                     {{ searchForm.showCompleted() | safe }}
                     <span>Show Completed</span>
@@ -41,18 +41,17 @@
                         <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
                     </header>
                     <dl>
-                        <dt>Was the study protocol followed?</dt>
-                        <dd>{{ u.protocol_followed | yes_no }}</dd>
-                        <dt>If No, please detail why</dt>
-                        <dd>{{ u.protocol_deviation_description }}</dd>
-                        <dt>Any additional comments?  E.g., image quality, motion artifacts, etc</dt>
-                        <dd>{{ u.comments }}</dd>
+                        {% for d in u.data %}
+                            <dt>{{ d.field.field_name }}</dt>
+                            <dd>{{ d.value }}</dd>
+                        {% endfor %}
                     </dl>
                 </div>
                 <div>
                     <div class="pull-left">
-                        <a class='download' href="{{ url_for('ui.study_file', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> Study File</a>
-                        <a class='download' href="{{ url_for('ui.cmr_data_recording_form_filepath', upload_id=u.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> CMR Data Recording Form</a>
+                        {% for f in u.files %}
+                            <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.filename }}</a>
+                        {% endfor %}
                     </div>
                     <div class="pull-right">
                         {% if not u.completed %}

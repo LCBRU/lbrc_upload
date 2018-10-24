@@ -1,18 +1,13 @@
-from sqlalchemy import (
-    MetaData,
-    Table,
-    Index,
-    Column,
-    Integer,
-)
+from sqlalchemy import MetaData, Table, Index, Column, Integer
 
 meta = MetaData()
 
 studies_collaborators = Table(
-    'studies_collaborators', meta,
-    Column('id', Integer, primary_key=True),
-    Column('study_id', Integer),
-    Column('user_id', Integer),
+    "studies_collaborators",
+    meta,
+    Column("id", Integer, primary_key=True),
+    Column("study_id", Integer),
+    Column("user_id", Integer),
 )
 
 Index("ix_studies_collaborators_study_id", studies_collaborators.c.study_id)

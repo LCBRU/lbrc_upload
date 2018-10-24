@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from upload.database import db
 
+
 def login(client, faker):
     s = faker.site_details()
     u = faker.user_details()
@@ -9,25 +10,19 @@ def login(client, faker):
     db.session.add(u)
     db.session.commit()
 
-    resp = client.get('/login')
-    soup = BeautifulSoup(resp.data, 'html.parser')
+    resp = client.get("/login")
+    soup = BeautifulSoup(resp.data, "html.parser")
 
     crf_token = soup.find(
-        'input',
-        {'name': 'csrf_token'},
-        type='hidden',
-        id='csrf_token',
+        "input", {"name": "csrf_token"}, type="hidden", id="csrf_token"
     )
 
-    data = dict(
-        email=u.email,
-        password=u.password,
-    )
+    data = dict(email=u.email, password=u.password)
 
     if crf_token:
-        data['csrf_token'] = crf_token.get('value')
+        data["csrf_token"] = crf_token.get("value")
 
-    client.post('/login', data=data, follow_redirects=True)
+    client.post("/login", data=data, follow_redirects=True)
 
     return u
 
@@ -47,5 +42,5 @@ def add_content_for_all_areas(faker, user):
     db.session.add(upload)
 
     db.session.commit()
-    
+
     return (study, upload)

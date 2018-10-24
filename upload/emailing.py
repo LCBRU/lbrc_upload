@@ -11,10 +11,6 @@ def init_mail(app):
 
 def email(subject, message, recipients):
 
-    msg = Message(
-        subject=subject,
-        recipients=recipients,
-        body=message,
-    )
+    msg = Message(subject=subject, recipients=recipients, body=message)
 
     mail.send(msg)

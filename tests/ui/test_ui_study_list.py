@@ -12,12 +12,12 @@ from upload.database import db
 def test__study_list__no_studies__no_display(client, faker):
     login(client, faker)
 
-    resp = client.get('/')
+    resp = client.get("/")
 
     assert resp.status_code == 200
-    assert resp.soup.find('h2', string='Owned Studies') is None
-    assert resp.soup.find('h2', string='Collaborating Studies') is None
-    assert len(resp.soup.find_all('table', 'table study_list')) == 0
+    assert resp.soup.find("h2", string="Owned Studies") is None
+    assert resp.soup.find("h2", string="Collaborating Studies") is None
+    assert len(resp.soup.find_all("table", "table study_list")) == 0
 
 
 def test__study_list__owns_1_study_redirects(client, faker):
@@ -28,17 +28,14 @@ def test__study_list__owns_1_study_redirects(client, faker):
 
     db.session.add(study)
     db.session.commit()
-    
-    resp = client.get('/')
+
+    resp = client.get("/")
 
     assert resp.status_code == 302
-    assert resp.location == (url_for('ui.study', study_id=study.id, _external=True))
+    assert resp.location == (url_for("ui.study", study_id=study.id, _external=True))
 
 
-@pytest.mark.parametrize("study_count", [
-    (2),
-    (3),
-])
+@pytest.mark.parametrize("study_count", [(2), (3)])
 def test__study_list__owns_mult_studies(client, faker, study_count):
     user = login(client, faker)
     studies = []
@@ -51,28 +48,30 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
         db.session.add(study)
 
     db.session.commit()
-    
-    resp = client.get('/')
+
+    resp = client.get("/")
 
     assert resp.status_code == 200
-    assert resp.soup.find('h2', string='Owned Studies') is not None
-    assert resp.soup.find('h2', string='Collaborating Studies') is None
-    assert len(resp.soup.select('table.study_list')) == 1
-    assert len(resp.soup.select('table.study_list > tbody > tr')) == study_count
+    assert resp.soup.find("h2", string="Owned Studies") is not None
+    assert resp.soup.find("h2", string="Collaborating Studies") is None
+    assert len(resp.soup.select("table.study_list")) == 1
+    assert len(resp.soup.select("table.study_list > tbody > tr")) == study_count
 
     for s in studies:
-        assert resp.soup.find('a', href=url_for('ui.study', study_id=s.id)) is not None
-        assert resp.soup.find('a', href=url_for('ui.study_csv', study_id=s.id)) is not None
-        assert resp.soup.find('td', string=s.name) is not None
+        assert resp.soup.find("a", href=url_for("ui.study", study_id=s.id)) is not None
+        assert (
+            resp.soup.find("a", href=url_for("ui.study_csv", study_id=s.id)) is not None
+        )
+        assert resp.soup.find("td", string=s.name) is not None
 
 
-@pytest.mark.parametrize(["outstanding", "completed", "deleted"], [
-    (2, 2, 0),
-    (3, 0, 4),
-    (2, 2, 2),
-    (3, 0, 0),
-])
-def test__study_list__owned_study__upload_count(client, faker, outstanding, completed, deleted):
+@pytest.mark.parametrize(
+    ["outstanding", "completed", "deleted"],
+    [(2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
+)
+def test__study_list__owned_study__upload_count(
+    client, faker, outstanding, completed, deleted
+):
     user = login(client, faker)
 
     user2 = faker.user_details()
@@ -118,15 +117,15 @@ def test__study_list__owned_study__upload_count(client, faker, outstanding, comp
         db.session.add(u)
 
     db.session.commit()
-    
-    resp = client.get('/')
+
+    resp = client.get("/")
 
     assert resp.status_code == 200
 
-    study_row = resp.soup.find('td', string=study.name).parent
+    study_row = resp.soup.find("td", string=study.name).parent
 
-    assert study_row.find_all('td')[2].string == str(outstanding + completed)
-    assert study_row.find_all('td')[3].string == str(outstanding)
+    assert study_row.find_all("td")[2].string == str(outstanding + completed)
+    assert study_row.find_all("td")[3].string == str(outstanding)
 
 
 def test__study_list__coll_1_study_redirects(client, faker):
@@ -137,17 +136,16 @@ def test__study_list__coll_1_study_redirects(client, faker):
 
     db.session.add(study)
     db.session.commit()
-    
-    resp = client.get('/')
+
+    resp = client.get("/")
 
     assert resp.status_code == 302
-    assert resp.location == (url_for('ui.study_my_uploads', study_id=study.id, _external=True))
+    assert resp.location == (
+        url_for("ui.study_my_uploads", study_id=study.id, _external=True)
+    )
 
 
-@pytest.mark.parametrize("study_count", [
-    (2),
-    (3),
-])
+@pytest.mark.parametrize("study_count", [(2), (3)])
 def test__study_list__colls_mult_studies(client, faker, study_count):
     user = login(client, faker)
     studies = []
@@ -160,28 +158,33 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
         db.session.add(study)
 
     db.session.commit()
-    
-    resp = client.get('/')
+
+    resp = client.get("/")
 
     assert resp.status_code == 200
-    assert resp.soup.find('h2', string='Owned Studies') is None
-    assert resp.soup.find('h2', string='Collaborating Studies') is not None
-    assert len(resp.soup.select('table.study_list')) == 1
-    assert len(resp.soup.select('table.study_list > tbody > tr')) == study_count
+    assert resp.soup.find("h2", string="Owned Studies") is None
+    assert resp.soup.find("h2", string="Collaborating Studies") is not None
+    assert len(resp.soup.select("table.study_list")) == 1
+    assert len(resp.soup.select("table.study_list > tbody > tr")) == study_count
 
     for s in studies:
-        assert resp.soup.find('a', href=url_for('ui.study_my_uploads', study_id=s.id)) is not None
-        assert resp.soup.find('a', href=url_for('ui.upload_data', study_id=s.id)) is not None
-        assert resp.soup.find('td', string=s.name) is not None
+        assert (
+            resp.soup.find("a", href=url_for("ui.study_my_uploads", study_id=s.id))
+            is not None
+        )
+        assert (
+            resp.soup.find("a", href=url_for("ui.upload_data", study_id=s.id))
+            is not None
+        )
+        assert resp.soup.find("td", string=s.name) is not None
 
 
-@pytest.mark.parametrize(["me", "someone_else", "deleted"], [
-    (2, 2, 0),
-    (3, 0, 4),
-    (2, 2, 4),
-    (3, 0, 0),
-])
-def test__study_list__owned_study__upload_count(client, faker, me, someone_else, deleted):
+@pytest.mark.parametrize(
+    ["me", "someone_else", "deleted"], [(2, 2, 0), (3, 0, 4), (2, 2, 4), (3, 0, 0)]
+)
+def test__study_list__owned_study__upload_count(
+    client, faker, me, someone_else, deleted
+):
     user = login(client, faker)
 
     user2 = faker.user_details()
@@ -227,11 +230,11 @@ def test__study_list__owned_study__upload_count(client, faker, me, someone_else,
         db.session.add(u)
 
     db.session.commit()
-    
-    resp = client.get('/')
+
+    resp = client.get("/")
 
     assert resp.status_code == 200
 
-    study_row = resp.soup.find('td', string=study.name).parent
+    study_row = resp.soup.find("td", string=study.name).parent
 
-    assert study_row.find_all('td')[2].string == str(me)
+    assert study_row.find_all("td")[2].string == str(me)

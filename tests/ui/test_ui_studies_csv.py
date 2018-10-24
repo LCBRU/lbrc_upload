@@ -11,12 +11,7 @@ from tests import login
 from upload.database import db
 
 
-@pytest.mark.parametrize("upload_count", [
-    (0),
-    (2),
-    (3),
-    (100),
-])
+@pytest.mark.parametrize("upload_count", [(0), (2), (3), (100)])
 def test__study_csv__download(client, faker, upload_count):
     user = login(client, faker)
     uploads = []
@@ -33,24 +28,21 @@ def test__study_csv__download(client, faker, upload_count):
         db.session.add(upload)
 
     db.session.commit()
-    
-    resp = client.get(url_for('ui.study_csv', study_id=study.id))
+
+    resp = client.get(url_for("ui.study_csv", study_id=study.id))
 
     assert resp.status_code == 200
 
-    decoded_content = resp.data.decode('utf-8')
+    decoded_content = resp.data.decode("utf-8")
 
-    rows = list(csv.reader(StringIO(decoded_content), delimiter=','))
+    rows = list(csv.reader(StringIO(decoded_content), delimiter=","))
 
     assert rows[0] == [
-        'upload_id',
-        'study_name',
-        'study_number',
-        'uploaded_by',
-        'protocol_followed',
-        'protocol_deviation_description',
-        'comments',
-        'date_created'
+        "upload_id",
+        "study_name",
+        "study_number",
+        "uploaded_by",
+        "date_created",
     ]
 
     for u, row in zip(uploads, rows[1:]):
@@ -58,7 +50,4 @@ def test__study_csv__download(client, faker, upload_count):
         assert row[1] == u.study.name
         assert row[2] == u.study_number
         assert row[3] == u.uploader.full_name
-        assert row[4] == str(u.protocol_followed)
-        assert row[5] == u.protocol_deviation_description
-        assert row[6] == u.comments
-        assert row[7] == u.date_created.strftime('%Y-%m-%d %H:%M:%S.%f')
+        assert row[4] == u.date_created.strftime("%Y-%m-%d %H:%M:%S.%f")
