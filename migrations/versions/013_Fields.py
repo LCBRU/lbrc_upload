@@ -21,7 +21,7 @@ field = Table(
     Column("study_id", Integer),
     Column("order", Integer),
     Column("field_type_id", Integer),
-    Column("field_name", String),
+    Column("field_name", String(100)),
     Column("required", Boolean),
     Column("max_length", Integer),
     Column("default", String(250)),
