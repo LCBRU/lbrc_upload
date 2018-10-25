@@ -82,9 +82,7 @@ def test_must_be_study_owner_isnt(client, path, faker):
     assert resp.status_code == 403
 
 
-@pytest.mark.parametrize(
-    "path", [("/study/{}/my_uploads"), ("/study/{}/upload")]
-)
+@pytest.mark.parametrize("path", [("/study/{}/my_uploads"), ("/study/{}/upload")])
 def test_must_be_study_collaborator_is(client, path, faker):
     user = login(client, faker)
 
@@ -97,9 +95,7 @@ def test_must_be_study_collaborator_is(client, path, faker):
     assert resp.status_code == 200
 
 
-@pytest.mark.parametrize(
-    "path", [("/study/{}/my_uploads"), ("/study/{}/upload")]
-)
+@pytest.mark.parametrize("path", [("/study/{}/my_uploads"), ("/study/{}/upload")])
 def test_must_be_study_collaborator_isnt(client, path, faker):
     login(client, faker)
 

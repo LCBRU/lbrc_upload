@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from upload.database import db
+from upload.model import FieldType
 
 
 def login(client, faker):
@@ -44,3 +45,19 @@ def add_content_for_all_areas(faker, user):
     db.session.commit()
 
     return (study, upload)
+
+
+def add_field_types():
+    for t in [
+        "BooleanField",
+        "IntegerField",
+        "RadioField",
+        "StringField",
+        "TextAreaField",
+    ]:
+        ft = FieldType(name=t)
+        db.session.add(ft)
+
+    db.session.add(FieldType(name="FileField", is_file=True))
+
+    db.session.commit()

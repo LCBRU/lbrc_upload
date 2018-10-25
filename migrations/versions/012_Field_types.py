@@ -25,7 +25,7 @@ def upgrade(migrate_engine):
         "BooleanField",
         "IntegerField",
         "RadioField",
-        "TextField",
+        "StringField",
         "TextAreaField",
     ]:
         ft = FieldType(name=t)
