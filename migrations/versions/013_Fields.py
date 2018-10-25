@@ -24,9 +24,9 @@ field = Table(
     Column("field_name", String),
     Column("required", Boolean),
     Column("max_length", Integer),
-    Column("default", String),
-    Column("choices", String),
-    Column("allowed_file_extensions", String),
+    Column("default", String(250)),
+    Column("choices", String(250)),
+    Column("allowed_file_extensions", String(250)),
 )
 
 Index("ix_field_study_id", field.c.study_id)
