@@ -84,6 +84,7 @@ def test__upload__form_study_number(client, faker):
     study = faker.study_details()
     study.collaborators.append(user)
 
+    db.session.add(study)
     db.session.commit()
 
     resp = client.get("/study/{}/upload".format(study.id))
@@ -210,10 +211,17 @@ def test__upload__form_dynamic_multiple(client, faker):
     assert f2["type"] == "text"
 
 
-def _create_collaborating_study(user, faker):
+def _create_collaborating_study(
+    user,
+    faker,
+    allow_duplicate_study_number=False,
+    study_number_format=None,
+    ):
     study = faker.study_details()
     study.collaborators.append(user)
     study.owners.append(user)
+    study.allow_duplicate_study_number = allow_duplicate_study_number
+    study.study_number_format = study_number_format
 
     db.session.add(study)
     db.session.commit()
@@ -327,6 +335,115 @@ def test__upload__upload_study_number(client, faker):
 
     assert Upload.query.filter(
         Upload.study_number == data["study_number"] and Upload.study_id == study.id
+    ).first()
+
+
+def test__upload__upload_study_number__matches_format(client, faker):
+    add_field_types()
+    user = login(client, faker)
+    study = _create_collaborating_study(user, faker, study_number_format='Tst\\d{8}[A-Z]')
+
+    study_number = "Tst12345678X"
+
+    data = {"study_number": study_number}
+
+    resp = _do_upload(client, faker, data, study.id)
+
+    assert resp.status_code == 302
+
+    assert Upload.query.filter(
+        Upload.study_number == study_number and Upload.study_id == study.id
+    ).first()
+
+
+def test__upload__upload_study_number__not_matches_format(client, faker):
+    add_field_types()
+    user = login(client, faker)
+    study = _create_collaborating_study(user, faker, study_number_format='Tst\\d{8}[A-Z]')
+
+    study_number = "Tst12345678"
+
+    data = {"study_number": study_number}
+
+    resp = _do_upload(client, faker, data, study.id)
+
+    assert resp.status_code == 200
+
+    e = resp.soup.find("div", class_="alert")
+    assert 'Study Number' in e.text
+
+    assert Upload.query.filter(
+        Upload.study_number == study_number
+    ).count() == 0
+
+
+def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
+    add_field_types()
+    user = login(client, faker)
+    study = _create_collaborating_study(user, faker)
+
+    upload = faker.upload_details()
+    upload.study = study
+
+    db.session.add(upload)
+    db.session.commit()
+
+    data = {"study_number": upload.study_number}
+
+    resp = _do_upload(client, faker, data, study.id)
+
+    assert resp.status_code == 200
+
+    e = resp.soup.find("div", class_="alert")
+    assert 'Study Number' in e.text
+
+    assert Upload.query.filter(
+        Upload.study_number == upload.study_number
+    ).count() == 1
+
+
+def test__upload__upload_study_number__duplicate_allowed(client, faker):
+    add_field_types()
+    user = login(client, faker)
+    study = _create_collaborating_study(user, faker, allow_duplicate_study_number=True)
+
+    upload = faker.upload_details()
+    upload.study = study
+
+    db.session.add(upload)
+    db.session.commit()
+
+    data = {"study_number": upload.study_number}
+
+    resp = _do_upload(client, faker, data, study.id)
+
+    assert resp.status_code == 302
+
+    assert Upload.query.filter(
+        Upload.study_number == upload.study_number
+    ).count() == 2
+
+
+def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
+    add_field_types()
+    user = login(client, faker)
+    study1 = _create_collaborating_study(user, faker)
+    study2 = _create_collaborating_study(user, faker)
+
+    upload = faker.upload_details()
+    upload.study = study1
+
+    db.session.add(upload)
+    db.session.commit()
+
+    data = {"study_number": upload.study_number}
+
+    resp = _do_upload(client, faker, data, study2.id)
+
+    assert resp.status_code == 302
+
+    assert Upload.query.filter(
+        Upload.study_number == data["study_number"] and Upload.study_id == study2.id
     ).first()
 
 

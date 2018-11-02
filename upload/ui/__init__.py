@@ -119,10 +119,7 @@ def study_my_uploads(study_id):
 def upload_data(study_id):
     study = Study.query.get_or_404(study_id)
 
-    builder = UploadFormBuilder()
-
-    for f in study.fields:
-        builder.add_field(f)
+    builder = UploadFormBuilder(study)
 
     form = builder.get_form()
 
@@ -136,7 +133,7 @@ def upload_data(study_id):
 
         form.validate_on_submit()
 
-        if duplicate:
+        if duplicate and not study.allow_duplicate_study_number:
             form.study_number.errors.append(
                 "Study Number already exists for this study"
             )

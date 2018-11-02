@@ -112,6 +112,8 @@ class Study(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(100))
     date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    allow_duplicate_study_number = db.Column(db.Boolean, nullable=False, default=False)
+    study_number_format = db.Column(db.String(50))
     owners = db.relationship(
         "User",
         secondary=studies_owners,

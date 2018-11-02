@@ -10,7 +10,7 @@ from wtforms import (
     HiddenField,
     BooleanField,
 )
-from wtforms.validators import Length, DataRequired
+from wtforms.validators import Length, DataRequired, Regexp
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 
@@ -46,12 +46,23 @@ class UploadSearchForm(FlashingForm):
 
 
 class UploadFormBuilder:
-    def __init__(self):
+    def __init__(self, study):
+        validators = [DataRequired(), Length(max=100)]
+
+        if study.study_number_format:
+            validators.append(
+                Regexp(study.study_number_format, message="Study number is not of the correct format")
+            )
+
         self._fields = {
             "study_number": StringField(
-                "Study Number", validators=[DataRequired(), Length(max=100)]
+                "Study Number", validators=validators
             )
         }
+
+        for f in study.fields:
+            self.add_field(f)
+
 
     def get_form(self):
         class DynamicForm(FlashingForm):
