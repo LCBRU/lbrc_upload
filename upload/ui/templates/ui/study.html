@@ -41,7 +41,7 @@
                         <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
                     </header>
                     <dl>
-                        {% for d in u.data %}
+                        {% for d in u.data | sort(attribute='order')%}
                             <dt>{{ d.field.field_name }}</dt>
                             <dd>{{ d.value }}</dd>
                         {% endfor %}
