@@ -17,7 +17,6 @@ def create_app(config=BaseConfig):
     """ Used to create flask application"""
     app = Flask(__name__)
     app.config.from_object(config)
-    app.config.from_pyfile("application.cfg", silent=True)
 
     with app.app_context():
         db.init_app(app)

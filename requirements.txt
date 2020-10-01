@@ -12,3 +12,5 @@ bcrypt
 python-dotenv
 coverage
 pytest-cov
+email_validator
+python-dotenv

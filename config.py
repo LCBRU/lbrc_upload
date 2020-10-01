@@ -1,39 +1,42 @@
 import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class BaseConfig(object):
-    BASE_DIR = os.path.abspath(os.path.dirname(__file__))
-    FILE_UPLOAD_DIRECTORY = os.path.join(BASE_DIR, "file_uploads")
-    SQLALCHEMY_ECHO = False
-    WTF_CSRF_ENABLED = True
+    DEBUG = os.getenv("DEBUG", "False") == 'True'
+    FILE_UPLOAD_DIRECTORY = os.environ["FILE_UPLOAD_DIRECTORY"]
+    SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", "False") == 'True'
+    SMTP_SERVER = os.environ["SMTP_SERVER"]
+    ADMIN_EMAIL_ADDRESSES = os.environ["ADMIN_EMAIL_ADDRESSES"]
+    MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "lcbruit@leicester.ac.uk")
+    SECURITY_EMAIL_SENDER = os.getenv("SECURITY_EMAIL_SENDER", "lcbruit@leicester.ac.uk")
+    SQLALCHEMY_DATABASE_URI = os.environ["SQLALCHEMY_DATABASE_URI"]
+    SECURITY_SEND_PASSWORD_CHANGE_EMAIL = os.getenv("SECURITY_SEND_PASSWORD_CHANGE_EMAIL", "False") == 'True'
+
+    SECRET_KEY = os.environ["SECRET_KEY"]
+    SECURITY_PASSWORD_SALT = os.environ["SECURITY_PASSWORD_SALT"]
+    SECURITY_CONFIRM_SALT = os.getenv("SECURITY_CONFIRM_SALT", SECURITY_PASSWORD_SALT)
+    SECURITY_RESET_SALT = os.getenv("SECURITY_RESET_SALT", SECURITY_PASSWORD_SALT)
+    SECURITY_LOGIN_SALT = os.getenv("SECURITY_LOGIN_SALT", SECURITY_PASSWORD_SALT)
+    SECURITY_REMEMBER_SALT = os.getenv("SECURITY_REMEMBER_SALT", SECURITY_PASSWORD_SALT)
+
     SECURITY_TRACKABLE = "True"
-    SMTP_SERVER = "localhost"
-    ADMIN_EMAIL_ADDRESSES = "rab63@le.ac.uk"
     ERROR_EMAIL_SUBJECT = "LBRC Study Data Upload Error"
-    MAIL_DEFAULT_SENDER = "lcbruit@leicester.ac.uk"
-    SECURITY_EMAIL_SENDER = "lcbruit@leicester.ac.uk"
+    WTF_CSRF_ENABLED = True
     SECURITY_CHANGEABLE = True
     SECURITY_RECOVERABLE = True
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
-class DevConfig(BaseConfig):
-    """Standard configuration options"""
-
-    DEBUG = True
-    DB_FILE = os.path.join(BaseConfig.BASE_DIR, "database.sqlite3")
-    SQLALCHEMY_DATABASE_URI = "sqlite:///" + DB_FILE
-    SQLALCHEMY_TRACK_MODIFICATIONS = True
-    SECRET_KEY = "secret"
-    SECURITY_PASSWORD_SALT = "sale"
-
-
-class TestConfig(DevConfig):
+class TestConfig(BaseConfig):
     """Configuration for general testing"""
 
     TESTING = True
     SQLALCHEMY_DATABASE_URI = "sqlite://"
     WTF_CSRF_ENABLED = False
-    FILE_UPLOAD_DIRECTORY = os.path.join(BaseConfig.BASE_DIR, "tests", "file_uploads")
+    FILE_UPLOAD_DIRECTORY = os.getenv("TEST_FILE_UPLOAD_DIRECTORY", BaseConfig.FILE_UPLOAD_DIRECTORY)
     SMTP_SERVER = None
     SECURITY_SEND_PASSWORD_CHANGE_EMAIL = False
 
