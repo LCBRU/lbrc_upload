@@ -24,8 +24,8 @@ pip install -r requirements.txt
 Staying in the `lbrc_upload` directory and type the command:
 
 ```bash
-./manage_dev.py version_control
-./manage_dev.py upgrade
+./manage.py version_control
+./manage.py upgrade
 ```
 
 4. Run the application
@@ -33,7 +33,7 @@ Staying in the `lbrc_upload` directory and type the command:
 Staying in the `lbrc_upload` directory and type the command:
 
 ```bash
-./dev.py
+./app.py
 ```
 
 ## Development
@@ -53,7 +53,7 @@ pytest
 To create a migration run the command
 
 ```bash
-./manage_dev.py script "{Description of change}"
+./manage.py script "{Description of change}"
 ```
 
 You will then need to change the newly-created script created in the
@@ -66,7 +66,7 @@ After amending the models, run the following command to create the
 migrations and apply them to the database:
 
 ```bash
-./manage_dev.py upgrade
+./manage.py upgrade
 ```
 
 ## Deployment

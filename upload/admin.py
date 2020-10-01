@@ -17,7 +17,7 @@ class FieldView(CustomView):
 
 class StudyView(CustomView):
 
-    form_columns = ["name", "allow_duplicate_study_number", "study_number_format", "owners", "collaborators"]
+    form_columns = ["name", "study_number_name", "allow_duplicate_study_number", "study_number_format", "owners", "collaborators"]
 
 
 class UserView(CustomView):
