@@ -6,7 +6,7 @@
     <div class="page-header">
         <h1>{{ study.name }} Uploads</h1>
 
-        {{ formhelper.render_search(searchForm, 'ui.study', placeholder='enter search text - searches ' + study.get_study_number_name(), buttons={'Download Upload Details': 'ui.study_csv'}, study_id=study.id) }}
+        {{ formhelper.render_search(searchForm, 'ui.study', placeholder='enter search text - searches ' + study.get_study_number_name().lower(), buttons={'Download Upload Details': 'ui.study_csv'}, study_id=study.id) }}
 
     </div>
 
