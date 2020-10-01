@@ -281,7 +281,7 @@ def get_study_uploads_query(study_id, search_form, show_completed):
 def write_study_upload_csv(filename, study, query):
     COL_UPLOAD_ID = "upload_id"
     COL_STUDY_NAME = "study_name"
-    COL_STUDY_NUMBER = "study_number"
+    COL_STUDY_NUMBER = study.get_study_number_name()
     COL_UPLOADER = "uploaded_by"
     COL_DATE_CREATED = "date_created"
 
