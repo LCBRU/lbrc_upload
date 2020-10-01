@@ -56,7 +56,7 @@ class UploadFormBuilder:
 
         self._fields = {
             "study_number": StringField(
-                "Study Number", validators=validators
+                study.get_study_number_name(), validators=validators
             )
         }
 
