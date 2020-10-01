@@ -140,6 +140,9 @@ class Study(db.Model):
     def outstanding_upload_count(self):
         return len([u for u in self.uploads if not u.deleted and not u.completed])
 
+    def get_study_number_name(self):
+        return self.study_number_name or 'Study Number'
+
 
 class Upload(db.Model):
 

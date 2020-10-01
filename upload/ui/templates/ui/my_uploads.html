@@ -20,7 +20,7 @@
                     </div>
                     <header>
                         <h1>
-                            <span class="hidden-xs">Study Number: </span>{{ u.study_number }}
+                            <span class="hidden-xs">{{ study.get_study_number_name() }}: </span>{{ u.study_number }}
                         </h1>
                         <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
                     </header>
