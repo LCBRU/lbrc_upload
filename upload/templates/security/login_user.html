@@ -13,15 +13,19 @@
 	{{ login_user_form.hidden_tag() }}
 
 	<div class="form-group input-group">
-		<span class="input-group-addon" id="basic-addon1">
-			<span class="fas fa-at"></span>
+		<span class="input-group-prepend">
+			<span class="input-group-text">
+				<span class="fas fa-at"></span>
+			</span>
 		</span>
 		{{ login_user_form.email(class="form-control", placeholder="Email Address") }}
 	</div>
 
 	<div class="form-group input-group">
-		<span class="input-group-addon" id="basic-addon1">
-			<span class="fas fa-lock"></span>
+		<span class="input-group-prepend">
+			<span class="input-group-text">
+				<span class="fas fa-lock"></span>
+			</span>
 		</span>
 		{{ login_user_form.password(class="form-control", placeholder="Password") }}
 	</div>
@@ -35,7 +39,8 @@
 	{{ render_field(login_user_form.next) }}
 
 	<div class="text-right">
-		<a href="{{ url_for_security('forgot_password') }}" class="btn btn-info" role="button">First Login or Forgotten Password</a>
+		<a href="{{ url_for_security('forgot_password') }}" class="btn btn-info" role="button">First Login</a>
+		<a href="{{ url_for_security('forgot_password') }}" class="btn btn-info" role="button">Forgotten Password</a>
 		<button type="submit" class="btn btn-primary">Login</button>
 	</div>
 </form>

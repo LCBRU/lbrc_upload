@@ -29,11 +29,13 @@
 {% endmacro %}
 
 
-{% macro render_button_bar(cancelview) %}
+{% macro render_button_bar(cancelview, submit_label="Save", cancelviewparams={}) %}
       <div class="form-group text-right">
           <div>
-              <a href="{{ url_for(cancelview) }}" class="btn btn-default" role="button">Cancel</a>
-              <button type="submit" class="btn btn-primary">Save</button>
+              {% if cancelview %}
+                <a href="{{ url_for(cancelview, **cancelviewparams) }}" class="btn btn-default" role="button">Cancel</a>
+              {% endif %}
+              <button type="submit" class="btn btn-primary">{{ submit_label }}</button>
           </div>
       </div>
 {% endmacro %}
@@ -57,26 +59,50 @@
 {% endmacro %}
 
 
-{% macro render_search(searchForm, searchview, buttons={}, checkboxes={}) %}
+{% macro render_search(searchForm, searchview, placeholder='enter search text', buttons={}, checkboxes={}) %}
 <form method="GET" class="form-horizontal" action="{{ url_for(searchview, **kwargs) }}">
 
   <div class="input-group">
-      {{ searchForm.search(class="form-control", placeholder="enter search text - searches study number, protocol deviation and comments") | safe }}
-      {% for key, value in checkboxes.items() %}
-        <span class="input-group-addon">
-            <input type="checkbox" id="{{ key }}" aria-label="{{ value }}">
-            <span>{{ value }}</span>
+    {{ searchForm.search(class="form-control", placeholder=placeholder) | safe }}
+    {% for field in searchForm %}
+      {% if field.type == "BooleanField" %}
+        <div class="input-group-append">
+          <div class="input-group-text">
+            {{ field(**kwargs)|safe }}
+            {{ field.label.text }}
+          </div>
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    <div class="input-group-append">
+      {% for key, value in buttons.items() %}
+        <span class="input-group-text">
+          <a href="{{ url_for(value, **kwargs) }}">{{ key }}</a>
         </span>
       {% endfor %}
-      <div class="input-group-btn">
-        <button type="submit" class="btn btn-primary">Search</button>
-        <a class="btn btn-primary" href="{{ url_for(searchview, **kwargs) }}">Clear Search</a>
+      <span class="input-group-text">
+          <a href="{{ url_for(searchview, **kwargs) }}">Clear Search</a>
+      </span>
+    </div>
+    <div class="input-group-append">
+      <button type="submit" class="btn btn-primary">Search</button>
+    </div>
+  </div>
 
-        {% for key, value in buttons.items() %}
-          <a class="btn btn-primary" href="{{ url_for(value, **kwargs) }}">{{ key }}</a>
+  {% if searchForm | rejectattr("type", "ne", "SelectField") | list | length is ge(1) %}
+    <div class="search-filters">
+      <div class="row">
+        {% for field in searchForm | rejectattr("type", "ne", "SelectField") %}
+          <div class="form-group{% if field.errors %} has-error{%endif%} col">
+            <div>{{ field.label.text | nbsp}}</div>
+            <div>{{ field(**kwargs)|safe }}</div>
+          </div>
         {% endfor %}
       </div>
-  </div>
+    </div>
+  {% endif %}
+
 </form>
 {% endmacro %}
 

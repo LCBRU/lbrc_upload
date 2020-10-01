@@ -8,7 +8,7 @@ class BaseConfig(object):
     DEBUG = os.getenv("DEBUG", "False") == 'True'
     FILE_UPLOAD_DIRECTORY = os.environ["FILE_UPLOAD_DIRECTORY"]
     SQLALCHEMY_ECHO = os.getenv("SQLALCHEMY_ECHO", "False") == 'True'
-    SMTP_SERVER = os.environ["SMTP_SERVER"]
+    SMTP_SERVER = os.getenv("SMTP_SERVER", None)
     ADMIN_EMAIL_ADDRESSES = os.environ["ADMIN_EMAIL_ADDRESSES"]
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER", "lcbruit@leicester.ac.uk")
     SECURITY_EMAIL_SENDER = os.getenv("SECURITY_EMAIL_SENDER", "lcbruit@leicester.ac.uk")

@@ -1,72 +1,89 @@
 {% extends "_subbase.html" %}
 
 {% block base_content %}
+<div id="main-wrapper">
 
-<div class="outer">
   <header class="pageheader">
-      <h1>Leicester<br>
-          <span class="hidden-xs">Biomedical Research Centre</span>
-          <span class="hidden-sm hidden-md hidden-lg">BRC</span>
-      </h1>
+    <div class="container">
+      <h1>Uploads</h1>
+    </div>
   </header>
 
-  <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    {% if current_user.is_active %}
-      <ul class="nav navbar-nav">
-        <li><a class="navbar-brand fas fa-home" href="{{ url_for('ui.index') }}"></a></li>
-        <li><a href="{{ url_for('ui.index') }}">Studies</a></li>
-      </ul>
-      <ul class="nav navbar-nav navbar-right">
-          <li class="dropdown">
-              <a class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.full_name }} <span class="caret"></span></a>
-              <ul class="dropdown-menu">
-                <li><a href="{{ url_for_security('change_password') }}">Change Password</a></li>
-                <li role="separator" class="divider"></li>
-                <li><a href="{{ url_for_security('logout') }}">Log Out</a></li>
-              </ul>
+  <div class="container">
+    <nav class="navbar navbar-expand-lg">
+      {% if current_user.is_active %}
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item">
+            <a class="navbar-brand fas fa-home" href="{{ url_for('ui.index') }}"></a>
+          </li>  
+        </ul>
+    
+        <ul class="navbar-nav ml-auto">
+          {% if current_user.is_admin %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Admin</a>
+              <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+                  <a class="dropdown-item" href="/admin/">Maintenance</a>
+                </div>
+            </li>
+          {% endif %}
+  
+          <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">{{ current_user.full_name }}</a>
+            <div class="dropdown-menu" aria-labelledby="navbarDropdown">
+              <a href="{{ url_for_security('change_password') }}">Change Password</a>
+              <a class="dropdown-item" href="{{ url_for_security('logout') }}">Log Out</a>
+            </div>
           </li>
         </ul>
+    
       {% endif %}
-  </nav>
+    </nav>
+  </div>
 
-  <div>
-      {% with messages = get_flashed_messages(with_categories=true) %}
+  <div class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
 
           {% set class="alert-info" %}
-          {% set gliph="glyphicon-info-sign" %}
+          {% set fas_class="fa-comment" %}
 
           {% if category == "warning" %}
             {% set class="alert-warning" %}
-            {% set gliph="glyphicon-exclamation-sign" %}
+            {% set fas_class="fa-exclamation" %}
           {% elif category == "error" %}
             {% set class="alert-danger" %}
-            {% set gliph="glyphicon-exclamation-sign" %}
+            {% set fas_class="fa-exclamation" %}
           {% elif category == "success" %}
             {% set class="alert-success" %}
-            {% set gliph="glyphicon-ok" %}
+            {% set fas_class="fa-check" %}
           {% endif %}
 
 
-          <div class="row">
-              <div class="alert {{class}} col-xs-6 col-md-6 col-md-offset-3" role="alert">
-                  <span class="glyphicon {{gliph}}" aria-hidden="true"></span>
+            <div class="justify-content-center">
+              <div class="alert {{class}}" role="alert">
+                  <i class="fas {{fas_class}}"></i>
                   <span class="sr-only">{{category}}:</span>
                   {{message}}
               </div>
           </div>
+
         {% endfor %}
       {% endwith %}
-      
-      {% block content %}{% endblock %}
 
+      {% block errors %}{% endblock %}
+  </div>
+        
+  <div id="content" class="container">
+    {% block content %}{% endblock %}
+  </div>
+
+  <footer>
+    <div class="container">
+        Copyright &copy; {{ current_year }} NIHR Leicester Biomedical Research Centre
     </div>
+  </footer>
 
-    <footer>
-        <p>
-            Copyright &copy; 2018 NIHR Leicester Biomedical Research Centre
-        </p>
-    </footer>
 </div>
 {% endblock %}
 

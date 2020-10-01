@@ -3,25 +3,33 @@
 
 {% block content %}
 
-<div class="panel panel-primary">
 
-    <div class="panel-heading">{{ site_name }}: Upload</div>
+<div class="row justify-content-center">
 
-    <form id="study_data_upload" method="POST" class="form" enctype="multipart/form-data">
-        <fieldset>
+    <div class="col-8">
+        <div class="card study-card">
+            <div class="card-header">
+                <div>{{ site_name }}: Upload</div>
+            </div>
     
-            {{ form.hidden_tag() }}
-            
-            {% for f in form %}
-                {{ formhelper.render_field(f) }}
-            {% endfor %}
+            <div class="card-body">
     
-            {{ formhelper.render_button_bar('ui.index') }}
-        </fieldset>
+                <form id="study_data_upload" method="POST" class="form panel-body" enctype="multipart/form-data">
+                    <fieldset>
+                        {{ form.hidden_tag() }}
     
-    </form>
+                        {% for f in form %}
+                            {{ formhelper.render_field(f) }}
+                        {% endfor %}
     
+                        {{ formhelper.render_button_bar('ui.index', submit_label="Upload") }}
+                    </fieldset>                   
+                </form>
+            </div>
+        </div>            
+    </div>
 </div>
+
 
 <!-- Upload Progress Dialog Simple-->
 <div class="modal fade" id="uploadProgressModalSimple" data-backdrop="static" tabindex="-1" role="dialog" aria-labelledby="uploadProgressModalSimple" aria-hidden="true">

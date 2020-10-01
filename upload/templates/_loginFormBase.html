@@ -2,28 +2,29 @@
 
 {% block base_content %}
 
-  <div class="errors col-md-8 col-md-offset-2">
+<div class="row justify-content-center">
+  <div class="errors">
       {% with messages = get_flashed_messages(with_categories=true) %}
         {% for category, message in messages %}
 
           {% set class="alert-info" %}
-          {% set gliph="glyphicon-info-sign" %}
+          {% set fas_class="fa-comment" %}
 
           {% if category == "warning" %}
             {% set class="alert-warning" %}
-            {% set gliph="glyphicon-exclamation-sign" %}
+            {% set fas_class="fa-exclamation" %}
           {% elif category == "error" %}
             {% set class="alert-danger" %}
-            {% set gliph="glyphicon-exclamation-sign" %}
+            {% set fas_class="fa-exclamation" %}
           {% elif category == "success" %}
             {% set class="alert-success" %}
-            {% set gliph="glyphicon-ok" %}
+            {% set fas_class="fa-check" %}
           {% endif %}
 
 
           <div class="row">
               <div class="alert {{class}}" role="alert">
-                  <span class="glyphicon {{gliph}}" aria-hidden="true"></span>
+                  <i class="fas {{fas_class}}"></i>
                   <span class="sr-only">{{category}}:</span>
                   {{message}}
               </div>
@@ -32,17 +33,22 @@
       {% endwith %}
 
       {% block errors %}{% endblock %}
-  </div>
+  </div>  
+</div>
 
-  <div class="panel panel-primary login-form">
-      <div class="panel-heading">{{ site_name }}: {% block formname %}{% endblock %}</div>
-      <div class="panel-body">
-        <div class="login-form-body">
-            {% block content %}{% endblock %}
-        </div>
-
+<div class="row justify-content-center">
+  <div class="login-form">  
+    <div class="card">
+      <div class="card-header">
+          <div>{{ site_name }}: {% block formname %}{% endblock %}</div>
       </div>
+
+      <div class="card-body">
+        {% block content %}{% endblock %}
+      </div>
+    </div>
   </div>
+
+</div>  
 
 {% endblock %}
-
