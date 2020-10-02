@@ -370,10 +370,6 @@ a.fas, a.fas:link, a.fas:hover {
 
 
 /* Specific Styling */
-ul.radio {
-  padding: 0;
-}
-
 ul.radio li {
   list-style-type: none;
 }
