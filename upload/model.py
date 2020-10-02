@@ -80,6 +80,7 @@ class User(db.Model, UserMixin):
     )
     site = db.relationship(Site)
 
+    @property
     def is_admin(self):
         return self.has_role(Role.ADMIN_ROLENAME)
 

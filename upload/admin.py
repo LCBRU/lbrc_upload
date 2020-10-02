@@ -8,7 +8,7 @@ from upload.model import Study, User, Role, Site, Field
 
 class CustomView(ModelView):
     def is_accessible(self):
-        return current_user.has_role(Role.ADMIN_ROLENAME)
+        return current_user.is_admin
 
 
 class FieldView(CustomView):
