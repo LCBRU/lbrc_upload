@@ -367,3 +367,13 @@ a.fas, a.fas:link, a.fas:hover {
     -webkit-transform: rotate(360deg);
   }
 }
+
+
+/* Specific Styling */
+ul.radio {
+  padding: 0;
+}
+
+ul.radio li {
+  list-style-type: none;
+}
