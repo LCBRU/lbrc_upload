@@ -295,7 +295,7 @@ def write_study_upload_csv(filename, study, query):
 
     fieldnames.extend(f.field_name for f in study.fields)
 
-    with open(filename, "w", newline="") as csvfile:
+    with open(filename, "w", newline="", encoding='utf8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
 
         writer.writeheader()
