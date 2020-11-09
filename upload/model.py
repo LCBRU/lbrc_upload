@@ -222,7 +222,7 @@ class UploadFile(db.Model):
 
     def get_download_filename(self):
         if len(self.field.download_filename_format or '') == 0:
-            return self.field_name
+            return self.filename
         else:
             return self.field.download_filename_format.format(file=self) + os.path.splitext(self.filename)[-1]
 
