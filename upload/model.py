@@ -116,6 +116,7 @@ class Study(db.Model):
     allow_duplicate_study_number = db.Column(db.Boolean, nullable=False, default=False)
     study_number_format = db.Column(db.String(50))
     study_number_name = db.Column(db.String(100))
+
     owners = db.relationship(
         "User",
         secondary=studies_owners,
@@ -182,6 +183,7 @@ class Field(db.Model):
     allowed_file_extensions = db.Column(db.String, default="")
     study = db.relationship(Study, backref=db.backref("fields"))
     field_type = db.relationship(FieldType)
+    download_filename_format = db.Column(db.String, default="")
 
     def get_choices(self):
         return [(c, c) for c in self.choices.split("|")]
@@ -217,6 +219,12 @@ class UploadFile(db.Model):
     field_id = db.Column(db.Integer(), db.ForeignKey(Field.id))
     field = db.relationship(Field)
     filename = db.Column(db.String(500))
+
+    def get_download_filename(self):
+        if len(self.field.download_filename_format) == 0:
+            return self.field_name
+        else:
+            return self.field.download_filename_format.format(file=self) + os.path.splitext(self.filename)[-1]
 
     def filepath(self):
         return os.path.join(

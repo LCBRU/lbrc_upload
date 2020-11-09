@@ -37,7 +37,7 @@
                 <div>
                     <div class="pull-left">
                         {% for f in u.files %}
-                            <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.filename }}</a>
+                            <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</a>
                         {% endfor %}
                     </div>
                     <div class="pull-right">
