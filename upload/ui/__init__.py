@@ -303,13 +303,13 @@ def write_study_upload_csv(filename, study, query):
         for u in query.all():
             row = {
                 COL_UPLOAD_ID: u.id,
-                COL_STUDY_NAME: u.study.name,
-                COL_STUDY_NUMBER: u.study_number,
-                COL_UPLOADER: u.uploader.full_name,
+                COL_STUDY_NAME: u.study.name.encode('utf-8'),
+                COL_STUDY_NUMBER: u.study_number.encode('utf-8'),
+                COL_UPLOADER: u.uploader.full_name.encode('utf-8'),
                 COL_DATE_CREATED: u.date_created,
             }
 
-            row = dict(row, **{d.field.field_name: d.value for d in u.data})
-            row = dict(row, **{f.field.field_name: f.filename for f in u.files})
+            row = dict(row, **{d.field.field_name: d.value.encode('utf-8') for d in u.data})
+            row = dict(row, **{f.field.field_name: f.filename.encode('utf-8') for f in u.files})
 
             writer.writerow(row)
