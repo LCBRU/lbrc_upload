@@ -2,7 +2,6 @@ import os
 import tempfile
 import datetime
 import csv
-import pathlib
 from flask import (
     current_app,
     Blueprint,
@@ -12,10 +11,10 @@ from flask import (
     request,
     send_file,
     flash,
+    Response,
 )
+
 from flask_security import login_required, current_user
-from werkzeug.utils import secure_filename
-from sqlalchemy import or_, func
 from upload.database import db
 from upload.model import Study, Upload, UploadData, UploadFile
 from upload.ui.forms import UploadSearchForm, ConfirmForm, SearchForm, UploadFormBuilder
@@ -156,13 +155,19 @@ def upload_data(study_id):
 
                 if field.field_type.is_file:
 
-                    uf = UploadFile(upload=u, field=field, filename=value.filename)
-                    db.session.add(uf)
-                    db.session.flush()  # Make sure uf has ID assigned
+                    if type(value) is list:
+                        files = value
+                    else:
+                        files = [value]
 
-                    filepath = get_upload_filepath(uf)
-                    os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                    value.save(filepath)
+                    for f in files:
+                        uf = UploadFile(upload=u, field=field, filename=f.filename)
+                        db.session.add(uf)
+                        db.session.flush()  # Make sure uf has ID assigned
+
+                        filepath = get_upload_filepath(uf)
+                        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+                        f.save(filepath)
 
                 else:
                     ud = UploadData(upload=u, field=field, value=value)
@@ -196,6 +201,22 @@ def upload_data(study_id):
 @must_be_upload_file_study_owner("upload_file_id")
 def download_upload_file(upload_file_id):
     uf = UploadFile.query.get_or_404(upload_file_id)
+
+    return send_file(
+        get_upload_filepath(uf), as_attachment=True, attachment_filename=uf.get_download_filename()
+    )
+
+
+@blueprint.route("/upload/<int:upload_id>/all_files/")
+@must_be_upload_study_owner("upload_id")
+def download_all_files(upload_id):
+    u = Upload.query.get_or_404(upload_id)
+
+    m = MultipartEncoder(
+           fields={'field0': 'value', 'field1': 'value',
+                   'field2': ('filename', open('file.py', 'rb'), 'text/plain')}
+        )
+    return Response(m.to_string(), mimetype=m.content_type)
 
     return send_file(
         get_upload_filepath(uf), as_attachment=True, attachment_filename=uf.get_download_filename()

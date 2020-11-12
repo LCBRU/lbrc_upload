@@ -14,8 +14,6 @@
         {% for u in uploads.items %}
             <li class="list-group-item">
                 <div class='upload_details'>
-                    <div>
-                    </div>
                     <header>
                         <h1>
                             <div class="pull-right">
@@ -27,28 +25,36 @@
                         </h1>
                         <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
                     </header>
-                    <dl>
-                        {% for d in u.data | sort(attribute='field.order')%}
-                            <dt>{{ d.field.field_name }}</dt>
-                            <dd>{{ d.value }}</dd>
-                        {% endfor %}
-                    </dl>
-                </div>
-                <div>
-                    <div class="pull-left">
-                        {% for f in u.files %}
-                            <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</a>
-                        {% endfor %}
-                    </div>
-                    <div class="pull-right">
+                    {% if u.data | length > 0 %}
+                        <h3>Fields</h3>
+                        <dl>
+                            {% for d in u.data | sort(attribute='field.order')%}
+                                <dt>{{ d.field.field_name }}</dt>
+                                <dd>{{ d.value }}</dd>
+                            {% endfor %}
+                        </dl>
+                    {% endif %}
+
+                    {% if u.files | length > 0 %}
+                        <h3>Files</h3>
+                        <div>
+                            {% for f in u.files %}
+                                <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</a>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <div class="float-right">
+                        {% if u.files | length > 0 %}
+                            <a class="btn btn-secondary download-all" href="#">Download All Files</a>
+                        {% endif %}
                         {% if not u.completed %}
-                            <a class="btn btn-primary" data-toggle="modal" data-target="#completeUploadModal" data-id="{{ u.id }}"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Complete</a>
+                            <a class="btn btn-primary" data-toggle="modal" href="#" data-target="#completeUploadModal" data-id="{{ u.id }}">Complete</a>
                         {% endif %}
                         {% if not u.deleted %}
-                            <a class="btn btn-danger" data-toggle="modal" data-target="#deleteUploadModal" data-id="{{ u.id }}"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</a>
+                            <a class="btn btn-danger" data-toggle="modal" href="#" data-target="#deleteUploadModal" data-id="{{ u.id }}">Delete</a>
                         {% endif %}
                     </div>
-                    <div class="clearfix"></div>
                 </div>
             </li>
         {% endfor %}
@@ -110,6 +116,11 @@
 
 {% block js %}
 <script>
+    function findAncestor (el, cls) {
+        while ((el = el.parentElement) && !el.classList.contains(cls));
+        return el;
+    }
+
     $('#deleteUploadModal').on('show.bs.modal', function (event) {
         var button = $(event.relatedTarget)
         var id = button.data('id')
@@ -129,6 +140,30 @@
     $('#showCompleted').click(function (event) {
         $("#searchForm").submit();
     })
+
+    $('.download-all').click(function (event) {
+        event.preventDefault();
+        ud = findAncestor(this, 'upload_details');
+
+        links = []
+
+        $('.download', ud).each(function(){
+            links.push(this)
+        });
+
+        var interval = setInterval(download_files, 1000, links);
+
+        function download_files() {
+            var l = links.pop();
+
+            l.click();
+
+            if (links.length == 0) {
+                clearInterval(interval);
+            }
+        }
+    })
+
 
 </script>
 {% endblock %}

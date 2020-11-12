@@ -229,7 +229,7 @@ dd {
 
 .list-group-item a.download {
   margin-right: 20px;
-  font-size: 20px;
+  font-size: 16px;
 }
 
 .list-group {
@@ -272,14 +272,6 @@ dd {
   font-size: 20px;
 }
 
-.upload_details {
-  padding: 10px;
-}
-
-.upload_details header {
-  padding-bottom: 20px;
-}
-
 .upload_details h1 {
   font-size: 20px;
   color: #23527c;
@@ -291,7 +283,13 @@ dd {
   font-size: 14px;
   color: #666;
   margin: 0;
-  
+}
+
+.upload_details h3 {
+  font-size: 16px;
+  color: #23527c;
+  font-weight: bold;
+  margin: 0;  
 }
 
 .login-form {
