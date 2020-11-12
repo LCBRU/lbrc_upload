@@ -47,7 +47,10 @@ class UploadSearchForm(FlashingForm):
 
 class UploadFormBuilder:
     def __init__(self, study):
-        validators = [DataRequired(), Length(max=100)]
+        validators = [Length(max=100)]
+
+        if not study.allow_empty_study_number:
+            validators.append(DataRequired())
 
         if study.study_number_format:
             validators.append(
