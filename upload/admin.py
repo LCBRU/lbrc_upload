@@ -12,7 +12,7 @@ class CustomView(ModelView):
 
 
 class FieldView(CustomView):
-    pass
+    column_default_sort = [('study.name', False), ('order', False)]
 
 
 class StudyView(CustomView):
