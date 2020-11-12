@@ -26,7 +26,6 @@
                         <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
                     </header>
                     {% if u.data | length > 0 %}
-                        <h3>Fields</h3>
                         <dl>
                             {% for d in u.data | sort(attribute='field.order')%}
                                 <dt>{{ d.field.field_name }}</dt>
