@@ -10,7 +10,7 @@ from wtforms import (
     HiddenField,
     BooleanField,
 )
-from wtforms.validators import Length, DataRequired, Regexp
+from wtforms.validators import Length, DataRequired, Optional, Regexp
 from flask_wtf.file import FileField, FileRequired, FileAllowed
 
 
@@ -83,6 +83,9 @@ class UploadFormBuilder:
 
         if field.required:
             kwargs["validators"].append(DataRequired())
+        else:
+            kwargs["validators"].append(Optional())
+            kwargs["default"] = None
 
         if field.max_length:
             kwargs["validators"].append(Length(max=field.max_length))
