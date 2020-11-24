@@ -1,16 +1,10 @@
 mysqlclient
 Flask
 Flask-SQLAlchemy
-beautifulsoup4
-pytest
-Faker
 flask_wtf
 sqlalchemy-migrate
 flask_admin
 flask_security
 bcrypt
 python-dotenv
-coverage
-pytest-cov
 email_validator
-python-dotenv
