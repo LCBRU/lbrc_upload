@@ -1,11 +1,6 @@
-# -*- coding: utf-8 -*-
-
 import pytest
-import re
-import os
 import csv
 from io import StringIO
-from itertools import cycle
 from flask import url_for
 from tests import login
 from upload.database import db
@@ -40,7 +35,7 @@ def test__study_csv__download(client, faker, upload_count):
     assert rows[0] == [
         "upload_id",
         "study_name",
-        "study_number",
+        "Study Number",
         "uploaded_by",
         "date_created",
     ]

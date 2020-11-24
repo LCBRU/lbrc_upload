@@ -3,15 +3,11 @@ from flask_wtf import FlaskForm
 from wtforms import (
     IntegerField,
     StringField,
-    RadioField,
-    TextField,
-    PasswordField,
-    TextAreaField,
     HiddenField,
     BooleanField,
 )
 from wtforms.validators import Length, DataRequired, Optional, Regexp
-from flask_wtf.file import FileField, FileRequired, FileAllowed
+from flask_wtf.file import FileAllowed
 
 
 class FlashingForm(FlaskForm):
@@ -79,7 +75,7 @@ class UploadFormBuilder:
     def add_field(self, field):
         form_field = None
 
-        kwargs = {"validators": [], "default": field.default}
+        kwargs = {"validators": [], "default": field.get_default()}
 
         if field.required:
             kwargs["validators"].append(DataRequired())

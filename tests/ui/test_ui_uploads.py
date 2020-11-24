@@ -1,16 +1,11 @@
-# -*- coding: utf-8 -*-
-
-import re
-import csv
 import pytest
 import os
 from io import BytesIO
-from itertools import cycle
 from flask import url_for
 from tests import login, add_field_types
 from upload.database import db
 from upload.ui import get_upload_filepath
-from upload.model import Upload, FieldType, Field, UploadFile, UploadData
+from upload.model import Upload, UploadFile, UploadData
 
 
 def test__upload__file_download(client, faker):

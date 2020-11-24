@@ -1,9 +1,7 @@
 import os
 import random
 import string
-from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.sql import select, func
-from datetime import datetime, timezone
+from datetime import datetime
 from upload.database import db
 from flask_security import UserMixin, RoleMixin
 from werkzeug.utils import secure_filename
@@ -185,6 +183,12 @@ class Field(db.Model):
     study = db.relationship(Study, backref=db.backref("fields"))
     field_type = db.relationship(FieldType)
     download_filename_format = db.Column(db.String, default="")
+
+    def get_default(self):
+        if self.default == '':
+            return None
+        else:
+            return self.default
 
     def get_choices(self):
         return [(c, c) for c in self.choices.split("|")]

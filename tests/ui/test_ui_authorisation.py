@@ -14,7 +14,6 @@ def test_missing_route(client):
     "path",
     [
         ("/static/css/main.css"),
-        ("/static/img/nihr-logo-70.png"),
         ("/static/img/cropped-favicon-32x32.png"),
         ("/static/img//cropped-favicon-192x192.png"),
         ("/static/img//cropped-favicon-180x180.png"),
