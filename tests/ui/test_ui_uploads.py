@@ -291,6 +291,8 @@ def _create_Field(study, field_type, faker, required, choices="", max_length="",
     field.max_length = max_length
     field.allowed_file_extensions = allowed_file_extensions
 
+    print(study.fields)
+
     db.session.add(field)
     db.session.commit()
 
@@ -457,16 +459,21 @@ def test__upload__upload_BooleanField(client, faker, required, value, upload_wor
     study = _create_collaborating_study(user, faker)
 
     field = _create_BooleanField(study, faker, required)
+    print(field.field_name)
 
     data = {
         "study_number": faker.pystr(min_chars=5, max_chars=10),
     }
 
+    print(data)
+    print(field.field_name)
     if value:
         data[field.field_name] = value
 
+    print(field.field_name)
     resp = _do_upload(client, faker, data, study.id)
 
+    print(field.field_name)
     if upload_worked:
         assert resp.status_code == 302
 
@@ -474,6 +481,7 @@ def test__upload__upload_BooleanField(client, faker, required, value, upload_wor
     else:
         assert resp.status_code == 200
 
+        print(field.field_name)
         _assert_field_in_error(resp, field)
         _assert_upload_not_saved(data["study_number"])
 

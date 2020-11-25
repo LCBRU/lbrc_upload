@@ -41,27 +41,10 @@ class UploadSearchForm(FlashingForm):
     page = IntegerField("Page", default=1)
 
 
-class UploadFormBuilder:
-    def __init__(self, study):
-        validators = [Length(max=100)]
+class FormBuilder:
 
-        if not study.allow_empty_study_number:
-            validators.append(DataRequired())
-
-        if study.study_number_format:
-            validators.append(
-                Regexp(study.study_number_format, message="Study number is not of the correct format")
-            )
-
-        self._fields = {
-            "study_number": StringField(
-                study.get_study_number_name(), validators=validators
-            )
-        }
-
-        for f in study.fields:
-            self.add_field(f)
-
+    def __init__(self):
+        self._fields = {}
 
     def get_form(self):
         class DynamicForm(FlashingForm):
@@ -81,7 +64,6 @@ class UploadFormBuilder:
             kwargs["validators"].append(DataRequired())
         else:
             kwargs["validators"].append(Optional())
-            kwargs["default"] = None
 
         if field.max_length:
             kwargs["validators"].append(Length(max=field.max_length))
@@ -104,3 +86,27 @@ class UploadFormBuilder:
         form_field = class_(field.field_name, **kwargs)
 
         self._fields[field.field_name] = form_field
+
+
+class UploadFormBuilder(FormBuilder):
+
+    def __init__(self, study):
+        super().__init__()
+
+        validators = [Length(max=100)]
+
+        if not study.allow_empty_study_number:
+            validators.append(DataRequired())
+
+        if study.study_number_format:
+            validators.append(
+                Regexp(study.study_number_format, message="Study number is not of the correct format")
+            )
+
+        self._fields["study_number"] = StringField(
+            study.get_study_number_name(),
+            validators=validators,
+        )
+
+        for f in study.fields:
+            self.add_field(f)
