@@ -1,39 +1,36 @@
-import flask_admin as admin
-from flask_security import current_user
-from flask import current_app, redirect
-from flask_admin.contrib.sqla import ModelView
-from upload.database import db
-from upload.model import Study, User, Role, Site, Field
+from upload.model import Study, User, Site, Field
+from lbrc_flask.database import db
+from lbrc_flask.admin import AdminCustomView, init_admin as flask_init_admin
 
 
-class CustomView(ModelView):
-    def is_accessible(self):
-        return current_user.is_admin
-
-
-class FieldView(CustomView):
+class FieldView(AdminCustomView):
     column_default_sort = [('study.name', False), ('order', False)]
 
 
-class StudyView(CustomView):
+class StudyView(AdminCustomView):
 
     form_columns = ["name", "study_number_name", "allow_duplicate_study_number", "allow_empty_study_number", "study_number_format", "owners", "collaborators"]
 
 
-class UserView(CustomView):
+class UserView(AdminCustomView):
 
     column_exclude_list = ["password"]
     form_columns = ["email", "site", "first_name", "last_name", "active"]
 
 
-class SiteView(CustomView):
+class SiteView(AdminCustomView):
 
     form_columns = ["name", "number"]
 
 
-def init_admin(app):
-    flask_admin = admin.Admin(app, name="Leicester BRC data Upload", url="/admin")
-    flask_admin.add_view(StudyView(Study, db.session))
-    flask_admin.add_view(FieldView(Field, db.session))
-    flask_admin.add_view(UserView(User, db.session))
-    flask_admin.add_view(SiteView(Site, db.session))
+def init_admin(app, title):
+    flask_init_admin(
+        app,
+        title,
+        [
+            StudyView(Study, db.session),
+            FieldView(Field, db.session),
+            UserView(User, db.session),
+            SiteView(Site, db.session),
+        ]
+    )

@@ -1,15 +1,12 @@
-# -*- coding: utf-8 -*-
-
 import pytest
 import re
-from upload.database import db
+from lbrc_flask.database import db
 from tests import login, add_content_for_all_areas
 
 
 @pytest.mark.parametrize(
     "path",
     [
-        ("/"),
         ("/study/<int:study_id>"),
         ("/study/<int:study_id>/my_uploads"),
         ("/study/<int:study_id>/upload"),
@@ -41,8 +38,8 @@ def test__boilerplate__html_standards(client, faker, path):
 
 
 @pytest.mark.parametrize("path", [("/study/{}/upload")])
-def test__boilerplate__forms_csrf_token(client_with_crsf, faker, path):
-    client = client_with_crsf
+@pytest.mark.app_crsf(True)
+def test__boilerplate__forms_csrf_token(client, faker, path):
     user = login(client, faker)
 
     study = faker.study_details()
@@ -62,7 +59,6 @@ def test__boilerplate__forms_csrf_token(client_with_crsf, faker, path):
 @pytest.mark.parametrize(
     "path",
     [
-        ("/"),
         ("/study/<int:study_id>"),
         ("/study/<int:study_id>/my_uploads"),
         ("/study/<int:study_id>/upload"),

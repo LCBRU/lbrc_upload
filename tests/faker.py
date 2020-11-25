@@ -1,7 +1,3 @@
-# -*- coding: utf-8 -*-
-
-import pytest
-from faker import Faker
 from faker.providers import BaseProvider
 from upload.model import Study, User, Upload, Site, UploadFile, Field, FieldType
 
@@ -16,6 +12,7 @@ class UploadFakerProvider(BaseProvider):
             last_name=self.generator.last_name(),
             email=self.generator.email(),
             active=True,
+            site=self.site_details(),
         )
         return u
 
@@ -42,11 +39,3 @@ class UploadFakerProvider(BaseProvider):
             allowed_file_extensions=self.generator.file_extension(),
         )
         return f
-
-
-@pytest.yield_fixture(scope="function")
-def faker():
-    result = Faker("en_GB")
-    result.add_provider(UploadFakerProvider)
-
-    yield result

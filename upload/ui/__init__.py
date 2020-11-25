@@ -15,16 +15,16 @@ from flask import (
 )
 
 from flask_security import login_required, current_user
-from upload.database import db
 from upload.model import Study, Upload, UploadData, UploadFile
 from upload.ui.forms import UploadSearchForm, ConfirmForm, SearchForm, UploadFormBuilder
-from upload.security import (
+from upload.decorators import (
     must_be_study_owner,
     must_be_study_collaborator,
     must_be_upload_study_owner,
     must_be_upload_file_study_owner,
 )
-from upload.emailing import email
+from lbrc_flask.emailing import email
+from lbrc_flask.database import db
 
 
 blueprint = Blueprint("ui", __name__, template_folder="templates")
@@ -217,10 +217,6 @@ def download_all_files(upload_id):
                    'field2': ('filename', open('file.py', 'rb'), 'text/plain')}
         )
     return Response(m.to_string(), mimetype=m.content_type)
-
-    return send_file(
-        get_upload_filepath(uf), as_attachment=True, attachment_filename=uf.get_download_filename()
-    )
 
 
 @blueprint.route("/study/<int:study_id>/csv")

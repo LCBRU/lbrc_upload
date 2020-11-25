@@ -3,7 +3,7 @@ import csv
 from io import StringIO
 from flask import url_for
 from tests import login
-from upload.database import db
+from lbrc_flask.database import db
 
 
 @pytest.mark.parametrize("upload_count", [(0), (2), (3), (100)])

@@ -1,12 +1,8 @@
-# -*- coding: utf-8 -*-
-
 import pytest
 import re
-import os
 from itertools import cycle
-from flask import url_for
 from tests import login
-from upload.database import db
+from lbrc_flask.database import db
 
 
 @pytest.mark.parametrize(

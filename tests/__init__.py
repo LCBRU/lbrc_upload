@@ -1,5 +1,5 @@
 from bs4 import BeautifulSoup
-from upload.database import db
+from lbrc_flask.database import db
 from upload.model import FieldType
 
 
@@ -59,5 +59,19 @@ def add_field_types():
         db.session.add(ft)
 
     db.session.add(FieldType(name="FileField", is_file=True))
+
+    db.session.commit()
+
+
+def add_studies(faker):
+    for _ in range(5):
+        db.session.add(faker.study_details())
+
+    db.session.commit()
+
+
+def add_users(faker):
+    for _ in range(5):
+        db.session.add(faker.user_details())
 
     db.session.commit()

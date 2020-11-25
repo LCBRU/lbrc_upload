@@ -1,41 +1,8 @@
 import os
-import random
-import string
 from datetime import datetime
-from upload.database import db
-from flask_security import UserMixin, RoleMixin
 from werkzeug.utils import secure_filename
-
-
-class Role(db.Model, RoleMixin):
-    ADMIN_ROLENAME = "admin"
-
-    id = db.Column(db.Integer(), primary_key=True)
-    name = db.Column(db.String(80), unique=True)
-    description = db.Column(db.String(255))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-
-    def __str__(self):
-        return self.name or ""
-
-
-roles_users = db.Table(
-    "roles_users",
-    db.Column("user_id", db.Integer(), db.ForeignKey("user.id")),
-    db.Column("role_id", db.Integer(), db.ForeignKey("role.id")),
-)
-
-
-def random_password():
-    return "".join(
-        random.SystemRandom().choice(
-            string.ascii_lowercase
-            + string.ascii_uppercase
-            + string.digits
-            + string.punctuation
-        )
-        for _ in range(15)
-    )
+from lbrc_flask.security import User as BaseUser
+from lbrc_flask.database import db
 
 
 class Site(db.Model):
@@ -58,38 +25,11 @@ class Site(db.Model):
         return self.name + number_portion
 
 
-class User(db.Model, UserMixin):
-    id = db.Column(db.Integer, primary_key=True)
-    email = db.Column(db.String(255), unique=True)
+class User(BaseUser):
+    __table_args__ = {'extend_existing': True}
+
     site_id = db.Column(db.Integer, db.ForeignKey(Site.id))
-    password = db.Column(db.String(255), nullable=False, default=random_password)
-    first_name = db.Column(db.String(255))
-    last_name = db.Column(db.String(255))
-    active = db.Column(db.Boolean())
-    confirmed_at = db.Column(db.DateTime())
-    last_login_at = db.Column(db.DateTime())
-    current_login_at = db.Column(db.DateTime())
-    last_login_ip = db.Column(db.String(50))
-    current_login_ip = db.Column(db.String(50))
-    login_count = db.Column(db.Integer())
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
-    roles = db.relationship(
-        "Role", secondary=roles_users, backref=db.backref("users", lazy="dynamic")
-    )
     site = db.relationship(Site)
-
-    @property
-    def is_admin(self):
-        return self.has_role(Role.ADMIN_ROLENAME)
-
-    @property
-    def full_name(self):
-        full_name = " ".join(filter(None, [self.first_name, self.last_name]))
-
-        return full_name or self.email
-
-    def __str__(self):
-        return self.email
 
 
 studies_owners = db.Table(
@@ -102,7 +42,7 @@ studies_owners = db.Table(
 studies_collaborators = db.Table(
     "studies_collaborators",
     db.Column("study_id", db.Integer(), db.ForeignKey("study.id")),
-    db.Column("user_id", db.Integer(), db.ForeignKey("user.id")),
+    db.Column("user_id", db.Integer(), db.ForeignKey(User.id)),
 )
 
 
@@ -117,12 +57,12 @@ class Study(db.Model):
     study_number_name = db.Column(db.String(100))
 
     owners = db.relationship(
-        "User",
+        User,
         secondary=studies_owners,
         backref=db.backref("owned_studies", lazy="dynamic"),
     )
     collaborators = db.relationship(
-        "User",
+        User,
         secondary=studies_collaborators,
         backref=db.backref("collaborator_studies", lazy="dynamic"),
     )

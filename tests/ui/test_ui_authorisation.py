@@ -1,36 +1,11 @@
-# -*- coding: utf-8 -*-
-
 import pytest
 from tests import login
-from upload.database import db
-
-
-def test_missing_route(client):
-    resp = client.get("/uihfihihf")
-    assert resp.status_code == 404
+from lbrc_flask.database import db
 
 
 @pytest.mark.parametrize(
     "path",
     [
-        ("/static/css/main.css"),
-        ("/static/img/cropped-favicon-32x32.png"),
-        ("/static/img//cropped-favicon-192x192.png"),
-        ("/static/img//cropped-favicon-180x180.png"),
-        ("/static/img//cropped-favicon-270x270.png"),
-        ("/static/favicon.ico"),
-    ],
-)
-def test_url_exists_without_login(client, path):
-    resp = client.get(path)
-
-    assert resp.status_code == 200
-
-
-@pytest.mark.parametrize(
-    "path",
-    [
-        ("/"),
         ("/study/1"),
         ("/study/1/my_uploads"),
         ("/study/1/upload"),
@@ -47,13 +22,6 @@ def test_url_requires_login_get(client, path):
 def test_url_requires_login_post(client, path):
     resp = client.post(path)
     assert resp.status_code == 302
-
-
-@pytest.mark.parametrize("path", [("/")])
-def test_url_requires_login_common_page(client, faker, path):
-    login(client, faker)
-    resp = client.get(path)
-    assert resp.status_code == 200
 
 
 @pytest.mark.parametrize("path", [("/study/{}"), ("/study/{}/csv")])

@@ -6,7 +6,7 @@ import os
 from itertools import cycle
 from flask import url_for
 from tests import login
-from upload.database import db
+from lbrc_flask.database import db
 
 
 def test__study_list__no_studies__no_display(client, faker):
