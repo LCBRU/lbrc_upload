@@ -7,7 +7,7 @@ upload = Table(
     meta,
     Column("id", Integer, primary_key=True),
     Column("study_id", Integer),
-    Column("study_number", NVARCHAR(20), unique=True),
+    Column("study_number", NVARCHAR(20)),
     Column("date_created", DateTime),
 )
 
