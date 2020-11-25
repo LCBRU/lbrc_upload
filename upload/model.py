@@ -120,7 +120,7 @@ class Field(db.Model):
     default = db.Column(db.String, default="")
     choices = db.Column(db.String, default="")
     allowed_file_extensions = db.Column(db.String, default="")
-    study = db.relationship(Study, backref=db.backref("fields"))
+    study = db.relationship(Study, backref=db.backref("fields", order_by='Field.order.asc()'))
     field_type = db.relationship(FieldType)
     download_filename_format = db.Column(db.String, default="")
 
