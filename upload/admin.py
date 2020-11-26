@@ -1,10 +1,22 @@
 from upload.model import Study, User, Site, Field
 from lbrc_flask.database import db
 from lbrc_flask.admin import AdminCustomView, init_admin as flask_init_admin
+from flask_admin.model.form import InlineFormAdmin
+from wtforms import validators
+
+
+class FieldlineView(InlineFormAdmin):
+    form_args = dict(
+        field_name=dict(validators=[validators.DataRequired()]),
+        order=dict(validators=[validators.DataRequired()]),
+    )
 
 
 class StudyView(AdminCustomView):
 
+    form_args = dict(
+        name=dict(validators=[validators.DataRequired()]),
+    )
     form_columns = [
         Study.name,
         Study.study_number_name,
@@ -15,11 +27,14 @@ class StudyView(AdminCustomView):
         "collaborators",
     ]
     column_searchable_list = [Study.name]
-    inline_models = (Field, )
+    inline_models = (FieldlineView(Field),)
 
 
 class UserView(AdminCustomView):
 
+    form_args = dict(
+        email=dict(validators=[validators.DataRequired()]),
+    )
     column_exclude_list = ["password"]
     column_default_sort = [
         (Site.name, False),
@@ -42,6 +57,9 @@ class UserView(AdminCustomView):
 
 class SiteView(AdminCustomView):
 
+    form_args = dict(
+        name=dict(validators=[validators.DataRequired()]),
+    )
     form_columns = [
         Site.name,
         Site.number,

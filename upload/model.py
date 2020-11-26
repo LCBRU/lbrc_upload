@@ -1,5 +1,6 @@
 import os
 from datetime import datetime
+from sqlalchemy.util.langhelpers import classproperty
 from werkzeug.utils import secure_filename
 from lbrc_flask.security import User as BaseUser
 from lbrc_flask.database import db
@@ -104,6 +105,38 @@ class FieldType(db.Model):
     name = db.Column(db.String)
     is_file = db.Column(db.Boolean)
 
+    @classmethod
+    def _get_field_type(cls, name):
+        return FieldType.query.filter_by(name=name).one()
+
+    @classmethod
+    def get_boolean(cls):
+        return cls._get_field_type('BooleanField')
+
+    @classmethod
+    def get_integer(cls):
+        return cls._get_field_type('IntegerField')
+
+    @classmethod
+    def get_radio(cls):
+        return cls._get_field_type('RadioField')
+
+    @classmethod
+    def get_string(cls):
+        return cls._get_field_type('StringField')
+
+    @classmethod
+    def get_textarea(cls):
+        return cls._get_field_type('TextAreaField')
+
+    @classmethod
+    def get_file(cls):
+        return cls._get_field_type('FileField')
+
+    @classmethod
+    def get_multifile(cls):
+        return cls._get_field_type('MultipleFileField')
+
     def __str__(self):
         return self.name
 
@@ -123,6 +156,7 @@ class Field(db.Model):
     study = db.relationship(Study, backref=db.backref("fields", order_by='Field.order.asc()'))
     field_type = db.relationship(FieldType)
     download_filename_format = db.Column(db.String, default="")
+    validation_regex = db.Column(db.String, default="")
 
     def get_default(self):
         if self.default == '':

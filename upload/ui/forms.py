@@ -1,3 +1,4 @@
+from upload.model import Field, FieldType
 from wtforms import (
     IntegerField,
     StringField,
@@ -17,6 +18,13 @@ class UploadFormBuilder(FormBuilder):
 
     def __init__(self, study):
         super().__init__()
+
+        # study_number = Field(
+        #     field_type = FieldType.get_string(),
+        #     order=0,
+        #     field_name=study.get_study_number_name(),
+
+        # )
 
         validators = [Length(max=100)]
 
