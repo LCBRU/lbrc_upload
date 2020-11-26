@@ -16,7 +16,7 @@ from flask import (
 
 from flask_security import login_required, current_user
 from upload.model import Study, Upload, UploadData, UploadFile
-from upload.ui.forms import UploadSearchForm, ConfirmForm, SearchForm, UploadFormBuilder
+from upload.ui.forms import UploadSearchForm, UploadFormBuilder
 from upload.decorators import (
     must_be_study_owner,
     must_be_study_collaborator,
@@ -25,6 +25,7 @@ from upload.decorators import (
 )
 from lbrc_flask.emailing import email
 from lbrc_flask.database import db
+from lbrc_flask.forms import ConfirmForm, SearchForm
 
 
 blueprint = Blueprint("ui", __name__, template_folder="templates")
