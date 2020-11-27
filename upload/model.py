@@ -101,6 +101,14 @@ class Upload(db.Model):
 
 class FieldType(db.Model):
 
+    BOOLEAN = 'BooleanField'
+    INTEGER = 'IntegerField'
+    RADIO = 'RadioField'
+    STRING = 'StringField'
+    TEXTAREA = 'TextAreaField'
+    FILE = 'FileField'
+    MULTIPLE_FILE = 'MultipleFileField'
+
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String)
     is_file = db.Column(db.Boolean)
@@ -111,35 +119,48 @@ class FieldType(db.Model):
 
     @classmethod
     def get_boolean(cls):
-        return cls._get_field_type('BooleanField')
+        return cls._get_field_type(FieldType.BOOLEAN)
 
     @classmethod
     def get_integer(cls):
-        return cls._get_field_type('IntegerField')
+        return cls._get_field_type(FieldType.INTEGER)
 
     @classmethod
     def get_radio(cls):
-        return cls._get_field_type('RadioField')
+        return cls._get_field_type(FieldType.RADIO)
 
     @classmethod
     def get_string(cls):
-        return cls._get_field_type('StringField')
+        return cls._get_field_type(FieldType.STRING)
 
     @classmethod
     def get_textarea(cls):
-        return cls._get_field_type('TextAreaField')
+        return cls._get_field_type(FieldType.TEXTAREA)
 
     @classmethod
     def get_file(cls):
-        return cls._get_field_type('FileField')
+        return cls._get_field_type(FieldType.FILE)
 
     @classmethod
     def get_multifile(cls):
-        return cls._get_field_type('MultipleFileField')
+        return cls._get_field_type(FieldType.MULTIPLE_FILE)
 
     def __str__(self):
         return self.name
 
+
+class FieldTypeSetup():
+    def setup(self):
+        self._add_field_type(FieldType(name=FieldType.BOOLEAN))
+        self._add_field_type(FieldType(name=FieldType.RADIO))
+        self._add_field_type(FieldType(name=FieldType.STRING))
+        self._add_field_type(FieldType(name=FieldType.TEXTAREA))
+        self._add_field_type(FieldType(name=FieldType.FILE, is_file=True))
+        self._add_field_type(FieldType(name=FieldType.MULTIPLE_FILE, is_file=True))
+
+    def _add_field_type(self, field_type):
+        if FieldType.query.filter_by(name=field_type.name).count() == 0:
+            db.session.add(field_type)
 
 class Field(db.Model):
 
@@ -148,6 +169,7 @@ class Field(db.Model):
     order = db.Column(db.Integer())
     field_type_id = db.Column(db.Integer(), db.ForeignKey(FieldType.id))
     field_name = db.Column(db.String)
+    label = db.Column(db.String)
     required = db.Column(db.Boolean, default=0)
     max_length = db.Column(db.Integer(), default=0)
     default = db.Column(db.String, default="")
@@ -169,6 +191,12 @@ class Field(db.Model):
 
     def get_allowed_file_extensions(self):
         return self.allowed_file_extensions.split("|")
+    
+    def get_label(self):
+        if self.label:
+            return self.label
+        else:
+            return self.field_name
 
     def __repr__(self):
         return 'Field(study="{}", order="{}", field_name="{}", field_type="{}")'.format(

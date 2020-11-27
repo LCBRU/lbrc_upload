@@ -19,27 +19,17 @@ class UploadFormBuilder(FormBuilder):
     def __init__(self, study):
         super().__init__()
 
-        # study_number = Field(
-        #     field_type = FieldType.get_string(),
-        #     order=0,
-        #     field_name=study.get_study_number_name(),
-
-        # )
-
-        validators = [Length(max=100)]
-
-        if not study.allow_empty_study_number:
-            validators.append(DataRequired())
-
-        if study.study_number_format:
-            validators.append(
-                Regexp(study.study_number_format, message="Study number is not of the correct format")
-            )
-
-        self._fields["study_number"] = StringField(
-            study.get_study_number_name(),
-            validators=validators,
+        study_number = Field(
+            field_type = FieldType.get_string(),
+            order=0,
+            field_name='study_number',
+            label=study.get_study_number_name(),
+            required=not study.allow_empty_study_number,
+            max_length=100,
+            validation_regex=study.study_number_format,
         )
+
+        self.add_field(study_number)
 
         for f in study.fields:
             self.add_field(f)

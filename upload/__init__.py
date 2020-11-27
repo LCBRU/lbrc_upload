@@ -5,6 +5,7 @@ from config import Config
 from .ui import blueprint as ui_blueprint
 from .model import User
 from .admin import init_admin
+from .setup import init_setup
 
 
 
@@ -18,6 +19,7 @@ def create_app(config=Config):
         init_lbrc_flask(app, TITLE)
         init_security(app, user_class=User, role_class=Role)
         init_admin(app, TITLE)
+        init_setup(app)
 
     app.register_blueprint(ui_blueprint)
 
