@@ -68,6 +68,7 @@ class SiteView(AdminCustomView):
 
 
 def init_admin(app, title):
+    return
     flask_init_admin(
         app,
         title,

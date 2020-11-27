@@ -1,5 +1,5 @@
 from lbrc_flask.database import db
-from .model import FieldTypeSetup
+from lbrc_flask.forms.dynamic import FieldTypeSetup
 
 
 def init_setup(app):
