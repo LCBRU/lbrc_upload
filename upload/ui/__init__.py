@@ -122,7 +122,6 @@ def upload_data(study_id):
     builder = UploadFormBuilder(study)
 
     form = builder.get_form()
-    print(form.__dict__)
 
     if request.method == "POST":
         q = Upload.query
@@ -196,7 +195,7 @@ def upload_data(study_id):
 
         return redirect(url_for("ui.index"))
 
-    return render_template("ui/upload.html", form=form, study=None)
+    return render_template("ui/upload.html", form=form, study=study)
 
 
 @blueprint.route("/upload/file/<int:upload_file_id>")
