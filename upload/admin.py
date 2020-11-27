@@ -1,4 +1,4 @@
-from upload.model import Study, User, Site, Field
+from upload.model import Study, User, Site, StudyField as Field
 from lbrc_flask.database import db
 from lbrc_flask.admin import AdminCustomView, init_admin as flask_init_admin
 from flask_admin.model.form import InlineFormAdmin
@@ -68,7 +68,6 @@ class SiteView(AdminCustomView):
 
 
 def init_admin(app, title):
-    return
     flask_init_admin(
         app,
         title,

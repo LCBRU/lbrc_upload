@@ -1,4 +1,4 @@
-from upload.model import Field
+from upload.model import StudyField as Field
 from wtforms import (
     IntegerField,
     StringField,

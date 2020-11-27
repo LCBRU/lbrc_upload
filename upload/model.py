@@ -3,7 +3,7 @@ from datetime import datetime
 from werkzeug.utils import secure_filename
 from lbrc_flask.security import User as BaseUser
 from lbrc_flask.database import db
-from lbrc_flask.forms.dynamic import Field as BaseField
+from lbrc_flask.forms.dynamic import FieldType
 
 
 class Site(db.Model):
@@ -99,12 +99,50 @@ class Upload(db.Model):
     deleted = db.Column(db.Boolean, default=0)
 
 
-class Field(BaseField):
+class StudyField(db.Model):
 
     __table_args__ = {'extend_existing': True}
+    __tablename__ = 'field'
+
+    id = db.Column(db.Integer(), primary_key=True)
+    order = db.Column(db.Integer())
+    field_type_id = db.Column(db.Integer(), db.ForeignKey(FieldType.id))
+    field_name = db.Column(db.String)
+    label = db.Column(db.String)
+    required = db.Column(db.Boolean, default=0)
+    max_length = db.Column(db.Integer(), default=0)
+    default = db.Column(db.String, default="")
+    choices = db.Column(db.String, default="")
+    allowed_file_extensions = db.Column(db.String, default="")
+    field_type = db.relationship(FieldType)
+    download_filename_format = db.Column(db.String, default="")
+    validation_regex = db.Column(db.String, default="")
 
     study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))
-    study = db.relationship(Study, backref=db.backref("fields"))
+    study = db.relationship(Study, backref=db.backref("fields", order_by='StudyField.order.asc()'))
+
+    def get_default(self):
+        if self.default == '':
+            return None
+        else:
+            return self.default
+
+    def get_choices(self):
+        return [(c, c) for c in self.choices.split("|")]
+
+    def get_allowed_file_extensions(self):
+        return self.allowed_file_extensions.split("|")
+    
+    def get_label(self):
+        if self.label:
+            return self.label
+        else:
+            return self.field_name
+
+    def __repr__(self):
+        return 'StudyField(field_name="{}", order="{}", field_type="{}")'.format(
+            self.order, self.field_name, self.field_type.name
+        )
 
 
 class UploadData(db.Model):
@@ -112,8 +150,8 @@ class UploadData(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     upload_id = db.Column(db.Integer(), db.ForeignKey(Upload.id))
     upload = db.relationship(Upload, backref=db.backref("data"))
-    field_id = db.Column(db.Integer(), db.ForeignKey(Field.id))
-    field = db.relationship(Field)
+    field_id = db.Column(db.Integer(), db.ForeignKey(StudyField.id))
+    field = db.relationship(StudyField)
     value = db.Column(db.String)
 
     def __repr__(self):
@@ -126,8 +164,8 @@ class UploadFile(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     upload_id = db.Column(db.Integer(), db.ForeignKey(Upload.id))
     upload = db.relationship(Upload, backref=db.backref("files"))
-    field_id = db.Column(db.Integer(), db.ForeignKey(Field.id))
-    field = db.relationship(Field)
+    field_id = db.Column(db.Integer(), db.ForeignKey(StudyField.id))
+    field = db.relationship(StudyField)
     filename = db.Column(db.String(500))
 
     def get_download_filename(self):

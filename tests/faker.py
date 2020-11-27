@@ -1,6 +1,5 @@
 from faker.providers import BaseProvider
-from upload.model import Study, User, Upload, Site, UploadFile, Field
-from lbrc_flask.forms.dynamic import FieldType
+from upload.model import Study, User, Upload, Site, UploadFile, StudyField as Field
 
 
 class UploadFakerProvider(BaseProvider):
