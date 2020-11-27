@@ -4,8 +4,9 @@ from wtforms import (
     StringField,
     BooleanField,
 )
-from wtforms.validators import Length, DataRequired, Regexp
-from lbrc_flask.forms import FlashingForm, FormBuilder
+from wtforms.validators import Length
+from lbrc_flask.forms import FlashingForm
+from lbrc_flask.forms.dynamic import FormBuilder
 
 
 class UploadSearchForm(FlashingForm):
