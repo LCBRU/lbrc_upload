@@ -1,4 +1,4 @@
-from sqlalchemy import MetaData, Table, Column, Integer, NVARCHAR, Index, ForeignKey
+from sqlalchemy import MetaData, Table, Column, Integer, NVARCHAR, ForeignKey
 
 
 def upgrade(migrate_engine):

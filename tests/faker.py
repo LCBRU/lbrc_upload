@@ -1,5 +1,5 @@
 from faker.providers import BaseProvider
-from upload.model import Study, User, Upload, Site, UploadFile, StudyField as Field
+from upload.model import Study, User, Upload, Site, UploadFile, Field
 
 
 class UploadFakerProvider(BaseProvider):
