@@ -32,5 +32,6 @@ class UploadFormBuilder(FormBuilder):
 
         self.add_field(study_number)
 
-        for f in study.fields:
-            self.add_field(f)
+        if study.field_group:
+            for f in study.field_group.fields:
+                self.add_field(f)

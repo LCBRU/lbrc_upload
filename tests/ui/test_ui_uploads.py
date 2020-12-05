@@ -6,7 +6,7 @@ from tests import login
 from lbrc_flask.database import db
 from upload.ui import get_upload_filepath
 from upload.model import Upload, UploadFile, UploadData
-from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.forms.dynamic import FieldGroup, FieldType
 
 
 def test__upload__file_download(client, faker):
@@ -104,13 +104,17 @@ def test__upload__form_study_number(client, faker):
 def test__upload__form_dynamic_input(client, faker, field_type, input_type):
     user = login(client, faker)
 
+    field_group = faker.field_group_details()
+
     study = faker.study_details()
     study.collaborators.append(user)
+    study.field_group = field_group
 
     field = faker.field_details(FieldType._get_field_type(field_type))
-    field.study = study
+    field.field_group = field_group
     field.order = 1
 
+    db.session.add(field_group)
     db.session.add(study)
     db.session.add(field)
     db.session.commit()
@@ -127,13 +131,17 @@ def test__upload__form_dynamic_input(client, faker, field_type, input_type):
 def test__upload__form_dynamic_textarea(client, faker):
     user = login(client, faker)
 
+    field_group = faker.field_group_details()
+
     study = faker.study_details()
     study.collaborators.append(user)
+    study.field_group = field_group
 
     field = faker.field_details(FieldType.get_textarea())
-    field.study = study
+    field.field_group = field_group
     field.order = 1
 
+    db.session.add(field_group)
     db.session.add(study)
     db.session.add(field)
     db.session.commit()
@@ -149,14 +157,18 @@ def test__upload__form_dynamic_textarea(client, faker):
 def test__upload__form_dynamic_radio(client, faker):
     user = login(client, faker)
 
+    field_group = faker.field_group_details()
+
     study = faker.study_details()
     study.collaborators.append(user)
+    study.field_group = field_group
 
     field = faker.field_details(FieldType.get_radio())
-    field.study = study
+    field.field_group = field_group
     field.order = 1
     field.choices = "xy|z"
 
+    db.session.add(field_group)
     db.session.add(study)
     db.session.add(field)
     db.session.commit()
@@ -174,17 +186,21 @@ def test__upload__form_dynamic_radio(client, faker):
 def test__upload__form_dynamic_multiple(client, faker):
     user = login(client, faker)
 
+    field_group = faker.field_group_details()
+
     study = faker.study_details()
     study.collaborators.append(user)
+    study.field_group = field_group
 
     field1 = faker.field_details(FieldType.get_textarea())
-    field1.study = study
+    field1.field_group = field_group
     field1.order = 1
 
     field2 = faker.field_details(FieldType.get_string())
-    field2.study = study
+    field2.field_group = field_group
     field2.order = 2
 
+    db.session.add(field_group)
     db.session.add(study)
     db.session.add(field2)
     db.session.add(field1)
@@ -280,16 +296,14 @@ def _assert_upload_not_saved(study_number):
     ).first()
 
 
-def _create_Field(study, field_type, faker, required, choices="", max_length="", allowed_file_extensions=""):
+def _create_Field(field_group, field_type, faker, required, choices="", max_length="", allowed_file_extensions=""):
     field = faker.field_details(field_type)
-    field.study = study
+    field.field_group = field_group
     field.order = 1
     field.required = required
     field.choices = choices
     field.max_length = max_length
     field.allowed_file_extensions = allowed_file_extensions
-
-    print(study.fields)
 
     db.session.add(field)
     db.session.commit()
@@ -297,24 +311,24 @@ def _create_Field(study, field_type, faker, required, choices="", max_length="",
     return field
 
 
-def _create_BooleanField(study, faker, required=False):
-    return _create_Field(study, FieldType.get_boolean(), faker, required)
+def _create_BooleanField(field_group, faker, required=False):
+    return _create_Field(field_group, FieldType.get_boolean(), faker, required)
 
 
-def _create_IntegerField(study, faker, required=False):
-    return _create_Field(study, FieldType.get_integer(), faker, required)
+def _create_IntegerField(field_group, faker, required=False):
+    return _create_Field(field_group, FieldType.get_integer(), faker, required)
 
 
-def _create_RadioField(study, faker, choices, required=False):
-    return _create_Field(study, FieldType.get_radio(), faker, required, choices=choices)
+def _create_RadioField(field_group, faker, choices, required=False):
+    return _create_Field(field_group, FieldType.get_radio(), faker, required, choices=choices)
 
 
-def _create_StringField(study, faker, max_length, required=False):
-    return _create_Field(study, FieldType.get_string(), faker, required, max_length=max_length)
+def _create_StringField(field_group, faker, max_length, required=False):
+    return _create_Field(field_group, FieldType.get_string(), faker, required, max_length=max_length)
 
 
-def _create_FileField(study, faker, allowed_file_extensions, required=False):
-    return _create_Field(study, FieldType.get_file(), faker, required, allowed_file_extensions=allowed_file_extensions)
+def _create_FileField(field_group, faker, allowed_file_extensions, required=False):
+    return _create_Field(field_group, FieldType.get_file(), faker, required, allowed_file_extensions=allowed_file_extensions)
 
 
 def test__upload__upload_study_number(client, faker):
@@ -448,23 +462,20 @@ def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
 def test__upload__upload_BooleanField(client, faker, required, value, upload_worked, saved_value):
     user = login(client, faker)
     study = _create_collaborating_study(user, faker)
+    study.field_group = faker.field_group_details()
 
-    field = _create_BooleanField(study, faker, required)
+    field = _create_BooleanField(study.field_group, faker, required)
     print(field.field_name)
 
     data = {
         "study_number": faker.pystr(min_chars=5, max_chars=10),
     }
 
-    print(data)
-    print(field.field_name)
     if value:
         data[field.field_name] = value
 
-    print(field.field_name)
     resp = _do_upload(client, faker, data, study.id)
 
-    print(field.field_name)
     if upload_worked:
         assert resp.status_code == 302
 
@@ -472,7 +483,6 @@ def test__upload__upload_BooleanField(client, faker, required, value, upload_wor
     else:
         assert resp.status_code == 200
 
-        print(field.field_name)
         _assert_field_in_error(resp, field)
         _assert_upload_not_saved(data["study_number"])
 
@@ -489,8 +499,9 @@ def test__upload__upload_BooleanField(client, faker, required, value, upload_wor
 def test__upload__upload_IntegerField(client, faker, required, value, upload_worked):
     user = login(client, faker)
     study = _create_collaborating_study(user, faker)
+    study.field_group = faker.field_group_details()
 
-    field = _create_IntegerField(study, faker, required=required)
+    field = _create_IntegerField(study.field_group, faker, required=required)
 
     data = {
         "study_number": faker.pystr(min_chars=5, max_chars=10),
@@ -524,8 +535,9 @@ def test__upload__upload_IntegerField(client, faker, required, value, upload_wor
 def test__upload__upload_RadioField(client, faker, required, value, should_be_loaded):
     user = login(client, faker)
     study = _create_collaborating_study(user, faker)
+    study.field_group = faker.field_group_details()
 
-    field = _create_RadioField(study, faker, choices="xy|z", required=required)
+    field = _create_RadioField(study.field_group, faker, choices="xy|z", required=required)
 
     study_number = faker.pystr(min_chars=5, max_chars=10)
 
@@ -559,8 +571,9 @@ def test__upload__upload_RadioField(client, faker, required, value, should_be_lo
 def test__upload__upload_StringField(client, faker, required, max_length, value, should_be_loaded):
     user = login(client, faker)
     study = _create_collaborating_study(user, faker)
+    study.field_group = faker.field_group_details()
 
-    field = _create_StringField(study, faker, required=required, max_length=max_length)
+    field = _create_StringField(study.field_group, faker, required=required, max_length=max_length)
 
     study_number = faker.pystr(min_chars=5, max_chars=10)
 
@@ -594,8 +607,9 @@ def test__upload__upload_StringField(client, faker, required, max_length, value,
 def test__upload__upload_FileField(client, faker, required, allowed_file_extensions, file_sent, extension, should_be_loaded):
     user = login(client, faker)
     study = _create_collaborating_study(user, faker)
+    study.field_group = faker.field_group_details()
 
-    field = _create_FileField(study, faker, required=required, allowed_file_extensions=allowed_file_extensions)
+    field = _create_FileField(study.field_group, faker, required=required, allowed_file_extensions=allowed_file_extensions)
 
     study_number = faker.pystr(min_chars=5, max_chars=10)
 

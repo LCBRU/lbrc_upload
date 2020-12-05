@@ -1,4 +1,5 @@
 from faker.providers import BaseProvider
+from lbrc_flask.forms.dynamic import FieldGroup
 from upload.model import Study, User, Upload, Site, UploadFile, Field
 
 
@@ -29,6 +30,9 @@ class UploadFakerProvider(BaseProvider):
     def upload_file_details(self):
         uf = UploadFile(filename=self.generator.file_name())
         return uf
+
+    def field_group_details(self):
+        return FieldGroup(name=self.generator.pystr(min_chars=5, max_chars=10).upper())
 
     def field_details(self, field_type):
         f = Field(

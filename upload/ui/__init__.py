@@ -147,7 +147,10 @@ def upload_data(study_id):
 
         db.session.add(u)
 
-        study_fields = {f.field_name: f for f in study.fields}
+        if study.field_group:
+            study_fields = {f.field_name: f for f in study.field_group.fields}
+        else:
+            study_fields = {}
 
         for field_name, value in form.data.items():
 
@@ -311,7 +314,8 @@ def write_study_upload_csv(filename, study, query):
         COL_DATE_CREATED,
     ]
 
-    fieldnames.extend(f.field_name for f in study.fields)
+    if study.field_group:
+        fieldnames.extend(f.field_name for f in study.field_group.fields)
 
     with open(filename, "w", newline="", encoding='utf8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
