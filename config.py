@@ -1,5 +1,8 @@
 import os
 from lbrc_flask.config import BaseConfig, BaseTestConfig
+from dotenv import load_dotenv
+
+load_dotenv()
 
 
 class Config(BaseConfig):
