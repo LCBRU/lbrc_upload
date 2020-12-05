@@ -6,7 +6,7 @@ from sqlalchemy import MetaData, Table, Column, Integer, String
 
 metadata = MetaData()
 
-fields = Table('fields', metadata,
+fields = Table('field', metadata,
     Column('id', Integer , primary_key=True),
     Column('study_id', Integer),
     Column('field_group_id', Integer),
