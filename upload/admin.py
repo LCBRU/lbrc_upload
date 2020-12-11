@@ -1,27 +1,8 @@
 from upload.model import Study, User, Site
 from lbrc_flask.database import db
 from lbrc_flask.admin import AdminCustomView, init_admin as flask_init_admin
-from lbrc_flask.forms.dynamic import Field, FieldGroup
-from flask_admin.model.form import InlineFormAdmin
+from lbrc_flask.forms.dynamic import get_dynamic_forms_admin_forms
 from wtforms import validators
-
-
-class FieldlineView(InlineFormAdmin):
-    form_args = dict(
-        field_name=dict(validators=[validators.DataRequired()]),
-        order=dict(validators=[validators.DataRequired()]),
-    )
-
-
-class FieldGroupView(AdminCustomView):
-    form_args = dict(
-        name=dict(validators=[validators.DataRequired()]),
-    )
-    form_columns = [
-        FieldGroup.name,
-    ]
-    column_searchable_list = [FieldGroup.name]
-    inline_models = (FieldlineView(Field),)
 
 
 class StudyView(AdminCustomView):
@@ -87,6 +68,6 @@ def init_admin(app, title):
             StudyView(Study, db.session),
             UserView(User, db.session),
             SiteView(Site, db.session),
-            FieldGroupView(FieldGroup, db.session),
+            *get_dynamic_forms_admin_forms(),
         ]
     )
