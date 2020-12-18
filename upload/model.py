@@ -100,6 +100,7 @@ class Upload(db.Model):
     completed = db.Column(db.Boolean, default=0)
     deleted = db.Column(db.Boolean, default=0)
 
+
 class UploadData(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
