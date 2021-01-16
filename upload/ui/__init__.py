@@ -121,7 +121,7 @@ def upload_data(study_id):
 
     builder = UploadFormBuilder(study)
 
-    form = builder.get_form()
+    form = builder.get_form()()
 
     if request.method == "POST":
         q = Upload.query

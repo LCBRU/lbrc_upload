@@ -4,8 +4,14 @@ from upload.model import Study, User, Upload, Site, UploadFile, Field
 
 
 class UploadFakerProvider(BaseProvider):
-    def study_details(self):
-        return Study(name=self.generator.pystr(min_chars=5, max_chars=10).upper())
+    def study_details(self, field_group=None):
+        if field_group is None:
+            field_group = self.generator.field_group_details()
+
+        return Study(
+            name=self.generator.pystr(min_chars=5, max_chars=10).upper(),
+            field_group=field_group,
+        )
 
     def user_details(self):
         u = User(

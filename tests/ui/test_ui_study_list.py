@@ -54,8 +54,8 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
     assert resp.status_code == 200
     assert resp.soup.find("h2", string="Owned Studies") is not None
     assert resp.soup.find("h2", string="Collaborating Studies") is None
-    assert len(resp.soup.select("table.study_list")) == 1
-    assert len(resp.soup.select("table.study_list > tbody > tr")) == study_count
+    assert len(resp.soup.select("table.table")) == 1
+    assert len(resp.soup.select("table.table > tbody > tr")) == study_count
 
     for s in studies:
         assert resp.soup.find("a", href=url_for("ui.study", study_id=s.id)) is not None
@@ -164,8 +164,8 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
     assert resp.status_code == 200
     assert resp.soup.find("h2", string="Owned Studies") is None
     assert resp.soup.find("h2", string="Collaborating Studies") is not None
-    assert len(resp.soup.select("table.study_list")) == 1
-    assert len(resp.soup.select("table.study_list > tbody > tr")) == study_count
+    assert len(resp.soup.select("table.table")) == 1
+    assert len(resp.soup.select("table.table > tbody > tr")) == study_count
 
     for s in studies:
         assert (

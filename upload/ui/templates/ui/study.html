@@ -109,7 +109,7 @@
     </div>
 </div>
     
-{{ formhelper.render_pagination(uploads, 'ui.study', search=searchForm.search.data, study_id=study.id) }}
+{{ formhelper.render_pagination(uploads, 'ui.study', search=searchForm.search.data, showCompleted=searchForm.showCompleted.data, study_id=study.id) }}
 
 {% endblock %}
 
