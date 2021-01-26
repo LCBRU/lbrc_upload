@@ -1,8 +1,12 @@
 import pytest
 import re
+from flask import url_for
 from itertools import cycle
 from tests import login
 from lbrc_flask.database import db
+
+def _url(**kwargs):
+    return url_for('ui.study_my_uploads', **kwargs)
 
 
 @pytest.mark.parametrize(
@@ -56,9 +60,20 @@ def test__my_uploads(client, faker, mine, others, deleted):
 
     db.session.commit()
 
-    resp = client.get("/study/{}/my_uploads".format(study.id))
+    resp = client.get(_url(study_id=study.id))
 
+    assert_response(resp, study, uploads)
+
+
+def assert_response(resp, study, uploads):
     assert resp.status_code == 200
+
+    assert resp.soup.find('input', id="search") is not None
+    assert resp.soup.find('a', string="Clear Search", href=_url(study_id=study.id)) is not None
+    assert resp.soup.find('button', type="submit", string="Search") is not None
+
+    assert resp.soup.find('a', string="Upload Data", href=url_for('ui.upload_data', study_id=study.id)) is not None
+
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
     assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
 
@@ -92,14 +107,9 @@ def test__my_uploads__search_study_number(client, faker):
 
     db.session.commit()
 
-    resp = client.get("/study/{}/my_uploads?search=fred".format(study.id))
+    resp = client.get(_url(study_id=study.id, search='fred'))
 
-    assert resp.status_code == 200
-    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
-    assert len(resp.soup.find_all("li", "list-group-item")) == 1
-
-    li = resp.soup.find("li", "list-group-item")
-    upload_matches_li(upload_matching, li)
+    assert_response(resp, study, [upload_matching])
 
 
 def upload_matches_li(upload, li):
