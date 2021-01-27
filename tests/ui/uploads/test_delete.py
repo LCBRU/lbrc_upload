@@ -1,7 +1,6 @@
 from lbrc_flask.pytest.asserts import assert__redirect, assert__requires_login
-from tests.ui.uploads import get_test_upload, test_referrer
 from flask import url_for
-from tests import login
+from tests import get_test_upload, login, test_referrer
 from upload.model import Upload
 from flask_api import status
 

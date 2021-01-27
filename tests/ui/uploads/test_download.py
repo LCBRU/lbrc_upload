@@ -1,10 +1,8 @@
 import os
 from lbrc_flask.pytest.asserts import assert__requires_login
-from tests.ui.uploads import get_test_upload_file
 from flask import url_for
-from tests import login
+from tests import get_test_upload_file, login
 from upload.ui import get_upload_filepath
-from lbrc_flask.forms.dynamic import FieldType
 from flask_api import status
 
 

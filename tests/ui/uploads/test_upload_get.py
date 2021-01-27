@@ -1,7 +1,7 @@
+from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
 import pytest
 from flask import url_for
-from tests import login
-from lbrc_flask.database import db
+from tests import get_test_field, get_test_study, login
 from lbrc_flask.forms.dynamic import FieldType
 
 
@@ -9,14 +9,23 @@ def _url(**kwargs):
     return url_for('ui.upload_data', **kwargs)
 
 
+def test__get__requires_login(client, faker):
+    study = get_test_study(faker)
+    assert__requires_login(client, _url(study_id=study.id, external=False))
+
+
+@pytest.mark.app_crsf(True)
+def test__standards(client, faker):
+    user = login(client, faker)
+    study = get_test_study(faker, collaborator=user)
+    assert__html_standards(client, faker, _url(study_id=study.id, external=False), user=user)
+    assert__form_standards(client, faker, _url(study_id=study.id, external=False))
+
+
 def test__upload__form_study_number(client, faker):
     user = login(client, faker)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
-
-    db.session.add(study)
-    db.session.commit()
+    study = get_test_study(faker, collaborator=user)
 
     resp = client.get(_url(study_id=study.id))
 
@@ -39,20 +48,14 @@ def test__upload__form_study_number(client, faker):
 def test__upload__form_dynamic_input(client, faker, field_type, input_type):
     user = login(client, faker)
 
-    field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
-    study.field_group = field_group
-
-    field = faker.field_details(FieldType._get_field_type(field_type))
-    field.field_group = field_group
-    field.order = 1
-
-    db.session.add(field_group)
-    db.session.add(study)
-    db.session.add(field)
-    db.session.commit()
+    field = get_test_field(
+        faker,
+        field_type=FieldType._get_field_type(field_type),
+        field_group=study.field_group,
+        order=1,
+    )
 
     resp = client.get(_url(study_id=study.id))
 
@@ -66,20 +69,14 @@ def test__upload__form_dynamic_input(client, faker, field_type, input_type):
 def test__upload__form_dynamic_textarea(client, faker):
     user = login(client, faker)
 
-    field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
-    study.field_group = field_group
-
-    field = faker.field_details(FieldType.get_textarea())
-    field.field_group = field_group
-    field.order = 1
-
-    db.session.add(field_group)
-    db.session.add(study)
-    db.session.add(field)
-    db.session.commit()
+    field = get_test_field(
+        faker,
+        field_type=FieldType.get_textarea(),
+        field_group=study.field_group,
+        order=1,
+    )
 
     resp = client.get(_url(study_id=study.id))
 
@@ -92,21 +89,15 @@ def test__upload__form_dynamic_textarea(client, faker):
 def test__upload__form_dynamic_radio(client, faker):
     user = login(client, faker)
 
-    field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
-    study.field_group = field_group
-
-    field = faker.field_details(FieldType.get_radio())
-    field.field_group = field_group
-    field.order = 1
-    field.choices = "xy|z"
-
-    db.session.add(field_group)
-    db.session.add(study)
-    db.session.add(field)
-    db.session.commit()
+    field = get_test_field(
+        faker,
+        field_type=FieldType.get_radio(),
+        field_group=study.field_group,
+        order=1,
+        choices="xy|z",
+    )
 
     resp = client.get(_url(study_id=study.id))
 
@@ -121,25 +112,20 @@ def test__upload__form_dynamic_radio(client, faker):
 def test__upload__form_dynamic_multiple(client, faker):
     user = login(client, faker)
 
-    field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
-    study.field_group = field_group
-
-    field1 = faker.field_details(FieldType.get_textarea())
-    field1.field_group = field_group
-    field1.order = 1
-
-    field2 = faker.field_details(FieldType.get_string())
-    field2.field_group = field_group
-    field2.order = 2
-
-    db.session.add(field_group)
-    db.session.add(study)
-    db.session.add(field2)
-    db.session.add(field1)
-    db.session.commit()
+    field1 = get_test_field(
+        faker,
+        field_type=FieldType.get_textarea(),
+        field_group=study.field_group,
+        order=1,
+    )
+    field2 = get_test_field(
+        faker,
+        field_type=FieldType.get_string(),
+        field_group=study.field_group,
+        order=2,
+    )
 
     resp = client.get(_url(study_id=study.id))
 

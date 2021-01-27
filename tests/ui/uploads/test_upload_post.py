@@ -1,37 +1,43 @@
+from lbrc_flask.pytest.asserts import assert__error__message, assert__redirect, assert__requires_login
 import pytest
 import os
 from io import BytesIO
 from flask import url_for
-from tests import login
-from lbrc_flask.database import db
+from tests import get_test_field, get_test_study, get_test_upload, login
 from upload.ui import get_upload_filepath
 from upload.model import Upload, UploadFile, UploadData
 from lbrc_flask.forms.dynamic import FieldType
+from flask_api import status
 
 
 def _url(**kwargs):
     return url_for('ui.upload_data', **kwargs)
 
 
-def _create_collaborating_study(
-    user,
-    faker,
-    allow_duplicate_study_number=False,
-    study_number_format=None,
-    ):
-    study = faker.study_details()
-    study.collaborators.append(user)
-    study.owners.append(user)
-    study.allow_duplicate_study_number = allow_duplicate_study_number
-    study.study_number_format = study_number_format
+def _do_upload_field(client, faker, study, should_be_loaded, field, value):
+    resp = _do_upload(client, faker, study.id, field_name=field.field_name, field_value=value)
 
-    db.session.add(study)
-    db.session.commit()
+    if should_be_loaded:
+        assert__redirect(resp, endpoint='ui.index')
 
-    return study
+        _assert_uploaded(study, field, value=value)
+    else:
+        assert resp.status_code == status.HTTP_200_OK
+
+        assert__error__message(resp.soup, field.field_name)
+        _assert_upload_not_saved(study)
 
 
-def _do_upload(client, faker, data, study_id):
+def _do_upload(client, faker, study_id, study_number=None, field_name=None, field_value=None):
+
+    if study_number is None:
+        study_number = faker.pystr(min_chars=5, max_chars=10)
+
+    data = {"study_number": study_number}
+
+    if field_name is not None:
+        data[field_name] = field_value
+
     return client.post(
         _url(study_id=study_id),
         buffered=True,
@@ -40,10 +46,8 @@ def _do_upload(client, faker, data, study_id):
     )
 
 
-def _assert_uploaded(study_number, study, field, value):
-    upload = Upload.query.filter(
-        Upload.study_number == study_number and Upload.study_id == study.id
-    ).first()
+def _assert_uploaded(study, field, value):
+    upload = Upload.query.filter(Upload.study_id == study.id).first()
 
     assert upload
 
@@ -54,10 +58,8 @@ def _assert_uploaded(study_number, study, field, value):
     ).first()
 
 
-def _assert_uploaded_file(study_number, study, field, filename, content):
-    upload = Upload.query.filter(
-        Upload.study_number == study_number and Upload.study_id == study.id
-    ).first()
+def _assert_uploaded_file(study, field, filename, content):
+    upload = Upload.query.filter(Upload.study_id == study.id).first()
 
     assert upload
 
@@ -78,78 +80,37 @@ def _assert_uploaded_file(study_number, study, field, filename, content):
         assert f.read() == content
 
 
-def _assert_field_in_error(resp, field):
-    e = resp.soup.find("div", class_="alert")
-    assert field.field_name in e.text
+def _assert_upload_not_saved(study):
+    assert Upload.query.filter(Upload.study_id == study.id).count() == 0
 
 
-def _assert_upload_not_saved(study_number):
-    assert not  Upload.query.filter(
-        Upload.study_number == study_number
-    ).first()
-
-
-def _create_Field(field_group, field_type, faker, required, choices="", max_length="", allowed_file_extensions=""):
-    field = faker.field_details(field_type)
-    field.field_group = field_group
-    field.order = 1
-    field.required = required
-    field.choices = choices
-    field.max_length = max_length
-    field.allowed_file_extensions = allowed_file_extensions
-
-    db.session.add(field)
-    db.session.commit()
-
-    return field
-
-
-def _create_BooleanField(field_group, faker, required=False):
-    return _create_Field(field_group, FieldType.get_boolean(), faker, required)
-
-
-def _create_IntegerField(field_group, faker, required=False):
-    return _create_Field(field_group, FieldType.get_integer(), faker, required)
-
-
-def _create_RadioField(field_group, faker, choices, required=False):
-    return _create_Field(field_group, FieldType.get_radio(), faker, required, choices=choices)
-
-
-def _create_StringField(field_group, faker, max_length, required=False):
-    return _create_Field(field_group, FieldType.get_string(), faker, required, max_length=max_length)
-
-
-def _create_FileField(field_group, faker, allowed_file_extensions, required=False):
-    return _create_Field(field_group, FieldType.get_file(), faker, required, allowed_file_extensions=allowed_file_extensions)
+def test__post__requires_login(client, faker):
+    study = get_test_study(faker)
+    assert__requires_login(client, _url(study_id=study.id, external=False), post=True)
 
 
 def test__upload__upload_study_number(client, faker):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
+    study = get_test_study(faker, collaborator=user)
 
-    data = {"study_number": faker.pystr(min_chars=5, max_chars=10)}
+    study_number = faker.pystr(min_chars=5, max_chars=10)
 
-    resp = _do_upload(client, faker, data, study.id)
-
-    assert resp.status_code == 302
+    resp = _do_upload(client, faker, study.id, study_number=study_number)
+    assert__redirect(resp, endpoint='ui.index')
 
     assert Upload.query.filter(
-        Upload.study_number == data["study_number"] and Upload.study_id == study.id
+        Upload.study_number == study_number and Upload.study_id == study.id
     ).first()
 
 
 def test__upload__upload_study_number__matches_format(client, faker):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker, study_number_format='Tst\\d{8}[A-Z]')
+    study = get_test_study(faker, collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
 
     study_number = "Tst12345678X"
 
-    data = {"study_number": study_number}
-
-    resp = _do_upload(client, faker, data, study.id)
-
-    assert resp.status_code == 302
+    resp = _do_upload(client, faker, study.id, study_number=study_number)
+    assert__redirect(resp, endpoint='ui.index')
 
     assert Upload.query.filter(
         Upload.study_number == study_number and Upload.study_id == study.id
@@ -158,15 +119,13 @@ def test__upload__upload_study_number__matches_format(client, faker):
 
 def test__upload__upload_study_number__not_matches_format(client, faker):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker, study_number_format='Tst\\d{8}[A-Z]')
+    study = get_test_study(faker, collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
 
     study_number = "Tst12345678"
 
-    data = {"study_number": study_number}
+    resp = _do_upload(client, faker, study.id, study_number=study_number)
 
-    resp = _do_upload(client, faker, data, study.id)
-
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
 
     e = resp.soup.find("div", class_="alert")
     assert 'Study Number' in e.text
@@ -178,19 +137,11 @@ def test__upload__upload_study_number__not_matches_format(client, faker):
 
 def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
+    upload = get_test_upload(faker, collaborator=user)
 
-    upload = faker.upload_details()
-    upload.study = study
+    resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
 
-    db.session.add(upload)
-    db.session.commit()
-
-    data = {"study_number": upload.study_number}
-
-    resp = _do_upload(client, faker, data, study.id)
-
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
 
     e = resp.soup.find("div", class_="alert")
     assert 'Study Number' in e.text
@@ -202,19 +153,10 @@ def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
 
 def test__upload__upload_study_number__duplicate_allowed(client, faker):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker, allow_duplicate_study_number=True)
+    upload = get_test_upload(faker, collaborator=user, allow_duplicate_study_number=True)
 
-    upload = faker.upload_details()
-    upload.study = study
-
-    db.session.add(upload)
-    db.session.commit()
-
-    data = {"study_number": upload.study_number}
-
-    resp = _do_upload(client, faker, data, study.id)
-
-    assert resp.status_code == 302
+    resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
+    assert__redirect(resp, endpoint='ui.index')
 
     assert Upload.query.filter(
         Upload.study_number == upload.study_number
@@ -223,28 +165,20 @@ def test__upload__upload_study_number__duplicate_allowed(client, faker):
 
 def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
     user = login(client, faker)
-    study1 = _create_collaborating_study(user, faker)
-    study2 = _create_collaborating_study(user, faker)
+    study2 = get_test_study(faker, collaborator=user)
 
-    upload = faker.upload_details()
-    upload.study = study1
+    upload = get_test_upload(faker, collaborator=user)
 
-    db.session.add(upload)
-    db.session.commit()
-
-    data = {"study_number": upload.study_number}
-
-    resp = _do_upload(client, faker, data, study2.id)
-
-    assert resp.status_code == 302
+    resp = _do_upload(client, faker, study2.id, study_number=upload.study_number)
+    assert__redirect(resp, endpoint='ui.index')
 
     assert Upload.query.filter(
-        Upload.study_number == data["study_number"] and Upload.study_id == study2.id
+        Upload.study_number == upload.study_number and Upload.study_id == study2.id
     ).first()
 
 
 @pytest.mark.parametrize(
-    ["required", "value", "upload_worked", "saved_value"],
+    ["required", "value", "should_be_loaded", "saved_value"],
     [
         (False, "y", True, "1"),
         (False, "", True, "0"),
@@ -252,36 +186,27 @@ def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
         (True, "", False, ""),
     ],
 )
-def test__upload__upload_BooleanField(client, faker, required, value, upload_worked, saved_value):
+def test__upload__upload_BooleanField(client, faker, required, value, should_be_loaded, saved_value):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
-    study.field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    field = _create_BooleanField(study.field_group, faker, required)
-    print(field.field_name)
+    field = get_test_field(faker, field_group=study.field_group, field_type=FieldType.get_boolean(), required=required)
 
-    data = {
-        "study_number": faker.pystr(min_chars=5, max_chars=10),
-    }
+    resp = _do_upload(client, faker, study.id, field_name=field.field_name, field_value=value)
 
-    if value:
-        data[field.field_name] = value
+    if should_be_loaded:
+        assert__redirect(resp, endpoint='ui.index')
 
-    resp = _do_upload(client, faker, data, study.id)
-
-    if upload_worked:
-        assert resp.status_code == 302
-
-        _assert_uploaded(data["study_number"], study, field, value=saved_value)
+        _assert_uploaded(study, field, value=saved_value)
     else:
-        assert resp.status_code == 200
+        assert resp.status_code == status.HTTP_200_OK
 
-        _assert_field_in_error(resp, field)
-        _assert_upload_not_saved(data["study_number"])
+        assert__error__message(resp.soup, field.field_name)
+        _assert_upload_not_saved(study)
 
 
 @pytest.mark.parametrize(
-    ["required", "value", "upload_worked"],
+    ["required", "value", "should_be_loaded"],
     [
         (False, "1", True),
         (False, "q", False),
@@ -289,31 +214,13 @@ def test__upload__upload_BooleanField(client, faker, required, value, upload_wor
         (True, "", False),
     ],
 )
-def test__upload__upload_IntegerField(client, faker, required, value, upload_worked):
+def test__upload__upload_IntegerField(client, faker, required, value, should_be_loaded):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
-    study.field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    field = _create_IntegerField(study.field_group, faker, required=required)
+    field = get_test_field(faker, field_group=study.field_group, field_type=FieldType.get_integer(), required=required)
 
-    data = {
-        "study_number": faker.pystr(min_chars=5, max_chars=10),
-    }
-
-    if value:
-        data[field.field_name] = value
-
-    resp = _do_upload(client, faker, data, study.id)
-
-    if upload_worked:
-        assert resp.status_code == 302
-
-        _assert_uploaded(data["study_number"], study, field, value=value)
-    else:
-        assert resp.status_code == 200
-
-        _assert_field_in_error(resp, field)
-        _assert_upload_not_saved(data["study_number"])
+    _do_upload_field(client, faker, study, should_be_loaded, field, value)
 
 
 @pytest.mark.parametrize(
@@ -327,29 +234,11 @@ def test__upload__upload_IntegerField(client, faker, required, value, upload_wor
 )
 def test__upload__upload_RadioField(client, faker, required, value, should_be_loaded):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
-    study.field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    field = _create_RadioField(study.field_group, faker, choices="xy|z", required=required)
+    field = get_test_field(faker, field_group=study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
 
-    study_number = faker.pystr(min_chars=5, max_chars=10)
-
-    data = {"study_number": study_number}
-
-    if value:
-        data[field.field_name] = value
-
-    resp = _do_upload(client, faker, data, study.id)
-
-    if should_be_loaded:
-        assert resp.status_code == 302
-
-        _assert_uploaded(data["study_number"], study, field, value=value)
-    else:
-        assert resp.status_code == 200
-
-        _assert_field_in_error(resp, field)
-        _assert_upload_not_saved(data["study_number"])
+    _do_upload_field(client, faker, study, should_be_loaded, field, value)
 
 
 @pytest.mark.parametrize(
@@ -363,29 +252,11 @@ def test__upload__upload_RadioField(client, faker, required, value, should_be_lo
 )
 def test__upload__upload_StringField(client, faker, required, max_length, value, should_be_loaded):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
-    study.field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    field = _create_StringField(study.field_group, faker, required=required, max_length=max_length)
+    field = get_test_field(faker, field_group=study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
 
-    study_number = faker.pystr(min_chars=5, max_chars=10)
-
-    data = {"study_number": study_number}
-
-    if value:
-        data[field.field_name] = value
-
-    resp = _do_upload(client, faker, data, study.id)
-
-    if should_be_loaded:
-        assert resp.status_code == 302
-
-        _assert_uploaded(data["study_number"], study, field, value=value)
-    else:
-        assert resp.status_code == 200
-
-        _assert_field_in_error(resp, field)
-        _assert_upload_not_saved(data["study_number"])
+    _do_upload_field(client, faker, study, should_be_loaded, field, value)
 
 
 @pytest.mark.parametrize(
@@ -399,33 +270,31 @@ def test__upload__upload_StringField(client, faker, required, max_length, value,
 )
 def test__upload__upload_FileField(client, faker, required, allowed_file_extensions, file_sent, extension, should_be_loaded):
     user = login(client, faker)
-    study = _create_collaborating_study(user, faker)
-    study.field_group = faker.field_group_details()
+    study = get_test_study(faker, collaborator=user)
 
-    field = _create_FileField(study.field_group, faker, required=required, allowed_file_extensions=allowed_file_extensions)
+    field = get_test_field(faker, field_group=study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
 
-    study_number = faker.pystr(min_chars=5, max_chars=10)
+    content = faker.text()
+    filename = faker.file_name(extension=extension)
 
-    data = {"study_number": study_number}
-
-    if file_sent:
-        content = faker.text()
-        filename = faker.file_name(extension=extension)
-
-        data[field.field_name] = (
+    resp = _do_upload(
+        client,
+        faker,
+        study.id,
+        field_name=field.field_name,
+        field_value=(
             BytesIO(content.encode('utf-8')),
             filename
-        )
-
-    resp = _do_upload(client, faker, data, study.id)
+        ),
+    )
 
     if should_be_loaded:
-        assert resp.status_code == 302
+        assert__redirect(resp, endpoint='ui.index')
 
-        _assert_uploaded_file(data["study_number"], study, field, filename=filename, content=content)
+        _assert_uploaded_file(study, field, filename=filename, content=content)
 
     else:
-        assert resp.status_code == 200
+        assert resp.status_code == status.HTTP_200_OK
 
-        _assert_field_in_error(resp, field)
-        _assert_upload_not_saved(data["study_number"])
+        assert__error__message(resp.soup, field.field_name)
+        _assert_upload_not_saved(study)
