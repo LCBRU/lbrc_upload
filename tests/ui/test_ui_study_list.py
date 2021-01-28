@@ -1,11 +1,9 @@
-from os import stat
 from flask_api import status
 from lbrc_flask.pytest.asserts import assert__redirect
 import pytest
 from itertools import cycle
 from flask import url_for
 from tests import get_test_study, get_test_upload, get_test_user, login
-from lbrc_flask.database import db
 
 
 _endpoint = 'ui.index'

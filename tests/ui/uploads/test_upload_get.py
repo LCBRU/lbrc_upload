@@ -24,6 +24,10 @@ def test__standards(client, faker):
     assert__html_standards(client, faker, _url(study_id=study.id, external=False), user=user)
     assert__form_standards(client, faker, _url(study_id=study.id, external=False))
 
+    resp = client.get(_url(study_id=study.id))
+    assert resp.soup.find("a", href=url_for('ui.index'), string="Cancel") is not None
+    assert resp.soup.find("button", type='submit', string="Upload") is not None
+
 
 def test__get___must_study_collaborator_is(client, faker):
     assert__get___must_be_study_collaborator_is(client, faker, _endpoint)

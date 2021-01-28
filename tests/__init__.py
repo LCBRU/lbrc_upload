@@ -6,9 +6,6 @@ from flask_login import current_user
 
 
 def login(client, faker):
-    if current_user is not None and not current_user.is_anonymous:
-        return current_user
-
     s = faker.site_details()
     u = faker.user_details()
     u.site = s

@@ -1,14 +1,15 @@
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
+from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login, assert__search_html
 import pytest
 import re
 from flask import url_for
 from itertools import cycle
 from tests import get_test_study, get_test_upload, get_test_user, login
-from lbrc_flask.database import db
 from flask_api import status
 
+
 _endpoint = 'ui.study_my_uploads'
+
 
 def _url(**kwargs):
     return url_for(_endpoint, **kwargs)
@@ -71,10 +72,7 @@ def test__my_uploads(client, faker, mine, others, deleted):
 def _assert_response(resp, study, uploads):
     assert resp.status_code == status.HTTP_200_OK
 
-    assert resp.soup.find('input', id="search") is not None
-    assert resp.soup.find('a', string="Clear Search", href=_url(study_id=study.id)) is not None
-    assert resp.soup.find('button', type="submit", string="Search") is not None
-
+    assert__search_html(resp, clear_url=_url(study_id=study.id))
     assert resp.soup.find('a', string="Upload Data", href=url_for('ui.upload_data', study_id=study.id)) is not None
 
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None

@@ -217,8 +217,8 @@ def download_all_files(upload_id):
     u = Upload.query.get_or_404(upload_id)
 
     m = MultipartEncoder(
-           fields={'field0': 'value', 'field1': 'value',
-                   'field2': ('filename', open('file.py', 'rb'), 'text/plain')}
+            fields={'field0': 'value', 'field1': 'value',
+                'field2': ('filename', open('file.py', 'rb'), 'text/plain')}
         )
     return Response(m.to_string(), mimetype=m.content_type)
 
