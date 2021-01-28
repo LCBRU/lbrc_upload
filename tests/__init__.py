@@ -66,6 +66,15 @@ def add_users(faker):
     db.session.commit()
 
 
+def get_test_user(faker, **kwargs):
+    user = faker.user_details(**kwargs)
+    
+    db.session.add(user)
+    db.session.commit()
+    
+    return user
+
+
 def get_test_study(faker, **kwargs):
     study = faker.study_details(**kwargs)
     
@@ -85,10 +94,11 @@ def get_test_field(faker, **kwargs):
     return field
 
 
-def get_test_upload(faker, **kwargs):
-    study = get_test_study(faker, **kwargs)
+def get_test_upload(faker, study=None, **kwargs):
+    if study is None:
+        study = get_test_study(faker)
     
-    upload = faker.upload_details()
+    upload = faker.upload_details(**kwargs)
     upload.study = study
     
     db.session.add(upload)

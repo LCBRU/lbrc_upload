@@ -1,11 +1,10 @@
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
-from tests import get_test_study
+from tests import get_test_study, get_test_upload, get_test_user
 from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
 import pytest
 import re
 from flask import url_for
 from itertools import cycle
-from lbrc_flask.database import db
 from lbrc_flask.pytest.helpers import login
 from flask_api import status
 
@@ -43,17 +42,8 @@ def test__standards(client, faker):
 )
 def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     user = login(client, faker)
-
-    site2 = faker.site_details()
-    user2 = faker.user_details()
-    user2.site = site2
-    db.session.add(site2)
-    db.session.add(user2)
-
-    study = faker.study_details()
-    study.owners.append(user)
-
-    db.session.add(study)
+    user2 = get_test_user(faker)
+    study = get_test_study(faker, owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -64,36 +54,18 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     uploads = []
 
     for _ in range(outstanding):
-        u = faker.upload_details()
-        u.completed = False
-        u.study = study
-        u.uploader = next(users)
-
+        u = get_test_upload(faker, study=study, uploader=next(users))
         uploads.append(u)
-        db.session.add(u)
 
     for _ in range(completed):
-        u = faker.upload_details()
-        u.completed = True
-        u.study = study
-        u.uploader = next(users)
-
-        db.session.add(u)
+        u = get_test_upload(faker, study=study, completed=True, uploader=next(users))
 
     for _ in range(deleted):
-        u = faker.upload_details()
-        u.completed = False
-        u.deleted = True
-        u.study = study
-        u.uploader = next(users)
-
-        db.session.add(u)
-
-    db.session.commit()
+        u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
     resp = client.get(_url(study_id=study.id))
 
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
     assert len(resp.soup.find_all("li", "list-group-item")) == outstanding
 
@@ -105,21 +77,10 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     ["outstanding", "completed", "deleted"],
     [(0, 0, 0), (0, 1, 0), (0, 0, 1), (2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
 )
-def test__study_details_uploads_and_complete(
-    client, faker, outstanding, completed, deleted
-):
+def test__study_details_uploads_and_complete(client, faker, outstanding, completed, deleted):
     user = login(client, faker)
-
-    site2 = faker.site_details()
-    user2 = faker.user_details()
-    user2.site = site2
-    db.session.add(site2)
-    db.session.add(user2)
-
-    study = faker.study_details()
-    study.owners.append(user)
-
-    db.session.add(study)
+    user2 = get_test_user(faker)
+    study = get_test_study(faker, owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -130,37 +91,19 @@ def test__study_details_uploads_and_complete(
     uploads = []
 
     for _ in range(outstanding):
-        u = faker.upload_details()
-        u.completed = False
-        u.study = study
-        u.uploader = next(users)
-
+        u = get_test_upload(faker, study=study, uploader=next(users))
         uploads.append(u)
-        db.session.add(u)
 
     for _ in range(completed):
-        u = faker.upload_details()
-        u.completed = True
-        u.study = study
-        u.uploader = next(users)
-
+        u = get_test_upload(faker, study=study, completed=True, uploader=next(users))
         uploads.append(u)
-        db.session.add(u)
 
     for _ in range(deleted):
-        u = faker.upload_details()
-        u.completed = False
-        u.deleted = True
-        u.study = study
-        u.uploader = next(users)
-
-        db.session.add(u)
-
-    db.session.commit()
+        u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
     resp = client.get(_url(study_id=study.id, showCompleted='y'))
 
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
     assert len(resp.soup.find_all("li", "list-group-item")) == outstanding + completed
 
@@ -170,33 +113,14 @@ def test__study_details_uploads_and_complete(
 
 def test__study_details_uploads__search_study_number(client, faker):
     user = login(client, faker)
+    study = get_test_study(faker, owner=user)
 
-    study = faker.study_details()
-    study.owners.append(user)
-
-    db.session.add(study)
-
-    upload_matching = faker.upload_details()
-    upload_matching.study_number = "fred"
-    upload_matching.completed = False
-    upload_matching.study = study
-    upload_matching.uploader = user
-
-    db.session.add(upload_matching)
-
-    upload_unmatching = faker.upload_details()
-    upload_unmatching.study_number = "margaret"
-    upload_unmatching.completed = False
-    upload_unmatching.study = study
-    upload_unmatching.uploader = user
-
-    db.session.add(upload_unmatching)
-
-    db.session.commit()
+    upload_matching = get_test_upload(faker, study_number="fred", study=study, uploader=user)
+    upload_unmatching = get_test_upload(faker, study_number="margaret", study=study, uploader=user)
 
     resp = client.get(_url(study_id=study.id, search='fred'))
 
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
     assert len(resp.soup.find_all("li", "list-group-item")) == 1
 

@@ -4,7 +4,7 @@ import pytest
 import re
 from flask import url_for
 from itertools import cycle
-from tests import get_test_study, login
+from tests import get_test_study, get_test_upload, get_test_user, login
 from lbrc_flask.database import db
 from flask_api import status
 
@@ -42,32 +42,17 @@ def test__standards(client, faker):
 def test__my_uploads(client, faker, mine, others, deleted):
     user = login(client, faker)
 
-    user2 = faker.user_details()
-    db.session.add(user2)
-
-    study = faker.study_details()
-    study.collaborators.append(user)
-
-    db.session.add(study)
+    user2 = get_test_user(faker)
+    study = get_test_study(faker, collaborator=user)
 
     uploads = []
 
     for _ in range(mine):
-        u = faker.upload_details()
-        u.completed = False
-        u.study = study
-        u.uploader = user
-
+        u = get_test_upload(faker, study=study, uploader=user)
         uploads.append(u)
-        db.session.add(u)
 
     for _ in range(others):
-        u = faker.upload_details()
-        u.completed = True
-        u.study = study
-        u.uploader = user2
-
-        db.session.add(u)
+        u = get_test_upload(faker, completed=True, uploader=user2)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -76,23 +61,15 @@ def test__my_uploads(client, faker, mine, others, deleted):
     users = cycle([user, user2])
 
     for _ in range(deleted):
-        u = faker.upload_details()
-        u.completed = False
-        u.deleted = True
-        u.study = study
-        u.uploader = next(users)
-
-        db.session.add(u)
-
-    db.session.commit()
+        u = get_test_upload(faker, uploader=next(users), deleted=True)
 
     resp = client.get(_url(study_id=study.id))
 
-    assert_response(resp, study, uploads)
+    _assert_response(resp, study, uploads)
 
 
-def assert_response(resp, study, uploads):
-    assert resp.status_code == 200
+def _assert_response(resp, study, uploads):
+    assert resp.status_code == status.HTTP_200_OK
 
     assert resp.soup.find('input', id="search") is not None
     assert resp.soup.find('a', string="Clear Search", href=_url(study_id=study.id)) is not None
@@ -110,32 +87,14 @@ def assert_response(resp, study, uploads):
 def test__my_uploads__search_study_number(client, faker):
     user = login(client, faker)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
+    study = get_test_study(faker, collaborator=user)
 
-    db.session.add(study)
-
-    upload_matching = faker.upload_details()
-    upload_matching.study_number = "fred"
-    upload_matching.completed = False
-    upload_matching.study = study
-    upload_matching.uploader = user
-
-    db.session.add(upload_matching)
-
-    upload_unmatching = faker.upload_details()
-    upload_unmatching.study_number = "margaret"
-    upload_unmatching.completed = False
-    upload_unmatching.study = study
-    upload_unmatching.uploader = user
-
-    db.session.add(upload_unmatching)
-
-    db.session.commit()
+    upload_matching = get_test_upload(faker, study=study, study_number="fred", uploader=user)
+    upload_unmatching = get_test_upload(faker, study=study, study_number="margaret", uploader=user)
 
     resp = client.get(_url(study_id=study.id, search='fred'))
 
-    assert_response(resp, study, [upload_matching])
+    _assert_response(resp, study, [upload_matching])
 
 
 def upload_matches_li(upload, li):

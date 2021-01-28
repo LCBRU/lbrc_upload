@@ -1,5 +1,5 @@
 from flask import url_for
-from tests import get_test_upload, login, test_referrer
+from tests import get_test_study, get_test_upload, login, test_referrer
 from upload.model import Upload
 from lbrc_flask.pytest.asserts import assert__redirect, assert__requires_login
 from flask_api import status
@@ -16,8 +16,9 @@ def test__post__requires_login(client, faker):
 
 def test__upload__complete__must_be_owner(client, faker):
     user = login(client, faker)
+    study = get_test_study(faker, collaborator=user)
 
-    upload = get_test_upload(faker, collaborator=user)
+    upload = get_test_upload(faker, study=study)
 
     resp = client.post(_url(upload_id=upload.id), data={"id": upload.id})
 
@@ -30,8 +31,8 @@ def test__upload__complete__must_be_owner(client, faker):
 
 def test__upload__complete(client, faker):
     user = login(client, faker)
-
-    upload = get_test_upload(faker, owner=user)
+    study = get_test_study(faker, owner=user)
+    upload = get_test_upload(faker, study=study)
 
     resp = client.post(
         _url(upload_id=upload.id),

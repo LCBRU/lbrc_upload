@@ -4,7 +4,7 @@ import pytest
 import csv
 from io import StringIO
 from flask import url_for
-from tests import get_test_study, login
+from tests import get_test_study, get_test_upload, login
 from lbrc_flask.database import db
 from flask_api import status
 
@@ -34,22 +34,15 @@ def test__study_csv__download(client, faker, upload_count):
     user = login(client, faker)
     uploads = []
 
-    study = faker.study_details()
-    study.owners.append(user)
+    study = get_test_study(faker, owner=user)
 
     for _ in range(upload_count):
-        upload = faker.upload_details()
-        upload.study = study
-        upload.uploader = user
+        upload = get_test_upload(faker, study=study, uploader=user)
         uploads.append(upload)
-
-        db.session.add(upload)
-
-    db.session.commit()
 
     resp = client.get(_url(study_id=study.id))
 
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
 
     decoded_content = resp.data.decode("utf-8")
 

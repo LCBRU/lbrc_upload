@@ -1,20 +1,25 @@
-# -*- coding: utf-8 -*-
-
+from os import stat
+from flask_api import status
+from lbrc_flask.pytest.asserts import assert__redirect
 import pytest
-import re
-import os
 from itertools import cycle
 from flask import url_for
-from tests import login
+from tests import get_test_study, get_test_upload, get_test_user, login
 from lbrc_flask.database import db
+
+
+_endpoint = 'ui.index'
+
+def _url(**kwargs):
+    return url_for(_endpoint, **kwargs)
 
 
 def test__study_list__no_studies__no_display(client, faker):
     login(client, faker)
 
-    resp = client.get("/")
+    resp = client.get(_url())
 
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h2", string="Owned Studies") is None
     assert resp.soup.find("h2", string="Collaborating Studies") is None
     assert len(resp.soup.find_all("table", "table study_list")) == 0
@@ -22,17 +27,10 @@ def test__study_list__no_studies__no_display(client, faker):
 
 def test__study_list__owns_1_study_redirects(client, faker):
     user = login(client, faker)
+    study = get_test_study(faker, owner=user)
 
-    study = faker.study_details()
-    study.owners.append(user)
-
-    db.session.add(study)
-    db.session.commit()
-
-    resp = client.get("/")
-
-    assert resp.status_code == 302
-    assert resp.location == (url_for("ui.study", study_id=study.id, _external=True))
+    resp = client.get(_url())
+    assert__redirect(resp, endpoint='ui.study', study_id=study.id)
 
 
 @pytest.mark.parametrize("study_count", [(2), (3)])
@@ -41,17 +39,11 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
     studies = []
 
     for _ in range(study_count):
-        study = faker.study_details()
-        study.owners.append(user)
-        studies.append(study)
+        studies.append(get_test_study(faker, owner=user))
 
-        db.session.add(study)
+    resp = client.get(_url())
 
-    db.session.commit()
-
-    resp = client.get("/")
-
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h2", string="Owned Studies") is not None
     assert resp.soup.find("h2", string="Collaborating Studies") is None
     assert len(resp.soup.select("table.table")) == 1
@@ -73,17 +65,10 @@ def test__study_list__owned_study__upload_count(
     client, faker, outstanding, completed, deleted
 ):
     user = login(client, faker)
+    user2 = get_test_user(faker)
 
-    user2 = faker.user_details()
-    db.session.add(user2)
-
-    study = faker.study_details()
-    study.owners.append(user)
-    study2 = faker.study_details()
-    study2.owners.append(user)
-
-    db.session.add(study)
-    db.session.add(study2)
+    study = get_test_study(faker, owner=user)
+    study2 = get_test_study(faker, owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -92,35 +77,17 @@ def test__study_list__owned_study__upload_count(
     users = cycle([user, user2])
 
     for _ in range(outstanding):
-        u = faker.upload_details()
-        u.completed = False
-        u.study = study
-        u.uploader = next(users)
-
-        db.session.add(u)
+        u = get_test_upload(faker, study=study, uploader=next(users))
 
     for _ in range(completed):
-        u = faker.upload_details()
-        u.completed = True
-        u.study = study
-        u.uploader = next(users)
-
-        db.session.add(u)
+        u = get_test_upload(faker, study=study, completed=True, uploader=next(users))
 
     for _ in range(deleted):
-        u = faker.upload_details()
-        u.completed = False
-        u.deleted = True
-        u.study = study
-        u.uploader = next(users)
+        u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
-        db.session.add(u)
+    resp = client.get(_url())
 
-    db.session.commit()
-
-    resp = client.get("/")
-
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
 
     study_row = resp.soup.find("td", string=study.name).parent
 
@@ -130,19 +97,10 @@ def test__study_list__owned_study__upload_count(
 
 def test__study_list__coll_1_study_redirects(client, faker):
     user = login(client, faker)
+    study = get_test_study(faker, collaborator=user)
 
-    study = faker.study_details()
-    study.collaborators.append(user)
-
-    db.session.add(study)
-    db.session.commit()
-
-    resp = client.get("/")
-
-    assert resp.status_code == 302
-    assert resp.location == (
-        url_for("ui.study_my_uploads", study_id=study.id, _external=True)
-    )
+    resp = client.get(_url())
+    assert__redirect(resp, endpoint='ui.study_my_uploads', study_id=study.id)
 
 
 @pytest.mark.parametrize("study_count", [(2), (3)])
@@ -151,17 +109,11 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
     studies = []
 
     for _ in range(study_count):
-        study = faker.study_details()
-        study.collaborators.append(user)
-        studies.append(study)
+        studies.append(get_test_study(faker, collaborator=user))
 
-        db.session.add(study)
+    resp = client.get(_url())
 
-    db.session.commit()
-
-    resp = client.get("/")
-
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h2", string="Owned Studies") is None
     assert resp.soup.find("h2", string="Collaborating Studies") is not None
     assert len(resp.soup.select("table.table")) == 1
@@ -182,37 +134,18 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
 @pytest.mark.parametrize(
     ["me", "someone_else", "deleted"], [(2, 2, 0), (3, 0, 4), (2, 2, 4), (3, 0, 0)]
 )
-def test__study_list__owned_study__upload_count(
-    client, faker, me, someone_else, deleted
-):
+def test__study_list__owned_study__upload_count(client, faker, me, someone_else, deleted):
     user = login(client, faker)
+    user2 = get_test_user(faker)
 
-    user2 = faker.user_details()
-    db.session.add(user2)
-
-    study = faker.study_details()
-    study.collaborators.append(user)
-    study2 = faker.study_details()
-    study2.collaborators.append(user)
-
-    db.session.add(study)
-    db.session.add(study2)
+    study = get_test_study(faker, collaborator=user)
+    study2 = get_test_study(faker, collaborator=user)
 
     for _ in range(me):
-        u = faker.upload_details()
-        u.completed = False
-        u.study = study
-        u.uploader = user
-
-        db.session.add(u)
+        u = get_test_upload(faker, study=study, uploader=user)
 
     for _ in range(someone_else):
-        u = faker.upload_details()
-        u.completed = True
-        u.study = study
-        u.uploader = user2
-
-        db.session.add(u)
+        u = get_test_upload(faker, study=study, completed=True, uploader=user2)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -221,19 +154,11 @@ def test__study_list__owned_study__upload_count(
     users = cycle([user, user2])
 
     for _ in range(deleted):
-        u = faker.upload_details()
-        u.completed = False
-        u.deleted = True
-        u.study = study
-        u.uploader = next(users)
+        u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
-        db.session.add(u)
+    resp = client.get(_url())
 
-    db.session.commit()
-
-    resp = client.get("/")
-
-    assert resp.status_code == 200
+    assert resp.status_code == status.HTTP_200_OK
 
     study_row = resp.soup.find("td", string=study.name).parent
 

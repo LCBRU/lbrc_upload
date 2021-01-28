@@ -41,8 +41,20 @@ class UploadFakerProvider(BaseProvider):
             number=self.generator.pystr(min_chars=5, max_chars=10),
         )
 
-    def upload_details(self):
-        u = Upload(study_number=self.generator.pystr(min_chars=5, max_chars=10).upper())
+    def upload_details(self, study_number=None, completed=False, deleted=False, uploader=None):
+        if uploader is None:
+            uploader = self.user_details()
+
+        if study_number is None:
+            study_number = self.generator.pystr(min_chars=5, max_chars=10).upper()
+
+        u = Upload(
+            study_number=study_number,
+            uploader = uploader,
+            completed = completed,
+            deleted=deleted,
+        )
+        
         return u
 
     def upload_file_details(self):

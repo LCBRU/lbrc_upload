@@ -149,7 +149,8 @@ def test__upload__upload_study_number__not_matches_format(client, faker):
 
 def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
     user = login(client, faker)
-    upload = get_test_upload(faker, collaborator=user)
+    study = get_test_study(faker, collaborator=user)
+    upload = get_test_upload(faker, study=study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
 
@@ -165,7 +166,8 @@ def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
 
 def test__upload__upload_study_number__duplicate_allowed(client, faker):
     user = login(client, faker)
-    upload = get_test_upload(faker, collaborator=user, allow_duplicate_study_number=True)
+    study = get_test_study(faker, collaborator=user, allow_duplicate_study_number=True)
+    upload = get_test_upload(faker, study=study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
     assert__redirect(resp, endpoint='ui.index')
@@ -178,8 +180,8 @@ def test__upload__upload_study_number__duplicate_allowed(client, faker):
 def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
     user = login(client, faker)
     study2 = get_test_study(faker, collaborator=user)
-
-    upload = get_test_upload(faker, collaborator=user)
+    study1 = get_test_study(faker, collaborator=user)
+    upload = get_test_upload(faker, study=study1)
 
     resp = _do_upload(client, faker, study2.id, study_number=upload.study_number)
     assert__redirect(resp, endpoint='ui.index')
