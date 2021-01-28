@@ -1,9 +1,38 @@
+from lbrc_flask.pytest.asserts import assert__requires_login
 import pytest
 import csv
 from io import StringIO
 from flask import url_for
-from tests import login
+from tests import get_test_study, login
 from lbrc_flask.database import db
+from flask_api import status
+
+
+def _url(**kwargs):
+    return url_for('ui.study_csv', **kwargs)
+
+
+def test__get__requires_login(client, faker):
+    study = get_test_study(faker)
+    assert__requires_login(client, _url(study_id=study.id, external=False))
+
+
+def test__get___must_be_study_owner_isnt(client, faker):
+    user = login(client, faker)
+
+    s = get_test_study(faker)
+
+    resp = client.get(_url(study_id=s.id))
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test__get___must_be_study_owner_is(client, faker):
+    user = login(client, faker)
+
+    s = get_test_study(faker, owner=user)
+
+    resp = client.get(_url(study_id=s.id))
+    assert resp.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize("upload_count", [(0), (2), (3), (100)])
@@ -24,7 +53,7 @@ def test__study_csv__download(client, faker, upload_count):
 
     db.session.commit()
 
-    resp = client.get(url_for("ui.study_csv", study_id=study.id))
+    resp = client.get(_url(study_id=study.id))
 
     assert resp.status_code == 200
 

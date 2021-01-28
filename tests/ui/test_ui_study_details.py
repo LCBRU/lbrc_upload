@@ -1,8 +1,39 @@
+from tests import get_test_study
+from lbrc_flask.pytest.asserts import assert__requires_login
 import pytest
 import re
+from flask import url_for
 from itertools import cycle
 from lbrc_flask.database import db
 from lbrc_flask.pytest.helpers import login
+from flask_api import status
+
+
+def _url(**kwargs):
+    return url_for('ui.study', **kwargs)
+
+
+def test__get__requires_login(client, faker):
+    study = get_test_study(faker)
+    assert__requires_login(client, _url(study_id=study.id, external=False))
+
+
+def test__get___must_be_study_owner_isnt(client, faker):
+    user = login(client, faker)
+
+    s = get_test_study(faker)
+
+    resp = client.get(_url(study_id=s.id))
+    assert resp.status_code == status.HTTP_403_FORBIDDEN
+
+
+def test__get___must_be_study_owner_is(client, faker):
+    user = login(client, faker)
+
+    s = get_test_study(faker, owner=user)
+
+    resp = client.get(_url(study_id=s.id))
+    assert resp.status_code == status.HTTP_200_OK
 
 
 @pytest.mark.parametrize(
@@ -59,7 +90,7 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
 
     db.session.commit()
 
-    resp = client.get("/study/{}".format(study.id))
+    resp = client.get(_url(study_id=study.id))
 
     assert resp.status_code == 200
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
@@ -126,7 +157,7 @@ def test__study_details_uploads_and_complete(
 
     db.session.commit()
 
-    resp = client.get("/study/{}?showCompleted=y".format(study.id))
+    resp = client.get(_url(study_id=study.id, showCompleted='y'))
 
     assert resp.status_code == 200
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
@@ -162,7 +193,7 @@ def test__study_details_uploads__search_study_number(client, faker):
 
     db.session.commit()
 
-    resp = client.get("/study/{}?search=fred".format(study.id))
+    resp = client.get(_url(study_id=study.id, search='fred'))
 
     assert resp.status_code == 200
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
