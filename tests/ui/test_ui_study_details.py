@@ -1,6 +1,6 @@
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
 from tests import get_test_study, get_test_upload, get_test_upload_file, get_test_user
-from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login, assert__search_html
+from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards
 import pytest
 import re
 from flask import url_for
@@ -13,6 +13,17 @@ _endpoint = 'ui.study'
 
 def _url(**kwargs):
     return url_for(_endpoint, **kwargs)
+
+
+def _get(client, url, loggedin_user, study):
+    resp = get_and_assert_standards(client, url, loggedin_user)
+
+    assert__search_html(resp.soup, clear_url=_url(_external=False, study_id=study.id))
+    assert resp.soup.find('input', type="checkbox", id='showCompleted') is not None
+    assert resp.soup.find('a', string="Download Upload Details", href=url_for('ui.study_csv', study_id=study.id)) is not None
+    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
+
+    return resp
 
 
 def test__get__requires_login(client, faker):
@@ -29,13 +40,6 @@ def test__get___must_study_owner_isnt(client, faker):
 
 
 @pytest.mark.app_crsf(True)
-def test__standards(client, faker):
-    user = login(client, faker)
-    study = get_test_study(faker, owner=user)
-    assert__html_standards(client, faker, _url(study_id=study.id, external=False), user=user)
-    assert__form_standards(client, faker, _url(study_id=study.id, external=False))
-
-
 @pytest.mark.parametrize(
     ["outstanding", "completed", "deleted"],
     [(0, 0, 0), (0, 1, 0), (0, 0, 1), (2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
@@ -63,11 +67,12 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     for _ in range(deleted):
         u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
-    resp = client.get(_url(study_id=study.id))
+    resp = _get(client, _url(study_id=study.id), user, study)
 
     _assert_response(study, uploads, resp)
 
 
+@pytest.mark.app_crsf(True)
 @pytest.mark.parametrize(
     ["outstanding", "completed", "deleted"],
     [(0, 0, 0), (0, 1, 0), (0, 0, 1), (2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
@@ -96,10 +101,11 @@ def test__study_details_uploads_and_complete(client, faker, outstanding, complet
     for _ in range(deleted):
         u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
-    resp = client.get(_url(study_id=study.id, showCompleted='y'))
+    resp = _get(client, _url(study_id=study.id, showCompleted='y'), user, study)
     _assert_response(study, uploads, resp)
 
 
+@pytest.mark.app_crsf(True)
 def test__study_details_uploads__search_study_number(client, faker):
     user = login(client, faker)
     study = get_test_study(faker, owner=user)
@@ -107,28 +113,24 @@ def test__study_details_uploads__search_study_number(client, faker):
     upload_matching = get_test_upload(faker, study_number="fred", study=study, uploader=user)
     upload_unmatching = get_test_upload(faker, study_number="margaret", study=study, uploader=user)
 
-    resp = client.get(_url(study_id=study.id, search='fred'))
+    resp = _get(client, _url(study_id=study.id, search='fred'), user, study)
     _assert_response(study, [upload_matching], resp)
 
 
+@pytest.mark.app_crsf(True)
 def test__study_details_uploads__with_files(client, faker):
     user = login(client, faker)
     study = get_test_study(faker, owner=user)
 
     uf = get_test_upload_file(faker, study=study)
 
-    resp = client.get(_url(study_id=study.id))
+    resp = _get(client, _url(study_id=study.id), user, study)
     _assert_response(study, [uf.upload], resp)
 
 
 def _assert_response(study, uploads, resp):
     assert resp.status_code == status.HTTP_200_OK
 
-    assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
-    assert resp.soup.find('a', string="Download Upload Details", href=url_for('ui.study_csv', study_id=study.id)) is not None
-    assert resp.soup.find('input', type="checkbox", id='showCompleted') is not None
-
-    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
     assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
 
     for u, li in zip(reversed(uploads), resp.soup.find_all("li", "list-group-item")):

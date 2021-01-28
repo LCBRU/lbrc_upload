@@ -1,5 +1,5 @@
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login, assert__search_html
+from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards
 import pytest
 import re
 from flask import url_for
@@ -15,6 +15,16 @@ def _url(**kwargs):
     return url_for(_endpoint, **kwargs)
 
 
+def _get(client, url, loggedin_user, study):
+    resp = get_and_assert_standards(client, url, loggedin_user)
+
+    assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
+    assert resp.soup.find('a', string="Upload Data", href=url_for('ui.upload_data', study_id=study.id)) is not None
+    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
+
+    return resp
+
+
 def test__get__requires_login(client, faker):
     study = get_test_study(faker)
     assert__requires_login(client, _url(study_id=study.id, external=False))
@@ -26,14 +36,6 @@ def test__get___must_study_collaborator_is(client, faker):
 
 def test__get___must_study_collaborator_isnt(client, faker):
     assert__get___must_be_study_collaborator_isnt(client, faker, _endpoint)
-
-
-@pytest.mark.app_crsf(True)
-def test__standards(client, faker):
-    user = login(client, faker)
-    study = get_test_study(faker, collaborator=user)
-    assert__html_standards(client, faker, _url(study_id=study.id, external=False), user=user)
-    assert__form_standards(client, faker, _url(study_id=study.id, external=False))
 
 
 @pytest.mark.parametrize(
@@ -64,22 +66,9 @@ def test__my_uploads(client, faker, mine, others, deleted):
     for _ in range(deleted):
         u = get_test_upload(faker, uploader=next(users), deleted=True)
 
-    resp = client.get(_url(study_id=study.id))
+    resp = _get(client, _url(study_id=study.id), user, study)
 
     _assert_response(resp, study, uploads)
-
-
-def _assert_response(resp, study, uploads):
-    assert resp.status_code == status.HTTP_200_OK
-
-    assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
-    assert resp.soup.find('a', string="Upload Data", href=url_for('ui.upload_data', study_id=study.id)) is not None
-
-    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
-    assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
-
-    for u, li in zip(reversed(uploads), resp.soup.find_all("li", "list-group-item")):
-        upload_matches_li(u, li)
 
 
 def test__my_uploads__search_study_number(client, faker):
@@ -90,9 +79,18 @@ def test__my_uploads__search_study_number(client, faker):
     upload_matching = get_test_upload(faker, study=study, study_number="fred", uploader=user)
     upload_unmatching = get_test_upload(faker, study=study, study_number="margaret", uploader=user)
 
-    resp = client.get(_url(study_id=study.id, search='fred'))
+    resp = _get(client, _url(study_id=study.id, search='fred'), user, study)
 
     _assert_response(resp, study, [upload_matching])
+
+
+def _assert_response(resp, study, uploads):
+    assert resp.status_code == status.HTTP_200_OK
+
+    assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
+
+    for u, li in zip(reversed(uploads), resp.soup.find_all("li", "list-group-item")):
+        upload_matches_li(u, li)
 
 
 def upload_matches_li(upload, li):

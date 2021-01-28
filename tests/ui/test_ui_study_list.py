@@ -1,10 +1,10 @@
 from flask_api import status
-from lbrc_flask.pytest.asserts import assert__redirect
+from lbrc_flask.pytest.asserts import assert__redirect, get_and_assert_standards
 import pytest
 from itertools import cycle
 from flask import url_for
 from tests import get_test_study, get_test_upload, get_test_user, login
-from lbrc_flask.pytest.asserts import assert__html_standards, assert__requires_login
+from lbrc_flask.pytest.asserts import assert__requires_login
 
 
 _endpoint = 'ui.index'
@@ -17,16 +17,10 @@ def test__get__requires_login(client, faker):
     assert__requires_login(client, _url())
 
 
-@pytest.mark.app_crsf(True)
-def test__standards(client, faker):
-    user = login(client, faker)
-    assert__html_standards(client, faker, _url(), user=user)
-
-
 def test__study_list__no_studies__no_display(client, faker):
-    login(client, faker)
+    user = login(client, faker)
 
-    resp = client.get(_url())
+    resp = get_and_assert_standards(client, _url(), user)
 
     assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h2", string="Owned Studies") is None
@@ -50,7 +44,7 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
     for _ in range(study_count):
         studies.append(get_test_study(faker, owner=user))
 
-    resp = client.get(_url())
+    resp = get_and_assert_standards(client, _url(), user)
 
     assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h2", string="Owned Studies") is not None
@@ -94,7 +88,7 @@ def test__study_list__owned_study__upload_count(
     for _ in range(deleted):
         u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
-    resp = client.get(_url())
+    resp = get_and_assert_standards(client, _url(), user)
 
     assert resp.status_code == status.HTTP_200_OK
 
@@ -120,7 +114,7 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
     for _ in range(study_count):
         studies.append(get_test_study(faker, collaborator=user))
 
-    resp = client.get(_url())
+    resp = get_and_assert_standards(client, _url(), user)
 
     assert resp.status_code == status.HTTP_200_OK
     assert resp.soup.find("h2", string="Owned Studies") is None
@@ -165,7 +159,7 @@ def test__study_list__owned_study__upload_count(client, faker, me, someone_else,
     for _ in range(deleted):
         u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
 
-    resp = client.get(_url())
+    resp = get_and_assert_standards(client, _url(), user)
 
     assert resp.status_code == status.HTTP_200_OK
 
