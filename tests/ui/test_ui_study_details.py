@@ -124,7 +124,7 @@ def test__study_details_uploads__with_files(client, faker):
 def _assert_response(study, uploads, resp):
     assert resp.status_code == status.HTTP_200_OK
 
-    assert__search_html(resp, clear_url=_url(study_id=study.id))
+    assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
     assert resp.soup.find('a', string="Download Upload Details", href=url_for('ui.study_csv', study_id=study.id)) is not None
     assert resp.soup.find('input', type="checkbox", id='showCompleted') is not None
 

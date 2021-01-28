@@ -72,7 +72,7 @@ def test__my_uploads(client, faker, mine, others, deleted):
 def _assert_response(resp, study, uploads):
     assert resp.status_code == status.HTTP_200_OK
 
-    assert__search_html(resp, clear_url=_url(study_id=study.id))
+    assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
     assert resp.soup.find('a', string="Upload Data", href=url_for('ui.upload_data', study_id=study.id)) is not None
 
     assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None

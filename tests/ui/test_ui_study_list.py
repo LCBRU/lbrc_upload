@@ -4,7 +4,7 @@ import pytest
 from itertools import cycle
 from flask import url_for
 from tests import get_test_study, get_test_upload, get_test_user, login
-from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
+from lbrc_flask.pytest.asserts import assert__html_standards, assert__requires_login
 
 
 _endpoint = 'ui.index'
