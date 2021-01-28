@@ -1,12 +1,15 @@
+from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
 from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
 import pytest
 from flask import url_for
 from tests import get_test_field, get_test_study, login
 from lbrc_flask.forms.dynamic import FieldType
 
+_endpoint = 'ui.upload_data'
+
 
 def _url(**kwargs):
-    return url_for('ui.upload_data', **kwargs)
+    return url_for(_endpoint, **kwargs)
 
 
 def test__get__requires_login(client, faker):
@@ -20,6 +23,14 @@ def test__standards(client, faker):
     study = get_test_study(faker, collaborator=user)
     assert__html_standards(client, faker, _url(study_id=study.id, external=False), user=user)
     assert__form_standards(client, faker, _url(study_id=study.id, external=False))
+
+
+def test__get___must_study_collaborator_is(client, faker):
+    assert__get___must_be_study_collaborator_is(client, faker, _endpoint)
+
+
+def test__get___must_study_collaborator_isnt(client, faker):
+    assert__get___must_be_study_collaborator_isnt(client, faker, _endpoint)
 
 
 def test__upload__form_study_number(client, faker):

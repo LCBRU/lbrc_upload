@@ -1,9 +1,14 @@
 from bs4 import BeautifulSoup
 from lbrc_flask.database import db
 from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.security import current_user_id
+from flask_login import current_user
 
 
 def login(client, faker):
+    if current_user is not None and not current_user.is_anonymous:
+        return current_user
+
     s = faker.site_details()
     u = faker.user_details()
     u.site = s

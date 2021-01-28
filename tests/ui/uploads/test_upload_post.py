@@ -1,3 +1,4 @@
+from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
 from lbrc_flask.pytest.asserts import assert__error__message, assert__redirect, assert__requires_login
 import pytest
 import os
@@ -10,8 +11,11 @@ from lbrc_flask.forms.dynamic import FieldType
 from flask_api import status
 
 
+_endpoint = 'ui.upload_data'
+
+
 def _url(**kwargs):
-    return url_for('ui.upload_data', **kwargs)
+    return url_for(_endpoint, **kwargs)
 
 
 def _do_upload_field(client, faker, study, should_be_loaded, field, value):
@@ -87,6 +91,14 @@ def _assert_upload_not_saved(study):
 def test__post__requires_login(client, faker):
     study = get_test_study(faker)
     assert__requires_login(client, _url(study_id=study.id, external=False), post=True)
+
+
+def test__get___must_study_collaborator_is(client, faker):
+    assert__get___must_be_study_collaborator_is(client, faker, _endpoint, post=True)
+
+
+def test__get___must_study_collaborator_isnt(client, faker):
+    assert__get___must_be_study_collaborator_isnt(client, faker, _endpoint, post=True)
 
 
 def test__upload__upload_study_number(client, faker):

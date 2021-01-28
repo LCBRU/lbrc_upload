@@ -59,7 +59,6 @@ def must_be_study_collaborator():
         @wraps(f)
         def decorated_function(*args, **kwargs):
             study = Study.query.get_or_404(request.view_args.get("study_id"))
-
             if current_user not in study.collaborators:
                 abort(403)
 

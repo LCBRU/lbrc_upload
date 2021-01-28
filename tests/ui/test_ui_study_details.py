@@ -1,5 +1,6 @@
+from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
 from tests import get_test_study
-from lbrc_flask.pytest.asserts import assert__requires_login
+from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
 import pytest
 import re
 from flask import url_for
@@ -9,8 +10,10 @@ from lbrc_flask.pytest.helpers import login
 from flask_api import status
 
 
+_endpoint = 'ui.study'
+
 def _url(**kwargs):
-    return url_for('ui.study', **kwargs)
+    return url_for(_endpoint, **kwargs)
 
 
 def test__get__requires_login(client, faker):
@@ -18,22 +21,20 @@ def test__get__requires_login(client, faker):
     assert__requires_login(client, _url(study_id=study.id, external=False))
 
 
-def test__get___must_be_study_owner_isnt(client, faker):
+def test__get___must_study_owner_is(client, faker):
+    assert__get___must_be_study_owner_is(client, faker, _endpoint)
+
+
+def test__get___must_study_owner_isnt(client, faker):
+    assert__get___must_be_study_owner_isnt(client, faker, _endpoint)
+
+
+@pytest.mark.app_crsf(True)
+def test__standards(client, faker):
     user = login(client, faker)
-
-    s = get_test_study(faker)
-
-    resp = client.get(_url(study_id=s.id))
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
-
-
-def test__get___must_be_study_owner_is(client, faker):
-    user = login(client, faker)
-
-    s = get_test_study(faker, owner=user)
-
-    resp = client.get(_url(study_id=s.id))
-    assert resp.status_code == status.HTTP_200_OK
+    study = get_test_study(faker, owner=user)
+    assert__html_standards(client, faker, _url(study_id=study.id, external=False), user=user)
+    assert__form_standards(client, faker, _url(study_id=study.id, external=False))
 
 
 @pytest.mark.parametrize(
