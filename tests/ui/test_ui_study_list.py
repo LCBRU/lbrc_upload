@@ -4,12 +4,23 @@ import pytest
 from itertools import cycle
 from flask import url_for
 from tests import get_test_study, get_test_upload, get_test_user, login
+from lbrc_flask.pytest.asserts import assert__form_standards, assert__html_standards, assert__requires_login
 
 
 _endpoint = 'ui.index'
 
 def _url(**kwargs):
     return url_for(_endpoint, **kwargs)
+
+
+def test__get__requires_login(client, faker):
+    assert__requires_login(client, _url())
+
+
+@pytest.mark.app_crsf(True)
+def test__standards(client, faker):
+    user = login(client, faker)
+    assert__html_standards(client, faker, _url(), user=user)
 
 
 def test__study_list__no_studies__no_display(client, faker):
