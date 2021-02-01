@@ -1,6 +1,6 @@
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
 from tests import get_test_study, get_test_upload, get_test_upload_file, get_test_user
-from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards
+from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation
 import pytest
 import re
 from flask import url_for
@@ -158,3 +158,41 @@ def upload_matches_li(upload, li):
     if len(upload.files) > 0:
         assert li.find("a", "download-all") is not None
 
+
+@pytest.mark.parametrize(
+    "uploads",
+    [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
+)
+def test__study_details__pages(client, faker, uploads):
+    user = login(client, faker)
+    study = get_test_study(faker, owner=user)
+    my_uploads = [get_test_upload(faker, study=study, uploader=user) for _ in range(uploads)]
+
+    assert__page_navigation(client, _url(study_id=study.id, _external=False), uploads)
+
+
+@pytest.mark.parametrize(
+    "uploads",
+    [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
+)
+def test__study_details__with_completed__pages(client, faker, uploads):
+    completed = cycle([True, False])
+
+    user = login(client, faker)
+    study = get_test_study(faker, owner=user)
+    my_uploads = [get_test_upload(faker, study=study, uploader=user, completed=next(completed)) for _ in range(uploads)]
+
+    assert__page_navigation(client, _url(study_id=study.id, showCompleted=True, _external=False), uploads)
+
+
+@pytest.mark.parametrize(
+    "uploads",
+    [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
+)
+def test__study_details__search__pages(client, faker, uploads):
+    user = login(client, faker)
+    study = get_test_study(faker, owner=user)
+    my_uploads = [get_test_upload(faker, study=study, uploader=user, study_number="fred") for _ in range(uploads)]
+    other = [get_test_upload(faker, study=study, uploader=user, study_number="margaret") for _ in range(100)]
+
+    assert__page_navigation(client, _url(study_id=study.id, search='fred', _external=False), uploads)

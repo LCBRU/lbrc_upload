@@ -1,5 +1,5 @@
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards
+from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation
 import pytest
 import re
 from flask import url_for
@@ -100,3 +100,28 @@ def upload_matches_li(upload, li):
         li.find("h2").find(string=re.compile(upload.date_created.strftime("%-d %b %Y")))
         is not None
     )
+
+
+@pytest.mark.parametrize(
+    "uploads",
+    [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
+)
+def test__my_uploads__pages(client, faker, uploads):
+    user = login(client, faker)
+    study = get_test_study(faker, collaborator=user)
+    my_uploads = [get_test_upload(faker, study=study, uploader=user) for _ in range(uploads)]
+
+    assert__page_navigation(client, _url(study_id=study.id, _external=False), uploads)
+
+
+@pytest.mark.parametrize(
+    "uploads",
+    [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
+)
+def test__my_uploads__search__pages(client, faker, uploads):
+    user = login(client, faker)
+    study = get_test_study(faker, collaborator=user)
+    my_uploads = [get_test_upload(faker, study=study, uploader=user, study_number="fred") for _ in range(uploads)]
+    other = [get_test_upload(faker, study=study, uploader=user, study_number="margaret") for _ in range(100)]
+
+    assert__page_navigation(client, _url(study_id=study.id, search='fred', _external=False), uploads)
