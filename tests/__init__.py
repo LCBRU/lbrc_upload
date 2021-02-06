@@ -44,17 +44,3 @@ def add_content_for_all_areas(faker, user):
     db.session.commit()
 
     return (study, upload)
-
-
-    def add_studies(faker):
-        for _ in range(5):
-            db.session.add(faker.study_details())
-
-        db.session.commit()
-
-
-    def add_users(faker):
-        for _ in range(5):
-            db.session.add(faker.user_details())
-
-        db.session.commit()

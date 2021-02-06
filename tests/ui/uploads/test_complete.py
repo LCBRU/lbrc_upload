@@ -37,9 +37,9 @@ def test__upload__complete(client, faker):
     resp = client.post(
         _url(upload_id=upload.id),
         data={"id": upload.id},
-        headers={'Referer': faker.test_referrer},
+        headers={'Referer': faker.test_referrer()},
     )
-    assert__redirect(resp, url=faker.test_referrer)
+    assert__redirect(resp, url=faker.test_referrer())
 
     changed_upload = Upload.query.get(upload.id)
 
