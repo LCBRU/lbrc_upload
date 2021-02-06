@@ -1,4 +1,4 @@
-from tests import get_test_study, login
+from tests import login
 from flask_api import status
 from flask import url_for
 
@@ -14,25 +14,25 @@ def assert__resp_status(client, url, status, post):
 
 def assert__get___must_be_study_collaborator_isnt(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = get_test_study(faker)
+    s = faker.get_test_study()
     assert__resp_status(client, url_for(endpoint, study_id=s.id), status.HTTP_403_FORBIDDEN, post)
 
 
 def assert__get___must_be_study_collaborator_is(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = get_test_study(faker, collaborator=user)
+    s = faker.get_test_study(collaborator=user)
     assert__resp_status(client, url_for(endpoint, study_id=s.id), status.HTTP_200_OK, post)
 
 
 def assert__get___must_be_study_owner_isnt(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = get_test_study(faker)
+    s = faker.get_test_study()
     assert__resp_status(client, url_for(endpoint, study_id=s.id), status.HTTP_403_FORBIDDEN, post)
 
 
 def assert__get___must_be_study_owner_is(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = get_test_study(faker, owner=user)
+    s = faker.get_test_study(owner=user)
     assert__resp_status(client, url_for(endpoint, study_id=s.id), status.HTTP_200_OK, post)
 
 

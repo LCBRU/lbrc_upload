@@ -4,7 +4,7 @@ import pytest
 import csv
 from io import StringIO
 from flask import url_for
-from tests import get_test_study, get_test_upload, login
+from tests import login
 from lbrc_flask.database import db
 from flask_api import status
 
@@ -17,7 +17,7 @@ def _url(**kwargs):
 
 
 def test__get__requires_login(client, faker):
-    study = get_test_study(faker)
+    study = faker.get_test_study()
     assert__requires_login(client, _url(study_id=study.id, external=False))
 
 
@@ -34,10 +34,10 @@ def test__study_csv__download(client, faker, upload_count):
     user = login(client, faker)
     uploads = []
 
-    study = get_test_study(faker, owner=user)
+    study = faker.get_test_study(owner=user)
 
     for _ in range(upload_count):
-        upload = get_test_upload(faker, study=study, uploader=user)
+        upload = faker.get_test_upload(study=study, uploader=user)
         uploads.append(upload)
 
     resp = client.get(_url(study_id=study.id))

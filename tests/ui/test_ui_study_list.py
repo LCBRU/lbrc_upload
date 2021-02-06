@@ -3,7 +3,7 @@ from lbrc_flask.pytest.asserts import assert__redirect, get_and_assert_standards
 import pytest
 from itertools import cycle
 from flask import url_for
-from tests import get_test_study, get_test_upload, get_test_user, login
+from tests import login
 from lbrc_flask.pytest.asserts import assert__requires_login
 
 
@@ -30,7 +30,7 @@ def test__study_list__no_studies__no_display(client, faker):
 
 def test__study_list__owns_1_study_redirects(client, faker):
     user = login(client, faker)
-    study = get_test_study(faker, owner=user)
+    study = faker.get_test_study(owner=user)
 
     resp = client.get(_url())
     assert__redirect(resp, endpoint='ui.study', study_id=study.id)
@@ -42,7 +42,7 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
     studies = []
 
     for _ in range(study_count):
-        studies.append(get_test_study(faker, owner=user))
+        studies.append(faker.get_test_study(owner=user))
 
     resp = get_and_assert_standards(client, _url(), user)
 
@@ -68,10 +68,10 @@ def test__study_list__owned_study__upload_count(
     client, faker, outstanding, completed, deleted
 ):
     user = login(client, faker)
-    user2 = get_test_user(faker)
+    user2 = faker.get_test_user()
 
-    study = get_test_study(faker, owner=user)
-    study2 = get_test_study(faker, owner=user)
+    study = faker.get_test_study(owner=user)
+    study2 = faker.get_test_study(owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -80,13 +80,13 @@ def test__study_list__owned_study__upload_count(
     users = cycle([user, user2])
 
     for _ in range(outstanding):
-        u = get_test_upload(faker, study=study, uploader=next(users))
+        u = faker.get_test_upload(study=study, uploader=next(users))
 
     for _ in range(completed):
-        u = get_test_upload(faker, study=study, completed=True, uploader=next(users))
+        u = faker.get_test_upload(study=study, completed=True, uploader=next(users))
 
     for _ in range(deleted):
-        u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
+        u = faker.get_test_upload(study=study, deleted=True, uploader=next(users))
 
     resp = get_and_assert_standards(client, _url(), user)
 
@@ -100,7 +100,7 @@ def test__study_list__owned_study__upload_count(
 
 def test__study_list__coll_1_study_redirects(client, faker):
     user = login(client, faker)
-    study = get_test_study(faker, collaborator=user)
+    study = faker.get_test_study(collaborator=user)
 
     resp = client.get(_url())
     assert__redirect(resp, endpoint='ui.study_my_uploads', study_id=study.id)
@@ -112,7 +112,7 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
     studies = []
 
     for _ in range(study_count):
-        studies.append(get_test_study(faker, collaborator=user))
+        studies.append(faker.get_test_study(collaborator=user))
 
     resp = get_and_assert_standards(client, _url(), user)
 
@@ -139,16 +139,16 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
 )
 def test__study_list__owned_study__upload_count(client, faker, me, someone_else, deleted):
     user = login(client, faker)
-    user2 = get_test_user(faker)
+    user2 = faker.get_test_user()
 
-    study = get_test_study(faker, collaborator=user)
-    study2 = get_test_study(faker, collaborator=user)
+    study = faker.get_test_study(collaborator=user)
+    study2 = faker.get_test_study(collaborator=user)
 
     for _ in range(me):
-        u = get_test_upload(faker, study=study, uploader=user)
+        u = faker.get_test_upload(study=study, uploader=user)
 
     for _ in range(someone_else):
-        u = get_test_upload(faker, study=study, completed=True, uploader=user2)
+        u = faker.get_test_upload(study=study, completed=True, uploader=user2)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -157,7 +157,7 @@ def test__study_list__owned_study__upload_count(client, faker, me, someone_else,
     users = cycle([user, user2])
 
     for _ in range(deleted):
-        u = get_test_upload(faker, study=study, deleted=True, uploader=next(users))
+        u = faker.get_test_upload(study=study, deleted=True, uploader=next(users))
 
     resp = get_and_assert_standards(client, _url(), user)
 

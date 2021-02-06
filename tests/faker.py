@@ -1,5 +1,6 @@
+from lbrc_flask.database import db
 from faker.providers import BaseProvider
-from lbrc_flask.forms.dynamic import FieldGroup
+from lbrc_flask.forms.dynamic import FieldGroup, FieldType
 from upload.model import Study, User, Upload, Site, UploadFile, Field
 
 
@@ -83,3 +84,64 @@ class UploadFakerProvider(BaseProvider):
             f.allowed_file_extensions = allowed_file_extensions
 
         return f
+
+    def get_test_user(self, **kwargs):
+        user = self.user_details(**kwargs)
+        
+        db.session.add(user)
+        db.session.commit()
+        
+        return user
+
+
+    def get_test_study(self, **kwargs):
+        study = self.study_details(**kwargs)
+        
+        db.session.add(study)
+        db.session.add(study.field_group)
+        db.session.commit()
+        
+        return study
+
+
+    def get_test_field(self, **kwargs):
+        field = self.field_details(**kwargs)
+
+        db.session.add(field)
+        db.session.commit()
+
+        return field
+
+
+    def get_test_upload(self, study=None, **kwargs):
+        if study is None:
+            study = self.get_test_study()
+        
+        upload = self.upload_details(**kwargs)
+        upload.study = study
+        
+        db.session.add(upload)
+        db.session.commit()
+        
+        return upload
+
+
+    def get_test_upload_file(self, **kwargs):
+        upload = self.get_test_upload(**kwargs)
+
+        file_field = self.generator.field_details(FieldType.get_file())
+        file_field.study = upload.study
+        file_field.order = 1
+
+        upload_file = self.upload_file_details()
+        upload_file.upload = upload
+        upload_file.field = file_field    
+
+        db.session.add(file_field)
+        db.session.add(upload_file)
+        db.session.commit()
+
+        return upload_file
+
+    def test_referrer(self):
+        return 'http://localhost/somethingelse'
