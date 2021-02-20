@@ -1,4 +1,3 @@
-mysqlclient
 Flask
 Flask-SQLAlchemy
 flask_wtf
@@ -8,4 +7,5 @@ flask_security
 bcrypt
 python-dotenv
 email_validator
+PyMySQL
 -e git+https://github.com/LCBRU/lbrc_flask.git@main#egg=lbrc_flask
