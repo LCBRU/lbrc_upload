@@ -25,7 +25,7 @@ class UploadFormBuilder(FormBuilder):
             field_name='study_number',
             label=study.get_study_number_name(),
             required=not study.allow_empty_study_number,
-            max_length=100,
+            max_length=50,
             validation_regex=study.study_number_format,
         )
 
