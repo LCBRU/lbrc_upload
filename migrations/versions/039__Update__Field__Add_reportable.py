@@ -11,9 +11,8 @@ def upgrade(migrate_engine):
 
     t = Table("field", meta, autoload=True)
 
-    if t.c.reportable is None:
-        reportable = Column("reportable", Boolean)
-        reportable.create(t)
+    reportable = Column("reportable", Boolean)
+    reportable.create(t)
 
 
 def downgrade(migrate_engine):
