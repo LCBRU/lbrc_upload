@@ -167,7 +167,7 @@ def test__study_details__pages(client, faker, uploads):
     study = faker.get_test_study(owner=user)
     my_uploads = [faker.get_test_upload(study=study, uploader=user) for _ in range(uploads)]
 
-    assert__page_navigation(client, _url(study_id=study.id, _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=study.id, _external=False), uploads)
 
 
 @pytest.mark.parametrize(
@@ -181,7 +181,7 @@ def test__study_details__with_completed__pages(client, faker, uploads):
     study = faker.get_test_study(owner=user)
     my_uploads = [faker.get_test_upload(study=study, uploader=user, completed=next(completed)) for _ in range(uploads)]
 
-    assert__page_navigation(client, _url(study_id=study.id, showCompleted=True, _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=study.id, showCompleted=True, _external=False), uploads)
 
 
 @pytest.mark.parametrize(
@@ -194,4 +194,5 @@ def test__study_details__search__pages(client, faker, uploads):
     my_uploads = [faker.get_test_upload(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
     other = [faker.get_test_upload(study=study, uploader=user, study_number="margaret") for _ in range(100)]
 
-    assert__page_navigation(client, _url(study_id=study.id, search='fred', _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=study.id, search='fred', _external=False), uploads)
+
