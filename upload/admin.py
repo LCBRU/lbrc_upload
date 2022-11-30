@@ -40,6 +40,7 @@ class UserView(AdminCustomView):
         User.first_name,
         User.last_name,
         User.active,
+        User.suppress_email,
     ]
     column_searchable_list = [
         User.first_name,
