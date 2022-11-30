@@ -31,6 +31,7 @@ class User(BaseUser):
 
     site_id = db.Column(db.Integer, db.ForeignKey(Site.id))
     site = db.relationship(Site)
+    suppress_email = db.Column(db.Boolean, nullable=False, default=False)
 
 
 studies_owners = db.Table(
