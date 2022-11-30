@@ -185,7 +185,7 @@ def upload_data(study_id):
             message="A new set of files has been uploaded for the {} study.".format(
                 study.name
             ),
-            recipients=[r.email for r in study.owners],
+            recipients=[r.email for r in study.owners if not r.suppress_email],
         )
 
         email(
