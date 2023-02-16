@@ -43,7 +43,7 @@ sqlalchemy-migrate==0.13.0
 sqlparse==0.4.1
 Tempita==0.5.2
 typing-extensions==3.7.4.3
-Werkzeug==1.0.1
+Werkzeug==2.2.3
 WTForms==2.3.3
 zipp==3.4.0
 -e git+https://github.com/LCBRU/lbrc_flask.git@main#egg=lbrc_flask
