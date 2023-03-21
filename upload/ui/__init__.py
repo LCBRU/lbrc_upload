@@ -242,7 +242,7 @@ def study_csv(study_id):
         return send_file(
             csv_filename.name,
             as_attachment=True,
-            attachment_filename="{0}_{1:%Y%M%d%H%m%S}.csv".format(
+            download_name="{0}_{1:%Y%M%d%H%m%S}.csv".format(
                 study.name, datetime.datetime.now()
             ),
         )
