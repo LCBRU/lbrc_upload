@@ -207,7 +207,9 @@ def download_upload_file(upload_file_id):
     uf = UploadFile.query.get_or_404(upload_file_id)
 
     return send_file(
-        get_upload_filepath(uf), as_attachment=True, attachment_filename=uf.get_download_filename()
+        get_upload_filepath(uf),
+        as_attachment=True,
+        download_name=uf.get_download_filename()
     )
 
 
