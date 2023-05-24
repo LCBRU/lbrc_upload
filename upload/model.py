@@ -109,7 +109,7 @@ class UploadData(db.Model):
     upload = db.relationship(Upload, backref=db.backref("data"))
     field_id = db.Column(db.Integer(), db.ForeignKey(Field.id))
     field = db.relationship(Field)
-    value = db.Column(db.String)
+    value = db.Column(db.String(500))
 
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
