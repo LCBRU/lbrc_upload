@@ -1,5 +1,7 @@
 import os
 from datetime import datetime
+from pathlib import Path
+from flask import current_app
 from werkzeug.utils import secure_filename
 from lbrc_flask.security import User as BaseUser
 from lbrc_flask.database import db
@@ -101,6 +103,9 @@ class Upload(db.Model):
     completed = db.Column(db.Boolean, default=0)
     deleted = db.Column(db.Boolean, default=0)
 
+    def has_existing_files(self):
+        return any(uf.file_exists() for uf in self.files)
+
 
 class UploadData(db.Model):
 
@@ -140,3 +145,11 @@ class UploadFile(db.Model):
                 "{}_{}_{}".format(self.id, self.upload.study_number, self.filename)
             ),
         )
+
+    def upload_filepath(self):
+        return os.path.join(
+            current_app.config["FILE_UPLOAD_DIRECTORY"], self.filepath()
+        )
+
+    def file_exists(self):
+        return Path(self.upload_filepath()).exists()

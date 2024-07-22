@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 import tempfile
 import datetime
 import csv
@@ -11,7 +12,6 @@ from flask import (
     request,
     send_file,
     flash,
-    Response,
 )
 
 from flask_security import login_required, current_user
@@ -80,7 +80,7 @@ def study(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data)
 
     uploads = q.order_by(Upload.date_created.desc()).paginate(
         page=searchForm.page.data, per_page=5, error_out=False
@@ -102,7 +102,7 @@ def study_my_uploads(study_id):
 
     searchForm = SearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, True)
+    q = get_study_uploads_query(study_id, searchForm, True, False)
     q = q.filter(Upload.uploader == current_user)
 
     uploads = q.order_by(Upload.date_created.desc()).paginate(
@@ -169,7 +169,7 @@ def upload_data(study_id):
                         db.session.add(uf)
                         db.session.flush()  # Make sure uf has ID assigned
 
-                        filepath = get_upload_filepath(uf)
+                        filepath = uf.upload_filepath()
                         os.makedirs(os.path.dirname(filepath), exist_ok=True)
                         f.save(filepath)
 
@@ -207,22 +207,10 @@ def download_upload_file(upload_file_id):
     uf = UploadFile.query.get_or_404(upload_file_id)
 
     return send_file(
-        get_upload_filepath(uf),
+        uf.upload_filepath(),
         as_attachment=True,
         download_name=uf.get_download_filename()
     )
-
-
-@blueprint.route("/upload/<int:upload_id>/all_files/")
-@must_be_upload_study_owner("upload_id")
-def download_all_files(upload_id):
-    u = Upload.query.get_or_404(upload_id)
-
-    m = MultipartEncoder(
-            fields={'field0': 'value', 'field1': 'value',
-                'field2': ('filename', open('file.py', 'rb'), 'text/plain')}
-        )
-    return Response(m.to_string(), mimetype=m.content_type)
 
 
 @blueprint.route("/study/<int:study_id>/csv")
@@ -232,7 +220,7 @@ def study_csv(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data)
 
     csv_filename = tempfile.NamedTemporaryFile()
 
@@ -261,6 +249,10 @@ def upload_delete():
 
         upload.deleted = 1
 
+        for uf in upload.files:
+            filepath = Path(uf.upload_filepath())
+            filepath.unlink()
+
         db.session.commit()
 
     return redirect(request.referrer)
@@ -281,19 +273,15 @@ def upload_complete():
     return redirect(request.referrer)
 
 
-def get_upload_filepath(upload_file):
-    return os.path.join(
-        current_app.config["FILE_UPLOAD_DIRECTORY"], upload_file.filepath()
-    )
-
-
-def get_study_uploads_query(study_id, search_form, show_completed):
+def get_study_uploads_query(study_id, search_form, show_completed, show_deleted):
     q = Upload.query
     q = q.filter(Upload.study_id == study_id)
-    q = q.filter(Upload.deleted == 0)
 
     if not show_completed:
         q = q.filter(Upload.completed == 0)
+
+    if not show_deleted:
+        q = q.filter(Upload.deleted == 0)
 
     if search_form.search.data:
         q = q.filter(Upload.study_number == search_form.search.data)

@@ -1,16 +1,18 @@
 from wtforms import (
     IntegerField,
+    SelectField,
     StringField,
     BooleanField,
 )
 from wtforms.validators import Length
-from lbrc_flask.forms import FlashingForm
+from lbrc_flask.forms import FlashingForm, boolean_coerce
 from lbrc_flask.forms.dynamic import FormBuilder, FieldType, Field
 
 
 class UploadSearchForm(FlashingForm):
     search = StringField("Search", validators=[Length(max=20)])
     showCompleted = BooleanField("Show Completed")
+    showDeleted = BooleanField("Show Deleted")
     page = IntegerField("Page", default=1)
 
 

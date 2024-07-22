@@ -11,3 +11,5 @@ weasyprint<53.0
 flask_weasyprint
 WTForms
 alembic
+flask-security-too[fsqla,common]
+Faker

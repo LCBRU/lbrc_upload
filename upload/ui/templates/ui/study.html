@@ -50,14 +50,21 @@
                         <h3>Files</h3>
                         <div>
                             {% for f in u.files %}
-                                <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</a>
+                                {% if f.file_exists() %}
+                                    <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</a>
+                                {% else %}
+                                    <span class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</span>
+                                {% endif %}
                             {% endfor %}
                         </div>
                     {% endif %}
 
                     <div class="float-right">
-                        {% if u.files | length > 0 %}
+                        {% if u.has_existing_files() %}
                             <a class="btn btn-secondary download-all" href="#">Download All Files</a>
+                        {% endif %}
+                        {% if u.deleted and u.has_existing_files() %}
+                            <a class="btn btn-danger" data-toggle="modal" href="#" data-target="#deleteUploadModal" data-id="{{ u.id }}">Delete All Files</a>
                         {% endif %}
                         {% if not u.completed %}
                             <a class="btn btn-primary" data-toggle="modal" href="#" data-target="#completeUploadModal" data-id="{{ u.id }}">Complete</a>
@@ -174,7 +181,6 @@
             }
         }
     })
-
 
 </script>
 {% endblock %}
