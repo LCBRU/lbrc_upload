@@ -1,0 +1,30 @@
+{% extends "lbrc/page.html" %}
+
+{% block page_content %}
+  <nav class="main_menu">
+    <div class="container">
+      <menu>
+        <li><a href="{{url_for('ui.index')}}">Home</a></li>
+      </menu>
+      <menu>
+        {% if current_user.is_admin %}
+          <li>
+            <a>Admin</a>
+            <menu>
+              <li><a href="{{url_for('admin.index')}}">Maintenance</a></li>
+            </menu>
+          </li>
+        {% endif %}
+        <li>
+          <a>{{ current_user.full_name }}</a>
+          <menu>
+            <li><a href="{{ url_for_security('change_password') }}">Change Password</a></li>
+            <li><a href="{{ url_for_security('logout') }}">Log Out</a></li>
+          </menu>
+        </li>
+      </menu>
+    </div>
+  </nav>
+
+  {% block menu_page_content %}{% endblock %}
+{% endblock %}

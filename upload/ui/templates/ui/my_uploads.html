@@ -1,54 +1,47 @@
-{% extends "lbrc_flask/page.html" %}
-{% import "lbrc_flask/form_macros.html" as formhelper %}
+{% extends "ui/menu_page.html" %}
 
-{% block content %}
+{% from "lbrc/form_macros.html" import render_form_fields, render_field_and_submit %}
+{% from "lbrc/pagination.html" import render_pagination, pagination_summary %}
 
-<section>
+{% block menu_page_content %}
 
-    <div class="page-header">
-        <h1>{{ study.name }} Uploads</h1>
+<section class="container">
+    <header>
+        <h2>{{ study.name }} Uploads</h2>
 
-        {{ formhelper.render_search(
-            searchForm,
-            'ui.study_my_uploads',
-            placeholder='enter search text - searches ' + study.get_study_number_name().lower(),
-            buttons=[
-                {
-                    'id': 'upload_data',
-                    'text': 'Upload Data',
-                    'endpoint': 'ui.upload_data',
-                },
-            ],
-            study_id=study.id,
-        ) }}
+        <form action="{{ url_for('ui.study_my_uploads', study_id=study.id) }}" method="GET" enctype="multipart/form-data">
+            <fieldset>
+                {{ render_form_fields(search_form) }}
 
-    </div>
-
-    <ul class="list-group">
-        {% for u in uploads.items %}
-            <li class="list-group-item">
-                <div class='upload_details'>
-                    <div>
-                    </div>
-                    <header>
-                        <h1>
-                            <span class="hidden-xs">{{ study.get_study_number_name() }}: </span>{{ u.study_number }}
-                        </h1>
-                        <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
-                    </header>
-                    <dl>
-                        {% for d in u.data %}
-                            <dt>{{ d.field.field_name }}</dt>
-                            <dd>{{ d.value }}</dd>
-                        {% endfor %}
-                    </dl>
+                <div class="button_bar">
+                    <a title="Upload data to study {{ study.name }}" hx-get="{{ url_for('ui.upload_data', study_id=study.id) }}" hx-target="body" hx-swap="beforeend" href="javascript:;" class="icon upload" role="button">Upload Data</a>
                 </div>
+            </fieldset>    
+        </form>    
+    </header>
+
+    {{ pagination_summary(uploads, 'upload') }}
+
+    <ul class="panel_list">
+        {% for u in uploads.items %}
+            <li>
+                <header>
+                    <div>
+                        <h3>{{ study.get_study_number_name() }}: {{ u.study_number }}</h3>
+                        <h4>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a></h4>
+                    </div>
+                </header>
+                <dl class="columns">
+                    {% for d in u.data %}
+                        <dt>{{ d.field.field_name }}</dt>
+                        <dd>{{ d.value }}</dd>
+                    {% endfor %}
+                </dl>
             </li>
         {% endfor %}
     </ul>
-    
 </section>
     
-{{ formhelper.render_pagination(uploads, 'ui.study_my_uploads', form=searchForm, study_id=study.id) }}
+{{ render_pagination(uploads, 'ui.study_my_uploads', form=searchForm, study_id=study.id) }}
 
 {% endblock %}

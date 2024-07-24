@@ -1,59 +1,68 @@
-{% extends "lbrc_flask/page.html" %}
+{% extends "ui/menu_page.html" %}
 
-{% block content %}
-<section>
-
-    {% if owned_studies.count() > 0 %}
-        <h2>Owned Studies</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Study</th>
-                    <th>Uploads</th>
-                    <th>Outstanding</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in owned_studies %}
-                <tr>
-                    <td>
-                        <a href="{{ url_for('ui.study', study_id=s.id) }}"><span class="fas fa-list" aria-hidden="true" title="View Study Uploads"></span></a>
-                        <a href="{{ url_for('ui.study_csv', study_id=s.id) }}"><span class="fas fa-download" aria-hidden="true" title="Download Uploads" ></span></a>
-                    </td>
-                    <td>{{ s.name }}</td>
-                    <td>{{ s.upload_count }}</td>
-                    <td>{{ s.outstanding_upload_count }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
+{% block menu_page_content %}
+<section class="container">
+    <ul class="panel_list">
+        {% if owned_studies.count() > 0 %}
+            <li>
+                <header>
+                    <h2>Owned Studies</h2>
+                </header>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Study</th>
+                            <th>Uploads</th>
+                            <th>Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in owned_studies %}
+                        <tr>
+                            <td>
+                                <a class="icon list" href="{{ url_for('ui.study', study_id=s.id) }}"></a>
+                                <a class="icon download" href="{{ url_for('ui.study_csv', study_id=s.id) }}"></a>
+                            </td>
+                            <td>{{ s.name }}</td>
+                            <td>{{ s.upload_count }}</td>
+                            <td>{{ s.outstanding_upload_count }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </li>
+        {% endif %}
+        {% if collaborator_studies.count() > 0 %}
+            <li>
+                <header>
+                    <h2>Collaborating Studies</h2>
+                </header>
+                <table>
+                    <thead>
+                        <tr>
+                            <th></th>
+                            <th>Study</th>
+                            <th>My Uploads</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for s in collaborator_studies %}
+                        <tr>
+                            <td>
+                                <a class="icon list" href="{{ url_for('ui.study_my_uploads', study_id=s.id) }}"></a>
+                                <a title="Upload data to study {{ s.name }}" hx-get="{{ url_for('ui.upload_data', study_id=s.id) }}" hx-target="body" hx-swap="beforeend" href="javascript:;" class="icon upload"></a>
+                            </td>
+                            <td>{{ s.name }}</td>
+                            <td>{{ s.upload_count_for_user(current_user) }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>        
+            </li>
+        {% endif %}
+    </ul>
         
-    {% if collaborator_studies.count() > 0 %}
-        <h2>Collaborating Studies</h2>
-        <table class="table">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>Study</th>
-                    <th>My Uploads</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for s in collaborator_studies %}
-                <tr>
-                    <td>
-                        <a href="{{ url_for('ui.study_my_uploads', study_id=s.id) }}"><span class="fas fa-list" aria-hidden="true" title="View My Study Uploads"></span></a>
-                        <a href="{{ url_for('ui.upload_data', study_id=s.id) }}"><span class="fas fa-upload" aria-hidden="true" title="Upload Data" ></span></a>
-                    </td>
-                    <td>{{ s.name }}</td>
-                    <td>{{ s.upload_count_for_user(current_user) }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    {% endif %}
 </section>
     
 {% endblock %}

@@ -4,7 +4,6 @@ import tempfile
 import datetime
 import csv
 from flask import (
-    current_app,
     Blueprint,
     render_template,
     redirect,
@@ -26,7 +25,7 @@ from upload.decorators import (
 from lbrc_flask.emailing import email
 from lbrc_flask.database import db
 from lbrc_flask.forms import ConfirmForm, SearchForm
-
+from lbrc_flask.response import refresh_response
 
 blueprint = Blueprint("ui", __name__, template_folder="templates")
 
@@ -90,7 +89,7 @@ def study(study_id):
         "ui/study.html",
         study=study,
         uploads=uploads,
-        searchForm=searchForm,
+        search_form=searchForm,
         confirm_form=ConfirmForm(),
     )
 
@@ -100,17 +99,17 @@ def study(study_id):
 def study_my_uploads(study_id):
     study = Study.query.get_or_404(study_id)
 
-    searchForm = SearchForm(formdata=request.args)
+    search_form = SearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, True, False)
+    q = get_study_uploads_query(study_id, search_form, True, False)
     q = q.filter(Upload.uploader == current_user)
 
     uploads = q.order_by(Upload.date_created.desc()).paginate(
-        page=searchForm.page.data, per_page=5, error_out=False
+        page=search_form.page.data, per_page=5, error_out=False
     )
 
     return render_template(
-        "ui/my_uploads.html", study=study, uploads=uploads, searchForm=searchForm
+        "ui/my_uploads.html", study=study, uploads=uploads, search_form=search_form
     )
 
 
@@ -164,7 +163,7 @@ def upload_data(study_id):
                     else:
                         files = [value]
 
-                    for f in files:
+                    for f in filter(None, files):
                         uf = UploadFile(upload=u, field=field, filename=f.filename)
                         db.session.add(uf)
                         db.session.flush()  # Make sure uf has ID assigned
@@ -196,9 +195,14 @@ def upload_data(study_id):
             recipients=[current_user.email],
         )
 
-        return redirect(url_for("ui.index"))
+        return refresh_response()
 
-    return render_template("ui/upload.html", form=form, study=study)
+    return render_template(
+        "lbrc/form_modal.html",
+        title=f"Upload data to study {study.name}",
+        form=form,
+        url=url_for('ui.upload_data', study_id=study.id),
+    )
 
 
 @blueprint.route("/upload/file/<int:upload_file_id>")
@@ -239,38 +243,34 @@ def study_csv(study_id):
         csv_filename.close()
 
 
-@blueprint.route("/upload_delete", methods=["POST"])
+@blueprint.route("/upload/<int:id>/delete", methods=["POST"])
 @must_be_upload_study_owner("id")
-def upload_delete():
-    form = ConfirmForm()
+def upload_delete(id):
+    upload = db.get_or_404(Upload, id)
 
-    if form.validate_on_submit():
-        upload = Upload.query.get_or_404(form.id.data)
+    upload.deleted = 1
 
-        upload.deleted = 1
+    for uf in upload.files:
+        filepath = Path(uf.upload_filepath())
+        filepath.unlink()
 
-        for uf in upload.files:
-            filepath = Path(uf.upload_filepath())
-            filepath.unlink()
+    db.session.add(upload)
+    db.session.commit()
 
-        db.session.commit()
-
-    return redirect(request.referrer)
+    return refresh_response()
 
 
-@blueprint.route("/upload_complete", methods=["POST"])
+@blueprint.route("/upload/<int:id>/complete", methods=["POST"])
 @must_be_upload_study_owner("id")
-def upload_complete():
-    form = ConfirmForm()
+def upload_complete(id):
+    upload = Upload.query.get_or_404(id)
 
-    if form.validate_on_submit():
-        upload = Upload.query.get_or_404(form.id.data)
+    upload.completed = 1
 
-        upload.completed = 1
+    db.session.add(upload)
+    db.session.commit()
 
-        db.session.commit()
-
-    return redirect(request.referrer)
+    return refresh_response()
 
 
 def get_study_uploads_query(study_id, search_form, show_completed, show_deleted):

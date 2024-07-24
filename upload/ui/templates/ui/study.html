@@ -1,186 +1,101 @@
-{% extends "lbrc_flask/page.html" %}
-{% import "lbrc_flask/form_macros.html" as formhelper %}
+{% extends "ui/menu_page.html" %}
 
-{% block content %}
-<section>
-    <div class="page-header">
-        <h1>{{ study.name }} Uploads</h1>
+{% from "lbrc/form_macros.html" import render_form_fields, render_field_and_submit %}
+{% from "lbrc/pagination.html" import render_pagination, pagination_summary %}
+{% from "lbrc/tabbed_display.html" import tabbed_display_tab with context %}
 
-        {{ formhelper.render_search(
-            searchForm,
-            'ui.study',
-            placeholder='enter search text - searches ' + study.get_study_number_name().lower(),
-            buttons=[
-                {
-                    'id': 'download_data',
-                    'text': 'Download Upload Details',
-                    'endpoint': 'ui.study_csv',
-                },
-            ],
-            study_id=study.id,
-        ) }}
+{% block menu_page_content %}
+<section class="container">
+    <header>
+        <h2>{{ study.name }} Uploads</h2>
 
-    </div>
+        <form action="{{ url_for('ui.study', study_id=study.id) }}" method="GET" enctype="multipart/form-data">
+            <fieldset>
+                {{ render_form_fields(search_form) }}
 
-    <ul class="list-group">
+                <div class="button_bar">
+                    <button type="submit" formaction="{{ url_for('ui.study_csv', study_id=study.id) }}" formmethod="get">Download Upload Details</button>
+                </div>
+            </fieldset>    
+        </form>    
+    </header>
+
+    {{ pagination_summary(uploads, 'upload') }}
+
+    <ul class="panel_list">
         {% for u in uploads.items %}
-            <li class="list-group-item">
-                <div class='upload_details'>
-                    <header>
-                        <h1>
-                            <div class="pull-right">
-                                {% if u.completed %}
-                                    <span class="label label-default">Completed</span>
-                                {% endif %}
-                            </div>
-                            <span class="hidden-xs">{{ study.get_study_number_name() }}: </span>{{ u.study_number }}
-                        </h1>
-                        <h2>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a> at {{ u.uploader.site.name_and_number }}</h2>
-                    </header>
-                    {% if u.data | length > 0 %}
-                        <dl>
-                            {% for d in u.data | sort(attribute='field.order')%}
-                                <dt>{{ d.field.field_name }}</dt>
-                                <dd>{{ d.value | default('', true) }}</dd>
-                            {% endfor %}
-                        </dl>
-                    {% endif %}
-
-                    {% if u.files | length > 0 %}
-                        <h3>Files</h3>
-                        <div>
-                            {% for f in u.files %}
-                                {% if f.file_exists() %}
-                                    <a class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</a>
-                                {% else %}
-                                    <span class='download' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}"><span class="glyphicon glyphicon-download" aria-hidden="true"></span> {{ f.get_download_filename() }}</span>
-                                {% endif %}
-                            {% endfor %}
-                        </div>
-                    {% endif %}
-
-                    <div class="float-right">
-                        {% if u.has_existing_files() %}
-                            <a class="btn btn-secondary download-all" href="#">Download All Files</a>
-                        {% endif %}
-                        {% if u.deleted and u.has_existing_files() %}
-                            <a class="btn btn-danger" data-toggle="modal" href="#" data-target="#deleteUploadModal" data-id="{{ u.id }}">Delete All Files</a>
+            <li>
+                <header class="flex_two_left_grow">
+                    <div>
+                        <h3>{{ study.get_study_number_name() }}: {{ u.study_number }}</h3>
+                        <h4>Uploaded on {{ u.date_created | date_format }} by <a href="mailto:{{ u.uploader.email }}">{{ u.uploader.full_name }}</a></h4>
+                    </div>
+                    <nav class="link_list">
+                        {% if u.completed %}
+                            <span class="pill">Completed</span>
                         {% endif %}
                         {% if not u.completed %}
-                            <a class="btn btn-primary" data-toggle="modal" href="#" data-target="#completeUploadModal" data-id="{{ u.id }}">Complete</a>
+                            <a title="Complete upload for {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_complete', id=u.id) }}" hx-confirm="Are you sure you wish to complete '{{ u.study_number }}'?" href="javascript:;" class="icon check_circle" role="button">Complete</a>
                         {% endif %}
                         {% if not u.deleted %}
-                            <a class="btn btn-danger" data-toggle="modal" href="#" data-target="#deleteUploadModal" data-id="{{ u.id }}">Delete</a>
+                            <a title="Delete upload for {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_delete', id=u.id) }}" hx-confirm="Are you sure you wish to delete '{{ u.study_number }}'?" href="javascript:;" class="icon delete error" role="button">Delete</a>
                         {% endif %}
+                    </nav>
+                </header>
+
+                <dl class="columns">
+                    {% for d in u.data | sort(attribute='field.order')%}
+                        <dt>{{ d.field.field_name }}</dt>
+                        <dd>{{ d.value | default('', true) }}</dd>
+                    {% endfor %}
+                </dl>
+
+                <div class="tabbed_display">
+                    <div class="tabbed_display_tabs">
+                        {{ tabbed_display_tab('files', 'files', 'Files', 'javascript:;') }}
                     </div>
+                    <div class="tabbed_display_content flex_two_left_grow">
+                        <nav class="link_list">
+                            {% for f in u.files %}
+                                {% if f.file_exists() %}
+                                    <a class='icon download upload_{{u.id}}_file' href="{{ url_for('ui.download_upload_file', upload_file_id=f.id) }}" role="button">{{ f.get_download_filename() }}</a>
+                                {% else %}
+                                    <a class='icon download muted' role="button">{{ f.get_download_filename() }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        </nav>    
+                        <nav class="link_list">
+                            {% if u.has_existing_files() %}
+                                <a class="icon download_all warning" onclick="download_all({{u.id}});" href="javascript:;" role="button">Download All</a>
+                            {% endif %}
+                            {% if u.deleted and u.has_existing_files() %}
+                                <a title="Delete all files for upload {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_delete', id=u.id) }}" hx-confirm="Are you sure you wish to delete all files for upload '{{ u.study_number }}'?" href="javascript:;" class="icon delete error" role="button">Delete All</a>
+                            {% endif %}
+                        </nav>
+                    </div>            
                 </div>
             </li>
         {% endfor %}
-    </ul>
-        
+    </ul>        
 </section>
 
-<!-- Delete Confirmation Dialog -->
-<div class="modal fade" id="deleteUploadModal" tabindex="-1" role="dialog" aria-labelledby="deleteUploadModal" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="deleteUploadModalLabel">Delete Upload</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            Are you sure you want to delete this upload?
-        </div>
-        <div class="modal-footer">
-            <form action="{{ url_for('ui.upload_delete') }}" method="POST">
-                {{ confirm_form.hidden_tag() }}
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-danger"><span class="glyphicon glyphicon-remove" aria-hidden="true"></span> Delete</button>
-            </form>
-        </div>
-        </div>
-    </div>
-</div>
+{{ render_pagination(uploads, 'ui.study', form=searchForm, study_id=study.id) }}
 
-<!-- Complete Confirmation Dialog -->
-<div class="modal fade" id="completeUploadModal" tabindex="-1" role="dialog" aria-labelledby="deleteUploadModal" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title" id="deleteUploadModalLabel">Complete Upload</h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-            <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-        <div class="modal-body">
-            Are you sure you want to complete this upload?
-        </div>
-        <div class="modal-footer">
-            <form action="{{ url_for('ui.upload_complete') }}" method="POST">
-                {{ confirm_form.hidden_tag() }}
-                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                <button type="submit" class="btn btn-primary"><span class="glyphicon glyphicon-ok" aria-hidden="true"></span> Complete</button>
-            </form>
-        </div>
-        </div>
-    </div>
-</div>
-    
-{{ formhelper.render_pagination(uploads, 'ui.study', form=searchForm, study_id=study.id) }}
-
-{% endblock %}
-
-{% block js %}
 <script>
-    function findAncestor (el, cls) {
-        while ((el = el.parentElement) && !el.classList.contains(cls));
-        return el;
-    }
+    function download_all (upload_id) {
+        const all_files = Array.from(document.querySelectorAll(`.upload_${upload_id}_file`));
 
-    $('#deleteUploadModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget)
-        var id = button.data('id')
-
-        var modal = $(this)
-        modal.find('.modal-footer input#id').val(id)
-    })
-
-    $('#completeUploadModal').on('show.bs.modal', function (event) {
-        var button = $(event.relatedTarget)
-        var id = button.data('id')
-
-        var modal = $(this)
-        modal.find('.modal-footer input#id').val(id)
-    })
-
-    $('#showCompleted').click(function (event) {
-        $("#searchForm").submit();
-    })
-
-    $('.download-all').click(function (event) {
-        event.preventDefault();
-        ud = findAncestor(this, 'upload_details');
-
-        links = []
-
-        $('.download', ud).each(function(){
-            links.push(this)
-        });
-
-        var interval = setInterval(download_files, 1000, links);
+        var interval = setInterval(download_files, 1000, all_files);
 
         function download_files() {
-            var l = links.pop();
+            var l = all_files.pop();
 
             l.click();
 
-            if (links.length == 0) {
+            if (all_files.length == 0) {
                 clearInterval(interval);
             }
         }
-    })
-
+    }
 </script>
 {% endblock %}
