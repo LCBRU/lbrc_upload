@@ -251,7 +251,8 @@ def upload_delete():
 
         for uf in upload.files:
             filepath = Path(uf.upload_filepath())
-            filepath.unlink()
+            if filepath.exists:
+                filepath.unlink()
 
         db.session.commit()
 
