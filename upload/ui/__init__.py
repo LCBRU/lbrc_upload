@@ -14,6 +14,7 @@ from flask import (
 )
 
 from flask_security import login_required, current_user
+from sqlalchemy import or_
 from upload.model import Study, Upload, UploadData, UploadFile
 from upload.ui.forms import UploadSearchForm, UploadFormBuilder
 from upload.decorators import (
@@ -79,7 +80,7 @@ def study(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
 
     uploads = q.order_by(Upload.date_created.desc()).paginate(
         page=searchForm.page.data, per_page=5, error_out=False
@@ -101,7 +102,7 @@ def study_my_uploads(study_id):
 
     search_form = SearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, search_form, True, False)
+    q = get_study_uploads_query(study_id, search_form, True, False, False)
     q = q.filter(Upload.uploader == current_user)
 
     uploads = q.order_by(Upload.date_created.desc()).paginate(
@@ -224,7 +225,7 @@ def study_csv(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data. searchForm.hideOutstanding.data)
 
     csv_filename = tempfile.NamedTemporaryFile()
 
@@ -264,7 +265,7 @@ def delete_upload(upload):
     db.session.commit()
 
 
-def get_study_uploads_query(study_id, search_form, show_completed, show_deleted):
+def get_study_uploads_query(study_id, search_form, show_completed, show_deleted, hide_outstanding):
     q = Upload.query
     q = q.filter(Upload.study_id == study_id)
 
@@ -273,6 +274,9 @@ def get_study_uploads_query(study_id, search_form, show_completed, show_deleted)
 
     if not show_deleted:
         q = q.filter(Upload.deleted == 0)
+
+    if hide_outstanding:
+        q = q.filter(or_(Upload.deleted == 1, Upload.completed == 1))
 
     if search_form.search.data:
         q = q.filter(Upload.study_number == search_form.search.data)
@@ -325,7 +329,7 @@ def upload_delete_page(study_id):
 
     searchForm = UploadSearchForm()
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
 
     uploads = q.order_by(Upload.date_created.desc()).paginate(
         page=searchForm.page.data, per_page=5, error_out=False

@@ -82,6 +82,7 @@ for s in studies:
             study_number=''.join(choices(string.digits, k=randint(5, 20))),
             uploader=me,
             deleted=choice([True, False]),
+            completed=choice([True, False]),
         ))
 db.session.add_all(uploads)
 db.session.commit()

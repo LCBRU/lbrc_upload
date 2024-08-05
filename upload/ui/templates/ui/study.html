@@ -35,6 +35,9 @@
                         {% if u.completed %}
                             <span class="pill">Completed</span>
                         {% endif %}
+                        {% if u.deleted %}
+                            <span class="pill">Deleted</span>
+                        {% endif %}
                         {% if not u.deleted %}
                             <a title="Delete upload for {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_delete', id=u.id) }}" hx-confirm="Are you sure you wish to delete '{{ u.study_number }}'?" href="javascript:;" class="icon delete error" role="button">Delete</a>
                         {% endif %}

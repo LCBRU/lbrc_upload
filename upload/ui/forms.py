@@ -12,6 +12,7 @@ class UploadSearchForm(FlashingForm):
     search = SearchField("Search", validators=[Length(max=20)])
     showCompleted = BooleanField("Show Completed")
     showDeleted = BooleanField("Show Deleted")
+    hideOutstanding = BooleanField("Hide Outstanding")
     page = IntegerField("Page", default=1)
 
 
