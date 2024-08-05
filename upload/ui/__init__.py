@@ -254,8 +254,10 @@ def upload_delete(id):
         filepath = Path(uf.upload_filepath())
         filepath.unlink()
 
-    db.session.add(upload)
-    db.session.commit()
+        for uf in upload.files:
+            filepath = Path(uf.upload_filepath())
+            if filepath.exists:
+                filepath.unlink()
 
     return refresh_response()
 
