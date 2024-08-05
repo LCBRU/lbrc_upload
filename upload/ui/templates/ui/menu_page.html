@@ -1,5 +1,9 @@
 {% extends "lbrc/page.html" %}
 
+{% block page_css %}
+  <link href="{{ url_for('static', filename='css/app.css', ver=4) }}" rel="stylesheet">
+{% endblock %}
+
 {% block page_content %}
   <nav class="main_menu">
     <div class="container">

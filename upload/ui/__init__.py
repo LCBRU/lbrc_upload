@@ -247,32 +247,21 @@ def study_csv(study_id):
 @must_be_upload_study_owner("id")
 def upload_delete(id):
     upload = db.get_or_404(Upload, id)
+    delete_upload(upload)
+    return refresh_response()
 
+
+def delete_upload(upload):
     upload.deleted = 1
 
     for uf in upload.files:
-        filepath = Path(uf.upload_filepath())
-        filepath.unlink()
-
         for uf in upload.files:
             filepath = Path(uf.upload_filepath())
-            if filepath.exists:
+            if filepath.exists():
                 filepath.unlink()
-
-    return refresh_response()
-
-
-@blueprint.route("/upload/<int:id>/complete", methods=["POST"])
-@must_be_upload_study_owner("id")
-def upload_complete(id):
-    upload = Upload.query.get_or_404(id)
-
-    upload.completed = 1
 
     db.session.add(upload)
     db.session.commit()
-
-    return refresh_response()
 
 
 def get_study_uploads_query(study_id, search_form, show_completed, show_deleted):
@@ -327,3 +316,22 @@ def write_study_upload_csv(filename, study, query):
             row = dict(row, **{f.field.field_name: f.filename for f in u.files})
 
             writer.writerow(row)
+
+
+@blueprint.route("/study/<int:study_id>/delete_page", methods=["POST"])
+@must_be_study_owner()
+def upload_delete_page(study_id):
+    study = Study.query.get_or_404(study_id)
+
+    searchForm = UploadSearchForm()
+
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data)
+
+    uploads = q.order_by(Upload.date_created.desc()).paginate(
+        page=searchForm.page.data, per_page=5, error_out=False
+    )
+
+    for u in uploads.items:
+        delete_upload(u)
+    
+    return refresh_response()

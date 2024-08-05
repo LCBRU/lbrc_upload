@@ -15,6 +15,7 @@
 
                 <div class="button_bar">
                     <button type="submit" formaction="{{ url_for('ui.study_csv', study_id=study.id) }}" formmethod="get">Download Upload Details</button>
+                    <button type="submit" hx-post="{{ url_for('ui.upload_delete_page', study_id=study.id) }}" hx-confirm="Are you sure you wish to delete all of the uploads on this page?" >Delete All on Page</button>
                 </div>
             </fieldset>    
         </form>    
@@ -33,9 +34,6 @@
                     <nav class="link_list">
                         {% if u.completed %}
                             <span class="pill">Completed</span>
-                        {% endif %}
-                        {% if not u.completed %}
-                            <a title="Complete upload for {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_complete', id=u.id) }}" hx-confirm="Are you sure you wish to complete '{{ u.study_number }}'?" href="javascript:;" class="icon check_circle" role="button">Complete</a>
                         {% endif %}
                         {% if not u.deleted %}
                             <a title="Delete upload for {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_delete', id=u.id) }}" hx-confirm="Are you sure you wish to delete '{{ u.study_number }}'?" href="javascript:;" class="icon delete error" role="button">Delete</a>
