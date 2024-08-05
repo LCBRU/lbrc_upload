@@ -358,6 +358,8 @@ def refresh_file_size():
             if uf.file_exists():
                 p = Path(uf.upload_filepath())
                 uf.size = p.stat().st_size
+            else:
+                uf.size = 0
             db.session.add(uf)
     
     db.session.commit()
