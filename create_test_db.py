@@ -12,7 +12,6 @@ from lbrc_flask.forms.dynamic import FieldGroup, create_field_types, FieldType, 
 from sqlalchemy import select
 from upload.model import Site, Study, Upload, UploadData, UploadFile, User
 
-
 fake = Faker()
 
 load_dotenv()
@@ -22,6 +21,7 @@ from upload import create_app
 application = create_app()
 application.app_context().push()
 db.create_all()
+
 init_roles([])
 init_users()
 create_field_types()
@@ -53,6 +53,7 @@ studies = [Study(
     field_group_id=fg.id,
     owners=[me],
     collaborators=[me],
+    size_limit=randint(1,10) * 1000,
 ) for fg in field_groups]
 
 db.session.add_all(studies)
@@ -114,3 +115,8 @@ db.session.add_all(upload_files)
 db.session.commit()
 
 db.session.close()
+
+from alembic.config import Config
+from alembic import command
+alembic_cfg = Config("alembic.ini")
+command.stamp(alembic_cfg, "head")

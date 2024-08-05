@@ -1,4 +1,5 @@
 git+https://github.com/LCBRU/lbrc_flask.git@pyproject
 Faker
+humanize
 lxml
 pymysql

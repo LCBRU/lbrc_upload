@@ -16,6 +16,7 @@ class StudyView(AdminCustomView):
         Study.allow_duplicate_study_number,
         Study.allow_empty_study_number,
         Study.study_number_format,
+        Study.size_limit,
         "field_group",
         "owners",
         "collaborators",

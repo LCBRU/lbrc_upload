@@ -8,7 +8,13 @@
 <section class="container">
     <header>
         <h2>{{ study.name }} Uploads</h2>
-
+        {% if study.size_limit_exceeded %}
+            <h4 class="pill error icon exclamation">File Uploads Disabled. Used space of {{study.total_file_size_message}} exceeds study size limit of {{study.size_limit_message}}</h4>
+        {% elif study.size_limit %}
+            <h4>{{study.total_file_size_message}} of {{study.size_limit_message}} used</h4>
+        {% else %}
+            <h4>{{study.total_file_size_message}} used</h4>
+        {% endif %}
         <form action="{{ url_for('ui.study', study_id=study.id) }}" method="GET" enctype="multipart/form-data">
             <fieldset>
                 {{ render_form_fields(search_form) }}
@@ -17,8 +23,8 @@
                     <button type="submit" formaction="{{ url_for('ui.study_csv', study_id=study.id) }}" formmethod="get">Download Upload Details</button>
                     <button type="submit" hx-post="{{ url_for('ui.upload_delete_page', study_id=study.id) }}" hx-confirm="Are you sure you wish to delete all of the uploads on this page?" >Delete All on Page</button>
                 </div>
-            </fieldset>    
-        </form>    
+            </fieldset>
+        </form>
     </header>
 
     {{ pagination_summary(uploads, 'upload') }}
@@ -53,7 +59,7 @@
 
                 <div class="tabbed_display">
                     <div class="tabbed_display_tabs">
-                        {{ tabbed_display_tab('files', 'files', 'Files', 'javascript:;') }}
+                        {{ tabbed_display_tab('files', 'files', 'Files (' + u.total_file_size_message + ')', 'javascript:;') }}
                     </div>
                     <div class="tabbed_display_content flex_two_left_grow">
                         <nav class="link_list">

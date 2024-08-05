@@ -14,7 +14,7 @@ from flask import (
 )
 
 from flask_security import login_required, current_user
-from sqlalchemy import or_
+from sqlalchemy import or_, select
 from upload.model import Study, Upload, UploadData, UploadFile
 from upload.ui.forms import UploadSearchForm, UploadFormBuilder
 from upload.decorators import (
@@ -27,6 +27,7 @@ from lbrc_flask.emailing import email
 from lbrc_flask.database import db
 from lbrc_flask.forms import ConfirmForm, SearchForm
 from lbrc_flask.response import refresh_response
+from lbrc_flask.security import must_be_admin
 
 blueprint = Blueprint("ui", __name__, template_folder="templates")
 
@@ -119,6 +120,10 @@ def study_my_uploads(study_id):
 def upload_data(study_id):
     study = Study.query.get_or_404(study_id)
 
+    if study.size_limit_exceeded:
+        flash(category='error', message="Upload failed as study has exceeded it's size limit.")
+        return refresh_response()
+
     builder = UploadFormBuilder(study)
 
     form = builder.get_form()()
@@ -169,12 +174,14 @@ def upload_data(study_id):
                         db.session.add(uf)
                         db.session.flush()  # Make sure uf has ID assigned
 
-                        filepath = uf.upload_filepath()
-                        os.makedirs(os.path.dirname(filepath), exist_ok=True)
-                        f.save(filepath)
+                        p = Path(uf.upload_filepath())
+                        p.parent.mkdir(parents=True, exist_ok=True)
+                        f.save(p)
 
+                        uf.size = p.stat().st_size
                 else:
-                    ud = UploadData(upload=u, field=field, value=value)
+
+                    ud = UploadData(upload=u, field=field, value=field.format_value(value))
 
                     db.session.add(ud)
 
@@ -260,6 +267,8 @@ def delete_upload(upload):
             filepath = Path(uf.upload_filepath())
             if filepath.exists():
                 filepath.unlink()
+            uf.size = 0
+            db.session.add(uf)
 
     db.session.add(upload)
     db.session.commit()
@@ -339,3 +348,19 @@ def upload_delete_page(study_id):
         delete_upload(u)
     
     return refresh_response()
+
+
+@blueprint.route("/refresh_file_size")
+@must_be_admin()
+def refresh_file_size():
+    for u in db.session.execute(select(Upload)).scalars():
+        for uf in u.files:
+            if uf.file_exists():
+                p = Path(uf.upload_filepath())
+                uf.size = p.stat().st_size
+            db.session.add(uf)
+    
+    db.session.commit()
+
+    return redirect(url_for('ui.index'))
+

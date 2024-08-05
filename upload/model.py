@@ -1,11 +1,14 @@
 import os
+import humanize
 from datetime import datetime
 from pathlib import Path
 from flask import current_app
+from sqlalchemy import Integer
 from werkzeug.utils import secure_filename
 from lbrc_flask.security import User as BaseUser
 from lbrc_flask.database import db
-from lbrc_flask.forms.dynamic import FieldGroup, Field, FieldType
+from lbrc_flask.forms.dynamic import FieldGroup, Field
+from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
 
 
 class Site(db.Model):
@@ -61,6 +64,7 @@ class Study(db.Model):
     study_number_name = db.Column(db.String(100))
     field_group_id = db.Column(db.Integer(), db.ForeignKey(FieldGroup.id))
     field_group = db.relationship(FieldGroup, backref=db.backref("study"))
+    size_limit: Mapped[int] = mapped_column(Integer, nullable=True)
 
     owners = db.relationship(
         User,
@@ -90,6 +94,22 @@ class Study(db.Model):
     def get_study_number_name(self):
         return self.study_number_name or 'Study Number'
 
+    @property
+    def total_file_size(self):
+        return sum(u.total_file_size for u in self.uploads)
+
+    @property
+    def total_file_size_message(self):
+        return humanize.naturalsize(self.total_file_size)
+
+    @property
+    def size_limit_message(self):
+        return humanize.naturalsize(self.size_limit)
+
+    @property
+    def size_limit_exceeded(self):
+        return self.size_limit and self.total_file_size > self.size_limit
+
 
 class Upload(db.Model):
 
@@ -105,6 +125,14 @@ class Upload(db.Model):
 
     def has_existing_files(self):
         return any(uf.file_exists() for uf in self.files)
+
+    @property
+    def total_file_size(self):
+        return sum(uf.size for uf in self.files)
+
+    @property
+    def total_file_size_message(self):
+        return humanize.naturalsize(self.total_file_size)
 
 
 class UploadData(db.Model):
@@ -129,6 +157,7 @@ class UploadFile(db.Model):
     field_id = db.Column(db.Integer(), db.ForeignKey(Field.id))
     field = db.relationship(Field)
     filename = db.Column(db.String(500))
+    size: Mapped[int] = mapped_column(Integer, nullable=True)
 
     def get_download_filename(self):
         if len(self.field.download_filename_format or '') == 0:
