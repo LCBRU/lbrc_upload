@@ -1,5 +1,7 @@
+from itertools import chain
 import os
 from pathlib import Path
+import shutil
 import tempfile
 import datetime
 import csv
@@ -232,23 +234,36 @@ def study_csv(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data. searchForm.hideOutstanding.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
 
-    csv_filename = tempfile.NamedTemporaryFile()
+    with tempfile.TemporaryDirectory() as tmpdirname:
+        temppath = Path(tmpdirname)
+        datestring = datetime.datetime.now().strftime('%Y%M%d%H%m%S')
+        filename = f'{study.name}_{datestring}'
+        csv_filename = temppath / f'{filename}.csv'
+        print('created temporary directory', tmpdirname)
 
-    try:
-        write_study_upload_csv(csv_filename.name, study, q)
+        write_study_upload_csv(csv_filename, study, q)
 
-        return send_file(
-            csv_filename.name,
-            as_attachment=True,
-            download_name="{0}_{1:%Y%M%d%H%m%S}.csv".format(
-                study.name, datetime.datetime.now()
-            ),
-        )
+        for u in study.uploads:
+            if not u.has_existing_files():
+                continue
 
-    finally:
-        csv_filename.close()
+            upload_dir_path = temppath / u.study_number
+            upload_dir_path.mkdir(parents=True, exist_ok=True)
+
+            for uf in u.files:
+                if uf.file_exists():
+                    upload_file_path = upload_dir_path / uf.get_download_filename()
+                    shutil.copy(uf.upload_filepath(), upload_file_path)
+        
+        with tempfile.NamedTemporaryFile(delete=False) as zipfilename:
+            zipname = shutil.make_archive(zipfilename.name, 'zip', temppath)
+            return send_file(
+                zipname,
+                as_attachment=True,
+                download_name=f'{filename}.zip'
+                )
 
 
 @blueprint.route("/upload/<int:id>/delete", methods=["POST"])
