@@ -234,7 +234,7 @@ def study_csv(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data. searchForm.hideOutstanding.data)
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
 
     csv_filename = tempfile.NamedTemporaryFile()
 
