@@ -77,7 +77,7 @@ db.session.commit()
 
 uploads = []
 for s in studies:
-    for _ in range(randint(5, 10)):
+    for _ in range(randint(50, 100)):
         uploads.append(Upload(
             study=s,
             study_number=''.join(choices(string.digits, k=randint(5, 20))),

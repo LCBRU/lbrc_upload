@@ -128,7 +128,7 @@ class Upload(db.Model):
 
     @property
     def total_file_size(self):
-        return sum(uf.size for uf in self.files)
+        return sum(uf.size or 0 for uf in self.files)
 
     @property
     def total_file_size_message(self):

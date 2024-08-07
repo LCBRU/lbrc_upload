@@ -234,7 +234,41 @@ def study_csv(study_id):
 
     searchForm = UploadSearchForm(formdata=request.args)
 
+    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data. searchForm.hideOutstanding.data)
+
+    csv_filename = tempfile.NamedTemporaryFile()
+
+    try:
+        write_study_upload_csv(csv_filename.name, study, q)
+
+        return send_file(
+            csv_filename.name,
+            as_attachment=True,
+            download_name="{0}_{1:%Y%M%d%H%m%S}.csv".format(
+                study.name, datetime.datetime.now()
+            ),
+        )
+
+    finally:
+        csv_filename.close()
+
+
+@blueprint.route("/Uploads/<int:study_id>/page_download")
+@must_be_study_owner()
+def study_page_download(study_id):
+    study = Study.query.get_or_404(study_id)
+
+    searchForm = UploadSearchForm(formdata=request.args)
+
     q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+
+    uploads = list(q.order_by(Upload.date_created.desc()).paginate(
+        page=searchForm.page.data, per_page=5, error_out=False
+    ).items)
+
+    if sum([u.total_file_size for u in uploads]) > 1_000_000_000:
+        flash('Files too large to download as a page')
+        return redirect(request.referrer)
 
     with tempfile.TemporaryDirectory() as tmpdirname:
         temppath = Path(tmpdirname)
@@ -245,7 +279,7 @@ def study_csv(study_id):
 
         write_study_upload_csv(csv_filename, study, q)
 
-        for u in study.uploads:
+        for u in uploads:
             if not u.has_existing_files():
                 continue
 
