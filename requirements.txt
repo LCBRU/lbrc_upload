@@ -128,7 +128,7 @@ jsonschema==4.17.3
     # via lbrc-flask
 kombu==5.3.7
     # via celery
-lbrc-flask @ git+https://github.com/LCBRU/lbrc_flask.git@pyproject
+lbrc-flask @ git+https://github.com/LCBRU/lbrc_flask.git
     # via -r requirements.in
 lxml==4.9.2
     # via -r requirements.in
