@@ -1,4 +1,4 @@
-git+https://github.com/LCBRU/lbrc_flask.git@pyproject
+-e git+https://github.com/LCBRU/lbrc_flask.git#egg=lbrc_flask
 Faker
 humanize
 lxml
