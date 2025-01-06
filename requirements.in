@@ -3,3 +3,4 @@ Faker
 humanize
 lxml
 pymysql
+wtforms==3.0.1
