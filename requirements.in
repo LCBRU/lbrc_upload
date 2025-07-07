@@ -1,6 +1,2 @@
--e git+https://github.com/LCBRU/lbrc_flask.git#egg=lbrc_flask
-Faker
+git+https://github.com/LCBRU/lbrc_flask.git#egg=lbrc_flask
 humanize
-lxml
-pymysql
-wtforms==3.0.1
