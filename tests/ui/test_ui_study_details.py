@@ -1,3 +1,4 @@
+import http
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
 from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation
 import pytest
@@ -5,7 +6,6 @@ import re
 from flask import url_for
 from itertools import cycle
 from lbrc_flask.pytest.helpers import login
-from flask_api import status
 
 
 _endpoint = 'ui.study'
@@ -128,7 +128,7 @@ def test__study_details_uploads__with_files(client, faker):
 
 
 def _assert_response(study, uploads, resp):
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
 
     assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
 

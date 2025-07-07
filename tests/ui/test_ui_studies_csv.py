@@ -1,3 +1,4 @@
+import http
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
 from lbrc_flask.pytest.asserts import assert__requires_login
 import pytest
@@ -5,8 +6,6 @@ import csv
 from io import StringIO
 from flask import url_for
 from tests import login
-from lbrc_flask.database import db
-from flask_api import status
 
 
 _endpoint = 'ui.study_csv'
@@ -42,7 +41,7 @@ def test__study_csv__download(client, faker, upload_count):
 
     resp = client.get(_url(study_id=study.id))
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
 
     decoded_content = resp.data.decode("utf-8")
 

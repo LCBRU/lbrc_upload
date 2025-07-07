@@ -1,4 +1,4 @@
-from flask_api import status
+import http
 from lbrc_flask.pytest.asserts import assert__redirect, get_and_assert_standards
 import pytest
 from itertools import cycle
@@ -22,7 +22,7 @@ def test__study_list__no_studies__no_display(client, faker):
 
     resp = get_and_assert_standards(client, _url(), user)
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
     assert resp.soup.find("h2", string="Owned Studies") is None
     assert resp.soup.find("h2", string="Collaborating Studies") is None
     assert len(resp.soup.find_all("table", "table study_list")) == 0
@@ -46,7 +46,7 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
 
     resp = get_and_assert_standards(client, _url(), user)
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
     assert resp.soup.find("h2", string="Owned Studies") is not None
     assert resp.soup.find("h2", string="Collaborating Studies") is None
     assert len(resp.soup.select("table.table")) == 1
@@ -90,7 +90,7 @@ def test__study_list__owned_study__upload_count(
 
     resp = get_and_assert_standards(client, _url(), user)
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
 
     study_row = resp.soup.find("td", string=study.name).parent
 
@@ -116,7 +116,7 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
 
     resp = get_and_assert_standards(client, _url(), user)
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
     assert resp.soup.find("h2", string="Owned Studies") is None
     assert resp.soup.find("h2", string="Collaborating Studies") is not None
     assert len(resp.soup.select("table.table")) == 1
@@ -161,7 +161,7 @@ def test__study_list__owned_study__upload_count(client, faker, me, someone_else,
 
     resp = get_and_assert_standards(client, _url(), user)
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
 
     study_row = resp.soup.find("td", string=study.name).parent
 

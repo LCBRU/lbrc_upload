@@ -1,9 +1,8 @@
+import http
 import os
 from lbrc_flask.pytest.asserts import assert__requires_login
 from flask import url_for
 from tests import login
-from upload.ui import get_upload_filepath
-from flask_api import status
 
 
 def _url(**kwargs):
@@ -34,7 +33,7 @@ def test__upload__file_download(client, faker):
 
     assert resp.get_data().decode("utf8") == contents
 
-    assert resp.status_code == status.HTTP_200_OK
+    assert resp.status_code == http.HTTPStatus.OK
 
 
 def test__upload___must_be_upload_study_owner_isnt(client, faker):
@@ -43,7 +42,7 @@ def test__upload___must_be_upload_study_owner_isnt(client, faker):
     uf = faker.get_test_upload_file()
 
     resp = client.get(_url(upload_file_id=uf.id))
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
+    assert resp.status_code == http.HTTPStatus.FORBIDDEN
 
 
 def test__upload___is_collaborator(client, faker):
@@ -53,4 +52,4 @@ def test__upload___is_collaborator(client, faker):
     uf = faker.get_test_upload_file(study=study)
 
     resp = client.get(_url(upload_file_id=uf.id))
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
+    assert resp.status_code == http.HTTPStatus.FORBIDDEN

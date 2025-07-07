@@ -1,8 +1,8 @@
+import http
 from flask import url_for
 from tests import login
 from upload.model import Upload
 from lbrc_flask.pytest.asserts import assert__redirect, assert__requires_login
-from flask_api import status
 
 
 def _url(**kwargs):
@@ -22,7 +22,7 @@ def test__upload__complete__must_be_owner(client, faker):
 
     resp = client.post(_url(upload_id=upload.id), data={"id": upload.id})
 
-    assert resp.status_code == status.HTTP_403_FORBIDDEN
+    assert resp.status_code ==  http.HTTPStatus.FORBIDDEN
 
     changed_upload = Upload.query.get(upload.id)
 
