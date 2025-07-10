@@ -1,3 +1,8 @@
+from dotenv import load_dotenv
+
+# Load environment variables from '.env' file.
+load_dotenv()
+
 from bs4 import BeautifulSoup
 from lbrc_flask.database import db
 

@@ -1,6 +1,6 @@
 import http
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
-from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation
+from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation, assert__formaction_button, assert__htmx_post_button
 import pytest
 import re
 from flask import url_for
@@ -19,8 +19,8 @@ def _get(client, url, loggedin_user, study):
 
     assert__search_html(resp.soup, clear_url=_url(_external=False, study_id=study.id))
     assert resp.soup.find('input', type="checkbox", id='showCompleted') is not None
-    assert resp.soup.find('a', string="Download Upload Details", href=url_for('ui.study_csv', study_id=study.id)) is not None
-    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
+    assert__formaction_button(resp.soup, 'Download Upload Details', url=url_for('ui.study_csv', study_id=study.id), method='get')
+    assert resp.soup.find("h2", string="{} Uploads".format(study.name)) is not None
 
     return resp
 
@@ -130,32 +130,25 @@ def test__study_details_uploads__with_files(client, faker):
 def _assert_response(study, uploads, resp):
     assert resp.status_code == http.HTTPStatus.OK
 
-    assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
+    upload_table = resp.soup.find("ul", class_="panel_list")
+    upload_items = upload_table.find_all("li")
 
-    for u, li in zip(reversed(uploads), resp.soup.find_all("li", "list-group-item")):
+    assert len(upload_items) == len(uploads)
+
+    for u, li in zip(reversed(uploads), upload_items):
         upload_matches_li(u, li)
 
 
 def upload_matches_li(upload, li):
-    assert li.find("h1").find(string=re.compile(upload.study_number)) is not None
-    assert li.find("h2").find(string=re.compile(upload.uploader.full_name)) is not None
-    assert li.find("h2").find(string=re.compile(upload.uploader.site.name)) is not None
+    assert li.find("h3").find(string=re.compile(upload.study_number)) is not None
+    assert li.find("h4").find(string=re.compile(upload.uploader.full_name)) is not None
     assert (
-        li.find("h2").find(string=re.compile(upload.date_created.strftime("%-d %b %Y")))
+        li.find("h4").find(string=re.compile(upload.date_created.strftime("%-d %b %Y")))
         is not None
     )
-    assert (
-        li.find(
-            "a", attrs={"data-target": "#completeUploadModal", "data-id": upload.id}
-        )
-        is None
-    ) == upload.completed
-    assert (
-        li.find("a", attrs={"data-target": "#deleteUploadModal", "data-id": upload.id})
-        is not None
-    )
-    if len(upload.files) > 0:
-        assert li.find("a", "download-all") is not None
+    assert__htmx_post_button(li, 'Delete', url_for("ui.upload_delete", id=upload.id))
+    if upload.has_existing_files():
+        assert li.find("a", class_="download_all") is not None
 
 
 @pytest.mark.parametrize(

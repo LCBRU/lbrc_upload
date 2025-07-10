@@ -183,7 +183,7 @@ def upload_data(study_id):
                         uf.size = p.stat().st_size
                 else:
 
-                    ud = UploadData(upload=u, field=field, value=field.format_value(value))
+                    ud = UploadData(upload=u, field=field, value=field.data_value(value))
 
                     db.session.add(ud)
 

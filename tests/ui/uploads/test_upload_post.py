@@ -1,6 +1,8 @@
 import http
+
+from sqlalchemy import select
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__error__message, assert__redirect, assert__requires_login
+from lbrc_flask.pytest.asserts import assert__error__message, assert__redirect, assert__requires_login, assert__refresh_response
 import pytest
 import os
 from io import BytesIO
@@ -8,6 +10,7 @@ from flask import url_for
 from tests import login
 from upload.model import Upload, UploadFile, UploadData
 from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.database import db
 
 
 _endpoint = 'ui.upload_data'
@@ -21,7 +24,7 @@ def _do_upload_field(client, faker, study, should_be_loaded, field, value):
     resp = _do_upload(client, faker, study.id, field_name=field.field_name, field_value=value)
 
     if should_be_loaded:
-        assert__redirect(resp, endpoint='ui.index')
+        assert__refresh_response(resp)
 
         _assert_uploaded(study, field, value=value)
     else:
@@ -54,6 +57,10 @@ def _assert_uploaded(study, field, value):
 
     assert upload
 
+    print(value)
+
+    print('########', list(db.session.execute(select(UploadData)).scalars()))
+
     assert UploadData.query.filter(
         UploadData.value == value
         and UploadData.field_id == field.id
@@ -66,7 +73,6 @@ def _assert_uploaded_file(study, field, filename, content):
 
     assert upload
 
-
     uf = UploadFile.query.filter(
         UploadFile.filename == filename
         and UploadFile.field_id == field.id
@@ -75,7 +81,7 @@ def _assert_uploaded_file(study, field, filename, content):
 
     assert uf
 
-    saved_filepath = get_upload_filepath(uf)
+    saved_filepath = uf.upload_filepath()
     
     assert os.path.isfile(saved_filepath)
 
@@ -107,7 +113,7 @@ def test__upload__upload_study_number(client, faker):
     study_number = faker.pystr(min_chars=5, max_chars=10)
 
     resp = _do_upload(client, faker, study.id, study_number=study_number)
-    assert__redirect(resp, endpoint='ui.index')
+    assert__refresh_response(resp)
 
     assert Upload.query.filter(
         Upload.study_number == study_number and Upload.study_id == study.id
@@ -121,7 +127,7 @@ def test__upload__upload_study_number__matches_format(client, faker):
     study_number = "Tst12345678X"
 
     resp = _do_upload(client, faker, study.id, study_number=study_number)
-    assert__redirect(resp, endpoint='ui.index')
+    assert__refresh_response(resp)
 
     assert Upload.query.filter(
         Upload.study_number == study_number and Upload.study_id == study.id
@@ -138,7 +144,7 @@ def test__upload__upload_study_number__not_matches_format(client, faker):
 
     assert resp.status_code == http.HTTPStatus.OK
 
-    e = resp.soup.find("div", class_="alert")
+    e = resp.soup.find("ul", class_="errors")
     assert 'Study Number' in e.text
 
     assert Upload.query.filter(
@@ -155,7 +161,7 @@ def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
 
     assert resp.status_code == http.HTTPStatus.OK
 
-    e = resp.soup.find("div", class_="alert")
+    e = resp.soup.find("ul", class_="errors")
     assert 'Study Number' in e.text
 
     assert Upload.query.filter(
@@ -169,7 +175,7 @@ def test__upload__upload_study_number__duplicate_allowed(client, faker):
     upload = faker.get_test_upload(study=study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
-    assert__redirect(resp, endpoint='ui.index')
+    assert__refresh_response(resp)
 
     assert Upload.query.filter(
         Upload.study_number == upload.study_number
@@ -183,7 +189,7 @@ def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
     upload = faker.get_test_upload(study=study1)
 
     resp = _do_upload(client, faker, study2.id, study_number=upload.study_number)
-    assert__redirect(resp, endpoint='ui.index')
+    assert__refresh_response(resp)
 
     assert Upload.query.filter(
         Upload.study_number == upload.study_number and Upload.study_id == study2.id
@@ -208,7 +214,7 @@ def test__upload__upload_BooleanField(client, faker, required, value, should_be_
     resp = _do_upload(client, faker, study.id, field_name=field.field_name, field_value=value)
 
     if should_be_loaded:
-        assert__redirect(resp, endpoint='ui.index')
+        assert__refresh_response(resp)
 
         _assert_uploaded(study, field, value=saved_value)
     else:
@@ -302,7 +308,7 @@ def test__upload__upload_FileField(client, faker, required, allowed_file_extensi
     )
 
     if should_be_loaded:
-        assert__redirect(resp, endpoint='ui.index')
+        assert__refresh_response(resp)
 
         _assert_uploaded_file(study, field, filename=filename, content=content)
 

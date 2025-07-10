@@ -1,5 +1,5 @@
 import http
-from lbrc_flask.pytest.asserts import assert__redirect, get_and_assert_standards
+from lbrc_flask.pytest.asserts import assert__redirect, get_and_assert_standards, assert__modal_button
 import pytest
 from itertools import cycle
 from flask import url_for
@@ -49,8 +49,8 @@ def test__study_list__owns_mult_studies(client, faker, study_count):
     assert resp.status_code == http.HTTPStatus.OK
     assert resp.soup.find("h2", string="Owned Studies") is not None
     assert resp.soup.find("h2", string="Collaborating Studies") is None
-    assert len(resp.soup.select("table.table")) == 1
-    assert len(resp.soup.select("table.table > tbody > tr")) == study_count
+    assert len(resp.soup.select("table")) == 1
+    assert len(resp.soup.select("table > tbody > tr")) == study_count
 
     for s in studies:
         assert resp.soup.find("a", href=url_for("ui.study", study_id=s.id)) is not None
@@ -119,18 +119,19 @@ def test__study_list__colls_mult_studies(client, faker, study_count):
     assert resp.status_code == http.HTTPStatus.OK
     assert resp.soup.find("h2", string="Owned Studies") is None
     assert resp.soup.find("h2", string="Collaborating Studies") is not None
-    assert len(resp.soup.select("table.table")) == 1
-    assert len(resp.soup.select("table.table > tbody > tr")) == study_count
+    assert len(resp.soup.select("table")) == 1
+    assert len(resp.soup.select("table > tbody > tr")) == study_count
+
+    upload_links = {a.attrs['hx-get']: a for a in resp.soup.find_all('a', class_="upload")}
+    assert len(studies) == len(upload_links)
 
     for s in studies:
         assert (
             resp.soup.find("a", href=url_for("ui.study_my_uploads", study_id=s.id))
             is not None
         )
-        assert (
-            resp.soup.find("a", href=url_for("ui.upload_data", study_id=s.id))
-            is not None
-        )
+        url = url_for("ui.upload_data", study_id=s.id)
+        assert__modal_button(upload_links[url], url)
         assert resp.soup.find("td", string=s.name) is not None
 
 

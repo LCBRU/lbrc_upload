@@ -20,7 +20,7 @@ def test__upload__file_download(client, faker):
     study = faker.get_test_study(owner=user)
     uf = faker.get_test_upload_file(study=study)
 
-    filename = get_upload_filepath(uf)
+    filename = uf.upload_filepath()
     contents = faker.text()
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, "w") as f:

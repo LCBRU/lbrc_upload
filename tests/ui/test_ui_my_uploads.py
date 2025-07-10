@@ -1,6 +1,6 @@
 import http
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation
+from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation, assert__modal_create_button
 import pytest
 import re
 from flask import url_for
@@ -19,8 +19,8 @@ def _get(client, url, loggedin_user, study):
     resp = get_and_assert_standards(client, url, loggedin_user)
 
     assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
-    assert resp.soup.find('a', string="Upload Data", href=url_for('ui.upload_data', study_id=study.id)) is not None
-    assert resp.soup.find("h1", string="{} Uploads".format(study.name)) is not None
+    assert__modal_create_button(soup=resp.soup, text='Upload Data', url=url_for('ui.upload_data', study_id=study.id))
+    assert resp.soup.find("h2", string="{} Uploads".format(study.name)) is not None
 
     return resp
 
@@ -87,17 +87,21 @@ def test__my_uploads__search_study_number(client, faker):
 def _assert_response(resp, study, uploads):
     assert resp.status_code == http.HTTPStatus.OK
 
-    assert len(resp.soup.find_all("li", "list-group-item")) == len(uploads)
+    upload_list = resp.soup.find('ul', class_="panel_list")
+    assert upload_list is not None
 
-    for u, li in zip(reversed(uploads), resp.soup.find_all("li", "list-group-item")):
+    uploads_found = upload_list.find_all("li")
+    assert len(uploads_found) == len(uploads)
+
+    for u, li in zip(reversed(uploads), uploads_found):
         upload_matches_li(u, li)
 
 
 def upload_matches_li(upload, li):
-    assert li.find("h1").find(string=re.compile(upload.study_number)) is not None
-    assert li.find("h2").find(string=re.compile(upload.uploader.full_name)) is not None
+    assert li.find("h3").find(string=re.compile(upload.study_number)) is not None
+    assert li.find("h4").find(string=re.compile(upload.uploader.full_name)) is not None
     assert (
-        li.find("h2").find(string=re.compile(upload.date_created.strftime("%-d %b %Y")))
+        li.find("h4").find(string=re.compile(upload.date_created.strftime("%-d %b %Y")))
         is not None
     )
 

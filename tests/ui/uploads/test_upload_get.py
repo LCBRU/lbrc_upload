@@ -1,5 +1,5 @@
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__requires_login, get_and_assert_standards
+from lbrc_flask.pytest.asserts import assert__requires_login, get_and_assert_standards_modal, assert__modal_cancel, assert__modal_save
 import pytest
 from flask import url_for
 from tests import login
@@ -13,11 +13,12 @@ def _url(**kwargs):
 
 
 def _get(client, url, loggedin_user, study):
-    resp = get_and_assert_standards(client, url, loggedin_user, has_form=True)
+    resp = get_and_assert_standards_modal(client, url, loggedin_user, has_form=True)
 
-    assert resp.soup.find("div", string="{}: Upload".format(study.name)) is not None
-    assert resp.soup.find("a", href=url_for('ui.index'), string="Cancel") is not None
-    assert resp.soup.find("button", type='submit', string="Upload") is not None
+    assert resp.soup.find("h2", string=f"Upload data to study {study.name}") is not None
+
+    assert__modal_cancel(resp.soup)
+    assert__modal_save(resp.soup)
 
     return resp
 
@@ -54,7 +55,7 @@ def test__upload__form_study_number(client, faker):
     ["field_type", "input_type"],
     [
         (FieldType.BOOLEAN, "checkbox"),
-        (FieldType.INTEGER, "text"),
+        (FieldType.INTEGER, "number"),
         (FieldType.STRING, "text"),
         (FieldType.FILE, "file"),
         (FieldType.MULTIPLE_FILE, "file"),
