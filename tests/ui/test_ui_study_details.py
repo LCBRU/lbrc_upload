@@ -26,7 +26,7 @@ def _get(client, url, loggedin_user, study):
 
 
 def test__get__requires_login(client, faker):
-    study = faker.get_test_study()
+    study = faker.study().get_in_db()
     assert__requires_login(client, _url(study_id=study.id, external=False))
 
 
@@ -45,8 +45,8 @@ def test__get___must_study_owner_isnt(client, faker):
 )
 def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     user = login(client, faker)
-    user2 = faker.get_test_user()
-    study = faker.get_test_study(owner=user)
+    user2 = faker.user().get_in_db()
+    study = faker.study().get_in_db(owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -57,14 +57,14 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     uploads = []
 
     for _ in range(outstanding):
-        u = faker.get_test_upload(study=study, uploader=next(users))
+        u = faker.upload().get_in_db(study=study, uploader=next(users))
         uploads.append(u)
 
     for _ in range(completed):
-        u = faker.get_test_upload(study=study, completed=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=study, completed=True, uploader=next(users))
 
     for _ in range(deleted):
-        u = faker.get_test_upload(study=study, deleted=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=study, deleted=True, uploader=next(users))
 
     resp = _get(client, _url(study_id=study.id), user, study)
 
@@ -78,8 +78,8 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
 )
 def test__study_details_uploads_and_complete(client, faker, outstanding, completed, deleted):
     user = login(client, faker)
-    user2 = faker.get_test_user()
-    study = faker.get_test_study(owner=user)
+    user2 = faker.user().get_in_db()
+    study = faker.study().get_in_db(owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
@@ -90,15 +90,15 @@ def test__study_details_uploads_and_complete(client, faker, outstanding, complet
     uploads = []
 
     for _ in range(outstanding):
-        u = faker.get_test_upload(study=study, uploader=next(users))
+        u = faker.upload().get_in_db(study=study, uploader=next(users))
         uploads.append(u)
 
     for _ in range(completed):
-        u = faker.get_test_upload(study=study, completed=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=study, completed=True, uploader=next(users))
         uploads.append(u)
 
     for _ in range(deleted):
-        u = faker.get_test_upload(study=study, deleted=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=study, deleted=True, uploader=next(users))
 
     resp = _get(client, _url(study_id=study.id, showCompleted='y'), user, study)
     _assert_response(study, uploads, resp)
@@ -107,10 +107,10 @@ def test__study_details_uploads_and_complete(client, faker, outstanding, complet
 @pytest.mark.app_crsf(True)
 def test__study_details_uploads__search_study_number(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(owner=user)
+    study = faker.study().get_in_db(owner=user)
 
-    upload_matching = faker.get_test_upload(study_number="fred", study=study, uploader=user)
-    upload_unmatching = faker.get_test_upload(study_number="margaret", study=study, uploader=user)
+    upload_matching = faker.upload().get_in_db(study_number="fred", study=study, uploader=user)
+    upload_unmatching = faker.upload().get_in_db(study_number="margaret", study=study, uploader=user)
 
     resp = _get(client, _url(study_id=study.id, search='fred'), user, study)
     _assert_response(study, [upload_matching], resp)
@@ -119,9 +119,10 @@ def test__study_details_uploads__search_study_number(client, faker):
 @pytest.mark.app_crsf(True)
 def test__study_details_uploads__with_files(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(owner=user)
+    study = faker.study().get_in_db(owner=user)
+    upload  = faker.upload().get_in_db(study=study)
 
-    uf = faker.get_test_upload_file(study=study)
+    uf = faker.upload_file().get_in_db(upload=upload)
 
     resp = _get(client, _url(study_id=study.id), user, study)
     _assert_response(study, [uf.upload], resp)
@@ -157,8 +158,8 @@ def upload_matches_li(upload, li):
 )
 def test__study_details__pages(client, faker, uploads):
     user = login(client, faker)
-    study = faker.get_test_study(owner=user)
-    my_uploads = [faker.get_test_upload(study=study, uploader=user) for _ in range(uploads)]
+    study = faker.study().get_in_db(owner=user)
+    my_uploads = [faker.upload().get_in_db(study=study, uploader=user) for _ in range(uploads)]
 
     assert__page_navigation(client, _endpoint, dict(study_id=study.id, _external=False), uploads)
 
@@ -171,8 +172,8 @@ def test__study_details__with_completed__pages(client, faker, uploads):
     completed = cycle([True, False])
 
     user = login(client, faker)
-    study = faker.get_test_study(owner=user)
-    my_uploads = [faker.get_test_upload(study=study, uploader=user, completed=next(completed)) for _ in range(uploads)]
+    study = faker.study().get_in_db(owner=user)
+    my_uploads = [faker.upload().get_in_db(study=study, uploader=user, completed=next(completed)) for _ in range(uploads)]
 
     assert__page_navigation(client, _endpoint, dict(study_id=study.id, showCompleted=True, _external=False), uploads)
 
@@ -183,9 +184,9 @@ def test__study_details__with_completed__pages(client, faker, uploads):
 )
 def test__study_details__search__pages(client, faker, uploads):
     user = login(client, faker)
-    study = faker.get_test_study(owner=user)
-    my_uploads = [faker.get_test_upload(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
-    other = [faker.get_test_upload(study=study, uploader=user, study_number="margaret") for _ in range(100)]
+    study = faker.study().get_in_db(owner=user)
+    my_uploads = [faker.upload().get_in_db(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
+    other = [faker.upload().get_in_db(study=study, uploader=user, study_number="margaret") for _ in range(100)]
 
     assert__page_navigation(client, _endpoint, dict(study_id=study.id, search='fred', _external=False), uploads)
 

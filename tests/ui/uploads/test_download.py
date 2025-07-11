@@ -10,26 +10,27 @@ def _url(**kwargs):
 
 
 def test__post__requires_login(client, faker):
-    uf = faker.get_test_upload_file()
+    uf = faker.upload_file().get_in_db()
     assert__requires_login(client, _url(upload_file_id=uf.id, external=False))
 
 
 def test__upload__file_download(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(owner=user)
-    uf = faker.get_test_upload_file(study=study)
+    study = faker.study().get_in_db(owner=user)
+    upload = faker.upload().get_in_db(study=study)
+    upload_file = faker.upload_file().get_in_db(upload=upload)
 
-    filename = uf.upload_filepath()
+    filename = upload_file.upload_filepath()
     contents = faker.text()
     os.makedirs(os.path.dirname(filename), exist_ok=True)
     with open(filename, "w") as f:
         f.write(contents)
 
-    resp = client.get(_url(upload_file_id=uf.id))
+    resp = client.get(_url(upload_file_id=upload_file.id))
 
-    os.unlink(filename)
-    os.rmdir(os.path.dirname(filename))
+    # os.unlink(filename)
+    # os.rmdir(os.path.dirname(filename))
 
     assert resp.get_data().decode("utf8") == contents
 
@@ -39,7 +40,7 @@ def test__upload__file_download(client, faker):
 def test__upload___must_be_upload_study_owner_isnt(client, faker):
     user = login(client, faker)
 
-    uf = faker.get_test_upload_file()
+    uf = faker.upload_file().get_in_db()
 
     resp = client.get(_url(upload_file_id=uf.id))
     assert resp.status_code == http.HTTPStatus.FORBIDDEN
@@ -48,8 +49,8 @@ def test__upload___must_be_upload_study_owner_isnt(client, faker):
 def test__upload___is_collaborator(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
-    uf = faker.get_test_upload_file(study=study)
+    study = faker.study().get_in_db(collaborator=user)
+    uf = faker.upload_file().get_in_db(study=study)
 
     resp = client.get(_url(upload_file_id=uf.id))
     assert resp.status_code == http.HTTPStatus.FORBIDDEN

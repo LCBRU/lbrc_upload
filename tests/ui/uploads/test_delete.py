@@ -10,15 +10,15 @@ def _url(**kwargs):
 
 
 def test__post__requires_login(client, faker):
-    upload = faker.get_test_upload()
+    upload = faker.upload().get_in_db()
     assert__requires_login(client, _url(id=upload.id, external=False), post=True)
 
 
 def test__upload__delete__must_be_owner(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
-    upload = faker.get_test_upload(study=study)
+    study = faker.study().get_in_db(collaborator=user)
+    upload = faker.upload().get_in_db(study=study)
 
     resp = client.post(_url(id=upload.id), data={"id": upload.id})
 
@@ -32,13 +32,12 @@ def test__upload__delete__must_be_owner(client, faker):
 def test__upload__delete(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(owner=user)
-    upload = faker.get_test_upload(study=study)
+    study = faker.study().get_in_db(owner=user)
+    upload = faker.upload().get_in_db(study=study)
 
     resp = client.post(
         _url(id=upload.id),
         data={"id": upload.id},
-        headers={'Referer': faker.test_referrer()},
     )
     assert__refresh_response(resp)
 

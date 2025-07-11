@@ -26,7 +26,7 @@ def _get(client, url, loggedin_user, study):
 
 
 def test__get__requires_login(client, faker):
-    study = faker.get_test_study()
+    study = faker.study().get_in_db()
     assert__requires_login(client, _url(study_id=study.id, external=False))
 
 
@@ -45,26 +45,26 @@ def test__get___must_study_collaborator_isnt(client, faker):
 def test__my_uploads(client, faker, mine, others, deleted):
     user = login(client, faker)
 
-    user2 = faker.get_test_user()
-    study = faker.get_test_study(collaborator=user)
+    user_other = faker.user().get_in_db()
+    study = faker.study().get_in_db(collaborator=user)
 
     uploads = []
 
     for _ in range(mine):
-        u = faker.get_test_upload(study=study, uploader=user)
+        u = faker.upload().get_in_db(study=study, uploader=user)
         uploads.append(u)
 
     for _ in range(others):
-        u = faker.get_test_upload(completed=True, uploader=user2)
+        u = faker.upload().get_in_db(completed=True, uploader=user_other)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
     # thus we can test that we can see
     # uploads by users other than ourselves
-    users = cycle([user, user2])
+    users = cycle([user, user_other])
 
     for _ in range(deleted):
-        u = faker.get_test_upload(uploader=next(users), deleted=True)
+        u = faker.upload().get_in_db(uploader=next(users), deleted=True)
 
     resp = _get(client, _url(study_id=study.id), user, study)
 
@@ -74,10 +74,10 @@ def test__my_uploads(client, faker, mine, others, deleted):
 def test__my_uploads__search_study_number(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    upload_matching = faker.get_test_upload(study=study, study_number="fred", uploader=user)
-    upload_unmatching = faker.get_test_upload(study=study, study_number="margaret", uploader=user)
+    upload_matching = faker.upload().get_in_db(study=study, study_number="fred", uploader=user)
+    upload_unmatching = faker.upload().get_in_db(study=study, study_number="margaret", uploader=user)
 
     resp = _get(client, _url(study_id=study.id, search='fred'), user, study)
 
@@ -112,8 +112,8 @@ def upload_matches_li(upload, li):
 )
 def test__my_uploads__pages(client, faker, uploads):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
-    my_uploads = [faker.get_test_upload(study=study, uploader=user) for _ in range(uploads)]
+    study = faker.study().get_in_db(collaborator=user)
+    my_uploads = [faker.upload().get_in_db(study=study, uploader=user) for _ in range(uploads)]
 
     assert__page_navigation(client, _endpoint, dict(study_id= study.id, _external=False), uploads)
 
@@ -124,8 +124,8 @@ def test__my_uploads__pages(client, faker, uploads):
 )
 def test__my_uploads__search__pages(client, faker, uploads):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
-    my_uploads = [faker.get_test_upload(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
-    other = [faker.get_test_upload(study=study, uploader=user, study_number="margaret") for _ in range(100)]
+    study = faker.study().get_in_db(collaborator=user)
+    my_uploads = [faker.upload().get_in_db(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
+    other = [faker.upload().get_in_db(study=study, uploader=user, study_number="margaret") for _ in range(100)]
 
     assert__page_navigation(client, _endpoint, dict(study_id=study.id, search='fred', _external=False), uploads)

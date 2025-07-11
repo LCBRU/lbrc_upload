@@ -1,21 +1,154 @@
-from lbrc_flask.database import db
-from faker.providers import BaseProvider
+from random import choice
 from lbrc_flask.forms.dynamic import FieldGroup, FieldType
 from upload.model import Study, User, Upload, Site, UploadFile, Field
+from lbrc_flask.pytest.faker import BaseProvider, FakeCreator
 
 
-class UploadFakerProvider(BaseProvider):
-    def study_details(self, field_group=None, study_number_format=None, owner=None, collaborator=None, allow_duplicate_study_number=False):
-        if owner is None:
-            owner = self.generator.user_details()
-        if collaborator is None:
-            collaborator = self.generator.user_details()
+class SiteCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(Site)
 
-        if field_group is None:
-            field_group = self.generator.field_group_details()
+    def get(self, **kwargs):
+        return Site(
+            name=self.faker.company(),
+            number=self.faker.pystr(min_chars=5, max_chars=10),
+        )
+
+
+class SiteProvider(BaseProvider):
+    def site(self):
+        return SiteCreator()
+
+
+class UserCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(User)
+
+    def get(self, **kwargs):
+        self.faker.add_provider(SiteProvider)
+
+        if (first_name := kwargs.get('first_name')) is None:
+            first_name = self.faker.first_name()
+
+        if (last_name := kwargs.get('last_name')) is None:
+            last_name = self.faker.last_name()
+
+        if (email := kwargs.get('email')) is None:
+            email = self.faker.email()
+
+        if (active := kwargs.get('active')) is None:
+            active = True
+
+        if (site := kwargs.get('site')) is None:
+            site = self.faker.site().get()
+
+        return User(
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            active=active,
+            site=site,
+        )
+
+
+class UserProvider(BaseProvider):
+    def user(self):
+        return UserCreator()
+
+
+class FieldGroupCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(FieldGroup)
+
+    def get(self, **kwargs):
+        if (name := kwargs.get('name')) is None:
+            name = self.faker.pystr(min_chars=5, max_chars=10).upper()
+
+        return FieldGroup(name=name.upper())
+
+
+class FieldGroupProvider(BaseProvider):
+    def field_group(self):
+        return FieldGroupCreator()
+
+
+class FieldCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(FieldGroup)
+
+    def get(self, **kwargs):        
+        self.faker.add_provider(FieldGroupProvider)
+
+        if (field_group := kwargs.get('field_group')) is None:
+            field_group = self.faker.field_group().get()
+
+        if (field_type := kwargs.get('field_type')) is None:
+            field_type = choice(FieldType.all_field_types())
+
+        if (field_name := kwargs.get('field_name')) is None:
+            field_name = self.faker.pystr(min_chars=5, max_chars=10)
+
+        if (allowed_file_extensions := kwargs.get('allowed_file_extensions')) is None:
+            allowed_file_extensions = self.faker.file_extension()
+
+        if (required := kwargs.get('required')) is None:
+            required = False
+
+        f = Field(
+            field_group=field_group,
+            field_type=field_type,
+            field_name=field_name,
+            allowed_file_extensions=allowed_file_extensions,
+            required=required,
+        )
+
+        if (order := kwargs.get('order')) is not None:
+            f.order = order
+
+        if (choices := kwargs.get('choices')) is not None:
+            f.choices = choices
+
+        if (max_length := kwargs.get('max_length')) is not None:
+            f.max_length = max_length
+
+        if (allowed_file_extensions := kwargs.get('allowed_file_extensions')) is not None:
+            f.allowed_file_extensions = allowed_file_extensions
+
+        return f
+
+
+class FieldProvider(BaseProvider):
+    def field(self):
+        return FieldCreator()
+
+
+class StudyCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(Study)
+
+    def get(self, **kwargs):
+        self.faker.add_provider(UserProvider)
+        self.faker.add_provider(FieldGroupProvider)
+
+        if (name := kwargs.get('name')) is None:
+            name = self.faker.pystr(min_chars=5, max_chars=10).upper()
+
+        if (owner := kwargs.get('owner')) is None:
+            owner = self.faker.user().get()
+
+        if (collaborator := kwargs.get('collaborator')) is None:
+            collaborator = self.faker.user().get()
+
+        if (field_group := kwargs.get('field_group')) is None:
+            field_group = self.faker.field_group().get()
+
+        study_number_format = kwargs.get('study_number_format')
+
+        if (allow_duplicate_study_number := kwargs.get('allow_duplicate_study_number')) is None:
+            allow_duplicate_study_number = False
 
         result = Study(
-            name=self.generator.pystr(min_chars=5, max_chars=10).upper(),
+            name=name,
             field_group=field_group,
             study_number_format=study_number_format,
             allow_duplicate_study_number=allow_duplicate_study_number,
@@ -26,122 +159,73 @@ class UploadFakerProvider(BaseProvider):
 
         return result
 
-    def user_details(self):
-        u = User(
-            first_name=self.generator.first_name(),
-            last_name=self.generator.last_name(),
-            email=self.generator.email(),
-            active=True,
-            site=self.site_details(),
-        )
-        return u
 
-    def site_details(self):
-        return Site(
-            name=self.generator.company(),
-            number=self.generator.pystr(min_chars=5, max_chars=10),
-        )
+class StudyProvider(BaseProvider):
+    def study(self):
+        return StudyCreator()
 
-    def upload_details(self, study_number=None, completed=False, deleted=False, uploader=None):
-        if uploader is None:
-            uploader = self.user_details()
 
-        if study_number is None:
-            study_number = self.generator.pystr(min_chars=5, max_chars=10).upper()
+class UploadCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(Upload)
 
-        u = Upload(
+    def get(self, **kwargs):
+        self.faker.add_provider(StudyProvider)
+        self.faker.add_provider(UserProvider)
+
+        if (study := kwargs.get('study')) is None:
+            study = self.faker.study().get()
+
+        if (uploader := kwargs.get('uploader')) is None:
+            uploader = self.faker.user().get()
+
+        if (study_number := kwargs.get('study_number')) is None:
+            study_number = self.faker.pystr(min_chars=5, max_chars=10).upper()
+
+        if (completed := kwargs.get('completed')) is None:
+            completed = False
+
+        if (deleted := kwargs.get('deleted')) is None:
+            deleted = False
+
+        return Upload(
+            study=study,
             study_number=study_number,
             uploader = uploader,
             completed = completed,
             deleted=deleted,
         )
-        
-        return u
 
-    def upload_file_details(self):
-        uf = UploadFile(filename=self.generator.file_name())
-        return uf
 
-    def field_group_details(self):
-        return FieldGroup(name=self.generator.pystr(min_chars=5, max_chars=10).upper())
+class UploadProvider(BaseProvider):
+    def upload(self):
+        return UploadCreator()
 
-    def field_details(self, field_type, field_group=None, order=None, choices=None, required=False, max_length=None, allowed_file_extensions=None):
-        f = Field(
-            field_type=field_type,
-            field_name=self.generator.pystr(min_chars=5, max_chars=10),
-            allowed_file_extensions=self.generator.file_extension(),
-            required=required,
+
+class UploadFileCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(UploadFile)
+
+    def get(self, **kwargs):
+        self.faker.add_provider(UploadProvider)
+        self.faker.add_provider(FieldProvider)
+
+        if (field := kwargs.get('field')) is None:
+            field = self.faker.field().get(field_type=FieldType.get_file())
+
+        if (upload := kwargs.get('upload')) is None:
+            upload = self.faker.upload().get()
+
+        if (filename := kwargs.get('filename')) is None:
+            filename = self.faker.file_name()
+
+        return UploadFile(
+            field=field,
+            upload=upload,
+            filename=filename,
         )
-        if field_group is not None:
-            f.field_group_id = field_group.id
-        if order is not None:
-            f.order = 1
-        if choices is not None:
-            f.choices = choices
-        if max_length is not None:
-            f.max_length = max_length
-        if allowed_file_extensions is not None:
-            f.allowed_file_extensions = allowed_file_extensions
-
-        return f
-
-    def get_test_user(self, **kwargs):
-        user = self.user_details(**kwargs)
-        
-        db.session.add(user)
-        db.session.commit()
-        
-        return user
 
 
-    def get_test_study(self, **kwargs):
-        study = self.study_details(**kwargs)
-        
-        db.session.add(study)
-        db.session.add(study.field_group)
-        db.session.commit()
-        
-        return study
-
-
-    def get_test_field(self, **kwargs):
-        field = self.field_details(**kwargs)
-
-        db.session.add(field)
-        db.session.commit()
-
-        return field
-
-
-    def get_test_upload(self, study=None, **kwargs):
-        if study is None:
-            study = self.get_test_study()
-        
-        upload = self.upload_details(**kwargs)
-        upload.study = study
-        
-        db.session.add(upload)
-        db.session.commit()
-        
-        return upload
-
-
-    def get_test_upload_file(self, **kwargs):
-        upload = self.get_test_upload(**kwargs)
-
-        file_field = self.generator.field_details(FieldType.get_file())
-        file_field.study = upload.study
-        file_field.order = 1
-
-        upload_file = self.upload_file_details()
-        upload_file.upload = upload
-        upload_file.field = file_field    
-
-        db.session.add(file_field)
-        db.session.add(upload_file)
-        db.session.commit()
-
-        return upload_file
-
-    def test_referrer(self):
-        return 'http://localhost/somethingelse'
+class UploadFileProvider(BaseProvider):
+    def upload_file(self):
+        return UploadFileCreator()

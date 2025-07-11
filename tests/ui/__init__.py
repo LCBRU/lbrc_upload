@@ -14,25 +14,25 @@ def assert__resp_status(client, url, status, post):
 
 def assert__get___must_be_study_collaborator_isnt(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = faker.get_test_study()
+    s = faker.study().get_in_db()
     assert__resp_status(client, url_for(endpoint, study_id=s.id), http.HTTPStatus.FORBIDDEN, post)
 
 
 def assert__get___must_be_study_collaborator_is(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = faker.get_test_study(collaborator=user)
+    s = faker.study().get_in_db(collaborator=user)
     assert__resp_status(client, url_for(endpoint, study_id=s.id), http.HTTPStatus.OK, post)
 
 
 def assert__get___must_be_study_owner_isnt(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = faker.get_test_study()
+    s = faker.study().get_in_db()
     assert__resp_status(client, url_for(endpoint, study_id=s.id), http.HTTPStatus.FORBIDDEN, post)
 
 
 def assert__get___must_be_study_owner_is(client, faker, endpoint, post=False):
     user = login(client, faker)
-    s = faker.get_test_study(owner=user)
+    s = faker.study().get_in_db(owner=user)
     assert__resp_status(client, url_for(endpoint, study_id=s.id), http.HTTPStatus.OK, post)
 
 

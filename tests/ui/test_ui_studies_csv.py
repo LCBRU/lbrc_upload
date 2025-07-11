@@ -16,7 +16,7 @@ def _url(**kwargs):
 
 
 def test__get__requires_login(client, faker):
-    study = faker.get_test_study()
+    study = faker.study().get_in_db()
     assert__requires_login(client, _url(study_id=study.id, external=False))
 
 
@@ -33,10 +33,10 @@ def test__study_csv__download(client, faker, upload_count):
     user = login(client, faker)
     uploads = []
 
-    study = faker.get_test_study(owner=user)
+    study = faker.study().get_in_db(owner=user)
 
     for _ in range(upload_count):
-        upload = faker.get_test_upload(study=study, uploader=user)
+        upload = faker.upload().get_in_db(study=study, uploader=user)
         uploads.append(upload)
 
     resp = client.get(_url(study_id=study.id))

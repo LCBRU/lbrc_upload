@@ -94,7 +94,7 @@ def _assert_upload_not_saved(study):
 
 
 def test__post__requires_login(client, faker):
-    study = faker.get_test_study()
+    study = faker.study().get_in_db()
     assert__requires_login(client, _url(study_id=study.id, external=False), post=True)
 
 
@@ -108,7 +108,7 @@ def test__get___must_study_collaborator_isnt(client, faker):
 
 def test__upload__upload_study_number(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
     study_number = faker.pystr(min_chars=5, max_chars=10)
 
@@ -122,7 +122,7 @@ def test__upload__upload_study_number(client, faker):
 
 def test__upload__upload_study_number__matches_format(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
+    study = faker.study().get_in_db(collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
 
     study_number = "Tst12345678X"
 
@@ -136,7 +136,7 @@ def test__upload__upload_study_number__matches_format(client, faker):
 
 def test__upload__upload_study_number__not_matches_format(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
+    study = faker.study().get_in_db(collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
 
     study_number = "Tst12345678"
 
@@ -154,8 +154,8 @@ def test__upload__upload_study_number__not_matches_format(client, faker):
 
 def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
-    upload = faker.get_test_upload(study=study)
+    study = faker.study().get_in_db(collaborator=user)
+    upload = faker.upload().get_in_db(study=study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
 
@@ -171,8 +171,8 @@ def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
 
 def test__upload__upload_study_number__duplicate_allowed(client, faker):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user, allow_duplicate_study_number=True)
-    upload = faker.get_test_upload(study=study)
+    study = faker.study().get_in_db(collaborator=user, allow_duplicate_study_number=True)
+    upload = faker.upload().get_in_db(study=study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
     assert__refresh_response(resp)
@@ -184,9 +184,9 @@ def test__upload__upload_study_number__duplicate_allowed(client, faker):
 
 def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
     user = login(client, faker)
-    study2 = faker.get_test_study(collaborator=user)
-    study1 = faker.get_test_study(collaborator=user)
-    upload = faker.get_test_upload(study=study1)
+    study2 = faker.study().get_in_db(collaborator=user)
+    study1 = faker.study().get_in_db(collaborator=user)
+    upload = faker.upload().get_in_db(study=study1)
 
     resp = _do_upload(client, faker, study2.id, study_number=upload.study_number)
     assert__refresh_response(resp)
@@ -207,9 +207,9 @@ def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
 )
 def test__upload__upload_BooleanField(client, faker, required, value, should_be_loaded, saved_value):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(field_group=study.field_group, field_type=FieldType.get_boolean(), required=required)
+    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_boolean(), required=required)
 
     resp = _do_upload(client, faker, study.id, field_name=field.field_name, field_value=value)
 
@@ -235,9 +235,9 @@ def test__upload__upload_BooleanField(client, faker, required, value, should_be_
 )
 def test__upload__upload_IntegerField(client, faker, required, value, should_be_loaded):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(field_group=study.field_group, field_type=FieldType.get_integer(), required=required)
+    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_integer(), required=required)
 
     _do_upload_field(client, faker, study, should_be_loaded, field, value)
 
@@ -253,9 +253,9 @@ def test__upload__upload_IntegerField(client, faker, required, value, should_be_
 )
 def test__upload__upload_RadioField(client, faker, required, value, should_be_loaded):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(field_group=study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
+    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
 
     _do_upload_field(client, faker, study, should_be_loaded, field, value)
 
@@ -271,9 +271,9 @@ def test__upload__upload_RadioField(client, faker, required, value, should_be_lo
 )
 def test__upload__upload_StringField(client, faker, required, max_length, value, should_be_loaded):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(field_group=study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
+    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
 
     _do_upload_field(client, faker, study, should_be_loaded, field, value)
 
@@ -289,9 +289,9 @@ def test__upload__upload_StringField(client, faker, required, max_length, value,
 )
 def test__upload__upload_FileField(client, faker, required, allowed_file_extensions, file_sent, extension, should_be_loaded):
     user = login(client, faker)
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(field_group=study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
+    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
 
     content = faker.text()
     filename = faker.file_name(extension=extension)

@@ -24,7 +24,7 @@ def _get(client, url, loggedin_user, study):
 
 
 def test__get__requires_login(client, faker):
-    study = faker.get_test_study()
+    study = faker.study().get_in_db()
     assert__requires_login(client, _url(study_id=study.id, external=False))
 
 
@@ -40,7 +40,7 @@ def test__get___must_study_collaborator_isnt(client, faker):
 def test__upload__form_study_number(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
     resp = _get(client, _url(study_id=study.id), user, study)
 
@@ -64,9 +64,9 @@ def test__upload__form_study_number(client, faker):
 def test__upload__form_dynamic_input(client, faker, field_type, input_type):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(
+    field = faker.field().get_in_db(
         field_type=FieldType._get_field_type(field_type),
         field_group=study.field_group,
         order=1,
@@ -85,9 +85,9 @@ def test__upload__form_dynamic_input(client, faker, field_type, input_type):
 def test__upload__form_dynamic_textarea(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(
+    field = faker.field().get_in_db(
         field_type=FieldType.get_textarea(),
         field_group=study.field_group,
         order=1,
@@ -105,9 +105,9 @@ def test__upload__form_dynamic_textarea(client, faker):
 def test__upload__form_dynamic_radio(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field = faker.get_test_field(
+    field = faker.field().get_in_db(
         field_type=FieldType.get_radio(),
         field_group=study.field_group,
         order=1,
@@ -128,14 +128,14 @@ def test__upload__form_dynamic_radio(client, faker):
 def test__upload__form_dynamic_multiple(client, faker):
     user = login(client, faker)
 
-    study = faker.get_test_study(collaborator=user)
+    study = faker.study().get_in_db(collaborator=user)
 
-    field1 = faker.get_test_field(
+    field1 = faker.field().get_in_db(
         field_type=FieldType.get_textarea(),
         field_group=study.field_group,
         order=1,
     )
-    field2 = faker.get_test_field(
+    field2 = faker.field().get_in_db(
         field_type=FieldType.get_string(),
         field_group=study.field_group,
         order=2,
