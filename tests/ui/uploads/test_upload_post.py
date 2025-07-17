@@ -2,13 +2,12 @@ import http
 
 from sqlalchemy import select
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__error__message, assert__redirect, assert__requires_login, assert__refresh_response
+from lbrc_flask.pytest.asserts import assert__error__message, assert__requires_login, assert__refresh_response
 import pytest
 import os
 from io import BytesIO
 from flask import url_for
-from tests import login
-from upload.model import Upload, UploadFile, UploadData
+from lbrc_upload.model import Upload, UploadFile, UploadData
 from lbrc_flask.forms.dynamic import FieldType
 from lbrc_flask.database import db
 
@@ -106,23 +105,19 @@ def test__get___must_study_collaborator_isnt(client, faker):
     assert__get___must_be_study_collaborator_isnt(client, faker, _endpoint, post=True)
 
 
-def test__upload__upload_study_number(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
-
+def test__upload__upload_study_number(client, faker, collaborator_study):
     study_number = faker.pystr(min_chars=5, max_chars=10)
 
-    resp = _do_upload(client, faker, study.id, study_number=study_number)
+    resp = _do_upload(client, faker, collaborator_study.id, study_number=study_number)
     assert__refresh_response(resp)
 
     assert Upload.query.filter(
-        Upload.study_number == study_number and Upload.study_id == study.id
+        Upload.study_number == study_number and Upload.study_id == collaborator_study.id
     ).first()
 
 
-def test__upload__upload_study_number__matches_format(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
+def test__upload__upload_study_number__matches_format(client, faker, loggedin_user):
+    study = faker.study().get_in_db(collaborator=loggedin_user, study_number_format='Tst\\d{8}[A-Z]')
 
     study_number = "Tst12345678X"
 
@@ -134,9 +129,8 @@ def test__upload__upload_study_number__matches_format(client, faker):
     ).first()
 
 
-def test__upload__upload_study_number__not_matches_format(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user, study_number_format='Tst\\d{8}[A-Z]')
+def test__upload__upload_study_number__not_matches_format(client, faker, loggedin_user):
+    study = faker.study().get_in_db(collaborator=loggedin_user, study_number_format='Tst\\d{8}[A-Z]')
 
     study_number = "Tst12345678"
 
@@ -152,10 +146,8 @@ def test__upload__upload_study_number__not_matches_format(client, faker):
     ).count() == 0
 
 
-def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
-    upload = faker.upload().get_in_db(study=study)
+def test__upload__upload_study_number__duplicate_not_allowed(client, faker, collaborator_study):
+    upload = faker.upload().get_in_db(study=collaborator_study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
 
@@ -169,9 +161,8 @@ def test__upload__upload_study_number__duplicate_not_allowed(client, faker):
     ).count() == 1
 
 
-def test__upload__upload_study_number__duplicate_allowed(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user, allow_duplicate_study_number=True)
+def test__upload__upload_study_number__duplicate_allowed(client, faker, loggedin_user):
+    study = faker.study().get_in_db(collaborator=loggedin_user, allow_duplicate_study_number=True)
     upload = faker.upload().get_in_db(study=study)
 
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
@@ -182,10 +173,9 @@ def test__upload__upload_study_number__duplicate_allowed(client, faker):
     ).count() == 2
 
 
-def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
-    user = login(client, faker)
-    study2 = faker.study().get_in_db(collaborator=user)
-    study1 = faker.study().get_in_db(collaborator=user)
+def test__upload__upload_study_number__duplicate_on_other_study(client, faker, loggedin_user):
+    study2 = faker.study().get_in_db(collaborator=loggedin_user)
+    study1 = faker.study().get_in_db(collaborator=loggedin_user)
     upload = faker.upload().get_in_db(study=study1)
 
     resp = _do_upload(client, faker, study2.id, study_number=upload.study_number)
@@ -205,23 +195,20 @@ def test__upload__upload_study_number__duplicate_on_other_study(client, faker):
         (True, "", False, ""),
     ],
 )
-def test__upload__upload_BooleanField(client, faker, required, value, should_be_loaded, saved_value):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
+def test__upload__upload_BooleanField(client, faker, collaborator_study, required, value, should_be_loaded, saved_value):
+    field = faker.field().get_in_db(field_group=collaborator_study.field_group, field_type=FieldType.get_boolean(), required=required)
 
-    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_boolean(), required=required)
-
-    resp = _do_upload(client, faker, study.id, field_name=field.field_name, field_value=value)
+    resp = _do_upload(client, faker, collaborator_study.id, field_name=field.field_name, field_value=value)
 
     if should_be_loaded:
         assert__refresh_response(resp)
 
-        _assert_uploaded(study, field, value=saved_value)
+        _assert_uploaded(collaborator_study, field, value=saved_value)
     else:
         assert resp.status_code == http.HTTPStatus.OK
 
         assert__error__message(resp.soup, field.field_name)
-        _assert_upload_not_saved(study)
+        _assert_upload_not_saved(collaborator_study)
 
 
 @pytest.mark.parametrize(
@@ -233,13 +220,10 @@ def test__upload__upload_BooleanField(client, faker, required, value, should_be_
         (True, "", False),
     ],
 )
-def test__upload__upload_IntegerField(client, faker, required, value, should_be_loaded):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
+def test__upload__upload_IntegerField(client, faker, collaborator_study, required, value, should_be_loaded):
+    field = faker.field().get_in_db(field_group=collaborator_study.field_group, field_type=FieldType.get_integer(), required=required)
 
-    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_integer(), required=required)
-
-    _do_upload_field(client, faker, study, should_be_loaded, field, value)
+    _do_upload_field(client, faker, collaborator_study, should_be_loaded, field, value)
 
 
 @pytest.mark.parametrize(
@@ -251,13 +235,10 @@ def test__upload__upload_IntegerField(client, faker, required, value, should_be_
         (True, "", False),
     ],
 )
-def test__upload__upload_RadioField(client, faker, required, value, should_be_loaded):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
+def test__upload__upload_RadioField(client, faker, collaborator_study, required, value, should_be_loaded):
+    field = faker.field().get_in_db(field_group=collaborator_study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
 
-    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
-
-    _do_upload_field(client, faker, study, should_be_loaded, field, value)
+    _do_upload_field(client, faker, collaborator_study, should_be_loaded, field, value)
 
 
 @pytest.mark.parametrize(
@@ -269,13 +250,10 @@ def test__upload__upload_RadioField(client, faker, required, value, should_be_lo
         (True, 50, "", False),
     ],
 )
-def test__upload__upload_StringField(client, faker, required, max_length, value, should_be_loaded):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
+def test__upload__upload_StringField(client, faker, collaborator_study, required, max_length, value, should_be_loaded):
+    field = faker.field().get_in_db(field_group=collaborator_study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
 
-    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
-
-    _do_upload_field(client, faker, study, should_be_loaded, field, value)
+    _do_upload_field(client, faker, collaborator_study, should_be_loaded, field, value)
 
 
 @pytest.mark.parametrize(
@@ -287,11 +265,8 @@ def test__upload__upload_StringField(client, faker, required, max_length, value,
         (True, "pdf|txt", True, "pdf", True),
     ],
 )
-def test__upload__upload_FileField(client, faker, required, allowed_file_extensions, file_sent, extension, should_be_loaded):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
-
-    field = faker.field().get_in_db(field_group=study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
+def test__upload__upload_FileField(client, faker, collaborator_study, required, allowed_file_extensions, file_sent, extension, should_be_loaded):
+    field = faker.field().get_in_db(field_group=collaborator_study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
 
     content = faker.text()
     filename = faker.file_name(extension=extension)
@@ -299,7 +274,7 @@ def test__upload__upload_FileField(client, faker, required, allowed_file_extensi
     resp = _do_upload(
         client,
         faker,
-        study.id,
+        collaborator_study.id,
         field_name=field.field_name,
         field_value=(
             BytesIO(content.encode('utf-8')),
@@ -310,10 +285,10 @@ def test__upload__upload_FileField(client, faker, required, allowed_file_extensi
     if should_be_loaded:
         assert__refresh_response(resp)
 
-        _assert_uploaded_file(study, field, filename=filename, content=content)
+        _assert_uploaded_file(collaborator_study, field, filename=filename, content=content)
 
     else:
         assert resp.status_code == http.HTTPStatus.OK
 
         assert__error__message(resp.soup, field.field_name)
-        _assert_upload_not_saved(study)
+        _assert_upload_not_saved(collaborator_study)

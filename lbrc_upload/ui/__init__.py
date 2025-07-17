@@ -1,5 +1,3 @@
-from itertools import chain
-import os
 from pathlib import Path
 import shutil
 import tempfile
@@ -17,9 +15,9 @@ from flask import (
 
 from flask_security import login_required, current_user
 from sqlalchemy import or_, select
-from upload.model import Study, Upload, UploadData, UploadFile
-from upload.ui.forms import UploadSearchForm, UploadFormBuilder
-from upload.decorators import (
+from lbrc_upload.model import Study, Upload, UploadData, UploadFile
+from lbrc_upload.ui.forms import UploadSearchForm, UploadFormBuilder
+from lbrc_upload.decorators import (
     must_be_study_owner,
     must_be_study_collaborator,
     must_be_upload_study_owner,
@@ -141,9 +139,7 @@ def upload_data(study_id):
         form.validate_on_submit()
 
         if duplicate and not study.allow_duplicate_study_number:
-            form.study_number.errors.append(
-                "Study Number already exists for this study"
-            )
+            form.study_number.errors.append("Study Number already exists for this study")
             flash("Study Number already exists for this study", "error")
 
     if len(form.errors) == 0 and form.is_submitted():
@@ -414,4 +410,3 @@ def refresh_file_size():
     db.session.commit()
 
     return redirect(url_for('ui.index'))
-

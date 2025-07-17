@@ -2,7 +2,6 @@ import http
 import os
 from lbrc_flask.pytest.asserts import assert__requires_login
 from flask import url_for
-from tests import login
 
 
 def _url(**kwargs):
@@ -14,11 +13,8 @@ def test__post__requires_login(client, faker):
     assert__requires_login(client, _url(upload_file_id=uf.id, external=False))
 
 
-def test__upload__file_download(client, faker):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(owner=user)
-    upload = faker.upload().get_in_db(study=study)
+def test__upload__file_download(client, faker, owned_study):
+    upload = faker.upload().get_in_db(study=owned_study)
     upload_file = faker.upload_file().get_in_db(upload=upload)
 
     filename = upload_file.upload_filepath()
@@ -37,20 +33,15 @@ def test__upload__file_download(client, faker):
     assert resp.status_code == http.HTTPStatus.OK
 
 
-def test__upload___must_be_upload_study_owner_isnt(client, faker):
-    user = login(client, faker)
-
+def test__upload___must_be_upload_study_owner_isnt(client, faker, loggedin_user):
     uf = faker.upload_file().get_in_db()
 
     resp = client.get(_url(upload_file_id=uf.id))
     assert resp.status_code == http.HTTPStatus.FORBIDDEN
 
 
-def test__upload___is_collaborator(client, faker):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(collaborator=user)
-    uf = faker.upload_file().get_in_db(study=study)
+def test__upload___is_collaborator(client, faker, collaborator_study):
+    uf = faker.upload_file().get_in_db(study=collaborator_study)
 
     resp = client.get(_url(upload_file_id=uf.id))
     assert resp.status_code == http.HTTPStatus.FORBIDDEN

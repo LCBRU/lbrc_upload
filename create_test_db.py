@@ -6,24 +6,23 @@ from random import randint, sample, choices, choice
 from dotenv import load_dotenv
 from flask import current_app
 from lbrc_flask.database import db
-from lbrc_flask.security import init_roles, init_users
 from faker import Faker
 from lbrc_flask.forms.dynamic import FieldGroup, create_field_types, FieldType, Field
 from sqlalchemy import select
-from upload.model import Site, Study, Upload, UploadData, UploadFile, User
+from lbrc_upload.model import Site, Study, Upload, UploadData, UploadFile, User
+from lbrc_upload.security import init_authorization
 
 fake = Faker()
 
 load_dotenv()
 
-from upload import create_app
+from lbrc_upload import create_app
 
 application = create_app()
 application.app_context().push()
 db.create_all()
 
-init_roles([])
-init_users()
+init_authorization()
 create_field_types()
 
 def unique_words(min=10, max=20):

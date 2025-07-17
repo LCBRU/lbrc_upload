@@ -4,12 +4,30 @@ from lbrc_flask.pytest.fixtures import *
 from lbrc_flask.forms.dynamic import create_field_types
 from config import TestConfig
 from tests.faker import FieldGroupProvider, FieldProvider, SiteProvider, StudyProvider, UploadFileProvider, UploadProvider, UserProvider
-from upload import create_app
+from lbrc_upload import create_app
+from lbrc_flask.pytest.helpers import login
+from lbrc_upload.security import init_authorization
 
 
 @pytest.fixture(scope="function", autouse=True)
 def standard_lookups(client, faker):
     return create_field_types()
+
+
+@pytest.fixture(scope="function")
+def loggedin_user(client, faker):
+    init_authorization()
+    return login(client, faker)
+
+
+@pytest.fixture(scope="function")
+def collaborator_study(client, faker, loggedin_user):
+    return faker.study().get_in_db(collaborator=loggedin_user)
+
+
+@pytest.fixture(scope="function")
+def owned_study(client, faker, loggedin_user):
+    return faker.study().get_in_db(owner=loggedin_user)
 
 
 @pytest.fixture(scope="function")

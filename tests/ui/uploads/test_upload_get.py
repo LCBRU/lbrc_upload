@@ -2,7 +2,6 @@ from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___
 from lbrc_flask.pytest.asserts import assert__requires_login, get_and_assert_standards_modal, assert__modal_cancel, assert__modal_save
 import pytest
 from flask import url_for
-from tests import login
 from lbrc_flask.forms.dynamic import FieldType
 
 _endpoint = 'ui.upload_data'
@@ -37,12 +36,8 @@ def test__get___must_study_collaborator_isnt(client, faker):
 
 
 @pytest.mark.app_crsf(True)
-def test__upload__form_study_number(client, faker):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(collaborator=user)
-
-    resp = _get(client, _url(study_id=study.id), user, study)
+def test__upload__form_study_number(client, faker, loggedin_user, collaborator_study):
+    resp = _get(client, _url(study_id=collaborator_study.id), loggedin_user, collaborator_study)
 
     sn = resp.soup.find("input", id="study_number")
 
@@ -61,18 +56,14 @@ def test__upload__form_study_number(client, faker):
         (FieldType.MULTIPLE_FILE, "file"),
     ],
 )
-def test__upload__form_dynamic_input(client, faker, field_type, input_type):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(collaborator=user)
-
+def test__upload__form_dynamic_input(client, faker, field_type, input_type, loggedin_user, collaborator_study):
     field = faker.field().get_in_db(
         field_type=FieldType._get_field_type(field_type),
-        field_group=study.field_group,
+        field_group=collaborator_study.field_group,
         order=1,
     )
 
-    resp = _get(client, _url(study_id=study.id), user, study)
+    resp = _get(client, _url(study_id=collaborator_study.id), loggedin_user, collaborator_study)
 
     sn = resp.soup.find(id=field.field_name)
 
@@ -82,18 +73,14 @@ def test__upload__form_dynamic_input(client, faker, field_type, input_type):
 
 
 @pytest.mark.app_crsf(True)
-def test__upload__form_dynamic_textarea(client, faker):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(collaborator=user)
-
+def test__upload__form_dynamic_textarea(client, faker, loggedin_user, collaborator_study):
     field = faker.field().get_in_db(
         field_type=FieldType.get_textarea(),
-        field_group=study.field_group,
+        field_group=collaborator_study.field_group,
         order=1,
     )
 
-    resp = _get(client, _url(study_id=study.id), user, study)
+    resp = _get(client, _url(study_id=collaborator_study.id), loggedin_user, collaborator_study)
 
     sn = resp.soup.find(id=field.field_name)
 
@@ -102,19 +89,15 @@ def test__upload__form_dynamic_textarea(client, faker):
 
 
 @pytest.mark.app_crsf(True)
-def test__upload__form_dynamic_radio(client, faker):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(collaborator=user)
-
+def test__upload__form_dynamic_radio(client, faker, loggedin_user, collaborator_study):
     field = faker.field().get_in_db(
         field_type=FieldType.get_radio(),
-        field_group=study.field_group,
+        field_group=collaborator_study.field_group,
         order=1,
         choices="xy|z",
     )
 
-    resp = _get(client, _url(study_id=study.id), user, study)
+    resp = _get(client, _url(study_id=collaborator_study.id), loggedin_user, collaborator_study)
 
     sn = resp.soup.find(id=field.field_name)
 
@@ -125,23 +108,19 @@ def test__upload__form_dynamic_radio(client, faker):
 
 
 @pytest.mark.app_crsf(True)
-def test__upload__form_dynamic_multiple(client, faker):
-    user = login(client, faker)
-
-    study = faker.study().get_in_db(collaborator=user)
-
+def test__upload__form_dynamic_multiple(client, faker, loggedin_user, collaborator_study):
     field1 = faker.field().get_in_db(
         field_type=FieldType.get_textarea(),
-        field_group=study.field_group,
+        field_group=collaborator_study.field_group,
         order=1,
     )
     field2 = faker.field().get_in_db(
         field_type=FieldType.get_string(),
-        field_group=study.field_group,
+        field_group=collaborator_study.field_group,
         order=2,
     )
 
-    resp = _get(client, _url(study_id=study.id), user, study)
+    resp = _get(client, _url(study_id=collaborator_study.id), loggedin_user, collaborator_study)
 
     f1 = resp.soup.find(id=field1.field_name)
 

@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 # Load environment variables from '.env' file.
 load_dotenv()
 
-from upload import create_app
+from lbrc_upload import create_app
 
 application = create_app()
 

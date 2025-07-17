@@ -5,7 +5,6 @@ import pytest
 import re
 from flask import url_for
 from itertools import cycle
-from tests import login
 
 
 _endpoint = 'ui.study_my_uploads'
@@ -42,16 +41,13 @@ def test__get___must_study_collaborator_isnt(client, faker):
     ["mine", "others", "deleted"],
     [(0, 0, 0), (0, 1, 0), (0, 0, 1), (2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
 )
-def test__my_uploads(client, faker, mine, others, deleted):
-    user = login(client, faker)
-
+def test__my_uploads(client, faker, collaborator_study, loggedin_user, mine, others, deleted):
     user_other = faker.user().get_in_db()
-    study = faker.study().get_in_db(collaborator=user)
 
     uploads = []
 
     for _ in range(mine):
-        u = faker.upload().get_in_db(study=study, uploader=user)
+        u = faker.upload().get_in_db(study=collaborator_study, uploader=loggedin_user)
         uploads.append(u)
 
     for _ in range(others):
@@ -61,27 +57,25 @@ def test__my_uploads(client, faker, mine, others, deleted):
     # the uploads to a different user
     # thus we can test that we can see
     # uploads by users other than ourselves
-    users = cycle([user, user_other])
+    users = cycle([loggedin_user, user_other])
 
     for _ in range(deleted):
         u = faker.upload().get_in_db(uploader=next(users), deleted=True)
 
-    resp = _get(client, _url(study_id=study.id), user, study)
+    resp = _get(client, _url(study_id=collaborator_study.id), loggedin_user, collaborator_study)
 
-    _assert_response(resp, study, uploads)
+    _assert_response(resp, collaborator_study, uploads)
 
 
-def test__my_uploads__search_study_number(client, faker):
-    user = login(client, faker)
+def test__my_uploads__search_study_number(client, faker, collaborator_study, loggedin_user):
+    collaborator_study = faker.study().get_in_db(collaborator=loggedin_user)
 
-    study = faker.study().get_in_db(collaborator=user)
+    upload_matching = faker.upload().get_in_db(study=collaborator_study, study_number="fred", uploader=loggedin_user)
+    upload_unmatching = faker.upload().get_in_db(study=collaborator_study, study_number="margaret", uploader=loggedin_user)
 
-    upload_matching = faker.upload().get_in_db(study=study, study_number="fred", uploader=user)
-    upload_unmatching = faker.upload().get_in_db(study=study, study_number="margaret", uploader=user)
+    resp = _get(client, _url(study_id=collaborator_study.id, search='fred'), loggedin_user, collaborator_study)
 
-    resp = _get(client, _url(study_id=study.id, search='fred'), user, study)
-
-    _assert_response(resp, study, [upload_matching])
+    _assert_response(resp, collaborator_study, [upload_matching])
 
 
 def _assert_response(resp, study, uploads):
@@ -110,22 +104,19 @@ def upload_matches_li(upload, li):
     "uploads",
     [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
 )
-def test__my_uploads__pages(client, faker, uploads):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
-    my_uploads = [faker.upload().get_in_db(study=study, uploader=user) for _ in range(uploads)]
+def test__my_uploads__pages(client, faker, collaborator_study, loggedin_user, uploads):
+    collaborator_study = faker.study().get_in_db(collaborator=loggedin_user)
+    my_uploads = [faker.upload().get_in_db(study=collaborator_study, uploader=loggedin_user) for _ in range(uploads)]
 
-    assert__page_navigation(client, _endpoint, dict(study_id= study.id, _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id= collaborator_study.id, _external=False), uploads)
 
 
 @pytest.mark.parametrize(
     "uploads",
     [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
 )
-def test__my_uploads__search__pages(client, faker, uploads):
-    user = login(client, faker)
-    study = faker.study().get_in_db(collaborator=user)
-    my_uploads = [faker.upload().get_in_db(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
-    other = [faker.upload().get_in_db(study=study, uploader=user, study_number="margaret") for _ in range(100)]
+def test__my_uploads__search__pages(client, faker, collaborator_study, loggedin_user, uploads):
+    my_uploads = [faker.upload().get_in_db(study=collaborator_study, uploader=loggedin_user, study_number="fred") for _ in range(uploads)]
+    other = [faker.upload().get_in_db(study=collaborator_study, uploader=loggedin_user, study_number="margaret") for _ in range(100)]
 
-    assert__page_navigation(client, _endpoint, dict(study_id=study.id, search='fred', _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=collaborator_study.id, search='fred', _external=False), uploads)

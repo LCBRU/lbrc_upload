@@ -1,7 +1,7 @@
 from functools import wraps
 from flask import request, abort
 from flask_login import current_user
-from upload.model import Study, Upload, UploadFile
+from lbrc_upload.model import Study, Upload, UploadFile
 
 
 def must_be_study_owner():

@@ -1,6 +1,6 @@
 from random import choice
 from lbrc_flask.forms.dynamic import FieldGroup, FieldType
-from upload.model import Study, User, Upload, Site, UploadFile, Field
+from lbrc_upload.model import Study, User, Upload, Site, UploadFile, Field
 from lbrc_flask.pytest.faker import BaseProvider, FakeCreator
 
 

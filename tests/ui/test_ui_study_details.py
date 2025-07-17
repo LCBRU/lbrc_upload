@@ -5,7 +5,6 @@ import pytest
 import re
 from flask import url_for
 from itertools import cycle
-from lbrc_flask.pytest.helpers import login
 
 
 _endpoint = 'ui.study'
@@ -43,32 +42,30 @@ def test__get___must_study_owner_isnt(client, faker):
     ["outstanding", "completed", "deleted"],
     [(0, 0, 0), (0, 1, 0), (0, 0, 1), (2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
 )
-def test__study_details_uploads(client, faker, outstanding, completed, deleted):
-    user = login(client, faker)
+def test__study_details_uploads(client, faker, owned_study, loggedin_user, outstanding, completed, deleted):
     user2 = faker.user().get_in_db()
-    study = faker.study().get_in_db(owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
     # thus we can test that we can see
     # uploads by users other than ourselves
-    users = cycle([user, user2])
+    users = cycle([loggedin_user, user2])
 
     uploads = []
 
     for _ in range(outstanding):
-        u = faker.upload().get_in_db(study=study, uploader=next(users))
+        u = faker.upload().get_in_db(study=owned_study, uploader=next(users))
         uploads.append(u)
 
     for _ in range(completed):
-        u = faker.upload().get_in_db(study=study, completed=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=owned_study, completed=True, uploader=next(users))
 
     for _ in range(deleted):
-        u = faker.upload().get_in_db(study=study, deleted=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=owned_study, deleted=True, uploader=next(users))
 
-    resp = _get(client, _url(study_id=study.id), user, study)
+    resp = _get(client, _url(study_id=owned_study.id), loggedin_user, owned_study)
 
-    _assert_response(study, uploads, resp)
+    _assert_response(owned_study, uploads, resp)
 
 
 @pytest.mark.app_crsf(True)
@@ -76,56 +73,49 @@ def test__study_details_uploads(client, faker, outstanding, completed, deleted):
     ["outstanding", "completed", "deleted"],
     [(0, 0, 0), (0, 1, 0), (0, 0, 1), (2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
 )
-def test__study_details_uploads_and_complete(client, faker, outstanding, completed, deleted):
-    user = login(client, faker)
+def test__study_details_uploads_and_complete(client, faker, owned_study, loggedin_user, outstanding, completed, deleted):
     user2 = faker.user().get_in_db()
-    study = faker.study().get_in_db(owner=user)
 
     # Cycle is used to alternately allocate
     # the uploads to a different user
     # thus we can test that we can see
     # uploads by users other than ourselves
-    users = cycle([user, user2])
+    users = cycle([loggedin_user, user2])
 
     uploads = []
 
     for _ in range(outstanding):
-        u = faker.upload().get_in_db(study=study, uploader=next(users))
+        u = faker.upload().get_in_db(study=owned_study, uploader=next(users))
         uploads.append(u)
 
     for _ in range(completed):
-        u = faker.upload().get_in_db(study=study, completed=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=owned_study, completed=True, uploader=next(users))
         uploads.append(u)
 
     for _ in range(deleted):
-        u = faker.upload().get_in_db(study=study, deleted=True, uploader=next(users))
+        u = faker.upload().get_in_db(study=owned_study, deleted=True, uploader=next(users))
 
-    resp = _get(client, _url(study_id=study.id, showCompleted='y'), user, study)
-    _assert_response(study, uploads, resp)
-
-
-@pytest.mark.app_crsf(True)
-def test__study_details_uploads__search_study_number(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(owner=user)
-
-    upload_matching = faker.upload().get_in_db(study_number="fred", study=study, uploader=user)
-    upload_unmatching = faker.upload().get_in_db(study_number="margaret", study=study, uploader=user)
-
-    resp = _get(client, _url(study_id=study.id, search='fred'), user, study)
-    _assert_response(study, [upload_matching], resp)
+    resp = _get(client, _url(study_id=owned_study.id, showCompleted='y'), loggedin_user, owned_study)
+    _assert_response(owned_study, uploads, resp)
 
 
 @pytest.mark.app_crsf(True)
-def test__study_details_uploads__with_files(client, faker):
-    user = login(client, faker)
-    study = faker.study().get_in_db(owner=user)
-    upload  = faker.upload().get_in_db(study=study)
+def test__study_details_uploads__search_study_number(client, faker, owned_study, loggedin_user):
+    upload_matching = faker.upload().get_in_db(study_number="fred", study=owned_study, uploader=loggedin_user)
+    upload_unmatching = faker.upload().get_in_db(study_number="margaret", study=owned_study, uploader=loggedin_user)
+
+    resp = _get(client, _url(study_id=owned_study.id, search='fred'), loggedin_user, owned_study)
+    _assert_response(owned_study, [upload_matching], resp)
+
+
+@pytest.mark.app_crsf(True)
+def test__study_details_uploads__with_files(client, faker, owned_study, loggedin_user):
+    upload  = faker.upload().get_in_db(study=owned_study)
 
     uf = faker.upload_file().get_in_db(upload=upload)
 
-    resp = _get(client, _url(study_id=study.id), user, study)
-    _assert_response(study, [uf.upload], resp)
+    resp = _get(client, _url(study_id=owned_study.id), loggedin_user, owned_study)
+    _assert_response(owned_study, [uf.upload], resp)
 
 
 def _assert_response(study, uploads, resp):
@@ -156,37 +146,31 @@ def upload_matches_li(upload, li):
     "uploads",
     [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
 )
-def test__study_details__pages(client, faker, uploads):
-    user = login(client, faker)
-    study = faker.study().get_in_db(owner=user)
-    my_uploads = [faker.upload().get_in_db(study=study, uploader=user) for _ in range(uploads)]
+def test__study_details__pages(client, faker, owned_study, loggedin_user, uploads):
+    my_uploads = [faker.upload().get_in_db(study=owned_study, uploader=loggedin_user) for _ in range(uploads)]
 
-    assert__page_navigation(client, _endpoint, dict(study_id=study.id, _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=owned_study.id, _external=False), uploads)
 
 
 @pytest.mark.parametrize(
     "uploads",
     [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
 )
-def test__study_details__with_completed__pages(client, faker, uploads):
+def test__study_details__with_completed__pages(client, faker, owned_study, loggedin_user, uploads):
     completed = cycle([True, False])
 
-    user = login(client, faker)
-    study = faker.study().get_in_db(owner=user)
-    my_uploads = [faker.upload().get_in_db(study=study, uploader=user, completed=next(completed)) for _ in range(uploads)]
+    my_uploads = [faker.upload().get_in_db(study=owned_study, uploader=loggedin_user, completed=next(completed)) for _ in range(uploads)]
 
-    assert__page_navigation(client, _endpoint, dict(study_id=study.id, showCompleted=True, _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=owned_study.id, showCompleted=True, _external=False), uploads)
 
 
 @pytest.mark.parametrize(
     "uploads",
     [0, 1, 5, 6, 11, 16, 21, 26, 31, 101],
 )
-def test__study_details__search__pages(client, faker, uploads):
-    user = login(client, faker)
-    study = faker.study().get_in_db(owner=user)
-    my_uploads = [faker.upload().get_in_db(study=study, uploader=user, study_number="fred") for _ in range(uploads)]
-    other = [faker.upload().get_in_db(study=study, uploader=user, study_number="margaret") for _ in range(100)]
+def test__study_details__search__pages(client, faker, owned_study, loggedin_user, uploads):
+    my_uploads = [faker.upload().get_in_db(study=owned_study, uploader=loggedin_user, study_number="fred") for _ in range(uploads)]
+    other = [faker.upload().get_in_db(study=owned_study, uploader=loggedin_user, study_number="margaret") for _ in range(100)]
 
-    assert__page_navigation(client, _endpoint, dict(study_id=study.id, search='fred', _external=False), uploads)
+    assert__page_navigation(client, _endpoint, dict(study_id=owned_study.id, search='fred', _external=False), uploads)
 

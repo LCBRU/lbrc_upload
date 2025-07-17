@@ -5,7 +5,6 @@ import pytest
 import csv
 from io import StringIO
 from flask import url_for
-from tests import login
 
 
 _endpoint = 'ui.study_csv'
@@ -29,17 +28,14 @@ def test__get___must_study_owner_isnt(client, faker):
 
 
 @pytest.mark.parametrize("upload_count", [(0), (2), (3), (100)])
-def test__study_csv__download(client, faker, upload_count):
-    user = login(client, faker)
+def test__study_csv__download(client, faker, owned_study, loggedin_user, upload_count):
     uploads = []
 
-    study = faker.study().get_in_db(owner=user)
-
     for _ in range(upload_count):
-        upload = faker.upload().get_in_db(study=study, uploader=user)
+        upload = faker.upload().get_in_db(study=owned_study, uploader=loggedin_user)
         uploads.append(upload)
 
-    resp = client.get(_url(study_id=study.id))
+    resp = client.get(_url(study_id=owned_study.id))
 
     assert resp.status_code == http.HTTPStatus.OK
 
