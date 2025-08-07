@@ -1,6 +1,7 @@
 import http
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
 from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation, assert__modal_create_button
+from lbrc_flask.python_helpers import sort_descending
 import pytest
 import re
 from flask import url_for
@@ -87,7 +88,9 @@ def _assert_response(resp, study, uploads):
     uploads_found = upload_list.find_all("li")
     assert len(uploads_found) == len(uploads)
 
-    for u, li in zip(reversed(uploads), uploads_found):
+    uploads = sorted(uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
+
+    for u, li in zip(uploads, uploads_found):
         upload_matches_li(u, li)
 
 

@@ -1,8 +1,8 @@
 import http
 
-from sqlalchemy import select
+from sqlalchemy import select, func
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__error__message, assert__requires_login, assert__refresh_response
+from lbrc_flask.pytest.asserts import assert__error__message_modal, assert__requires_login, assert__refresh_response
 import pytest
 import os
 from io import BytesIO
@@ -29,7 +29,7 @@ def _do_upload_field(client, faker, study, should_be_loaded, field, value):
     else:
         assert resp.status_code == http.HTTPStatus.OK
 
-        assert__error__message(resp.soup, field.field_name)
+        assert__error__message_modal(resp.soup, field.field_name)
         _assert_upload_not_saved(study)
 
 
@@ -52,31 +52,29 @@ def _do_upload(client, faker, study_id, study_number=None, field_name=None, fiel
 
 
 def _assert_uploaded(study, field, value):
-    upload = Upload.query.filter(Upload.study_id == study.id).first()
+    upload =  db.session.execute(select(Upload).where(Upload.study_id == study.id)).scalar()
 
     assert upload
 
-    print(value)
-
-    print('########', list(db.session.execute(select(UploadData)).scalars()))
-
-    assert UploadData.query.filter(
-        UploadData.value == value
-        and UploadData.field_id == field.id
-        and UploadData.upload_id == upload.id
-    ).first()
+    assert db.session.execute(
+        select(UploadData)
+        .where(UploadData.value == value)
+        .where(UploadData.field_id == field.id)
+        .where(UploadData.upload_id == upload.id)
+    ).scalar()
 
 
 def _assert_uploaded_file(study, field, filename, content):
-    upload = Upload.query.filter(Upload.study_id == study.id).first()
+    upload =  db.session.execute(select(Upload).where(Upload.study_id == study.id)).scalar()
 
     assert upload
 
-    uf = UploadFile.query.filter(
-        UploadFile.filename == filename
-        and UploadFile.field_id == field.id
-        and UploadFile.upload_id == upload.id
-    ).first()
+    uf =  db.session.execute(
+        select(UploadFile)
+        .where(UploadFile.filename == filename)
+        .where(UploadFile.field_id == field.id)
+        .where(UploadFile.upload_id == upload.id)
+    ).scalar()
 
     assert uf
 
@@ -89,7 +87,7 @@ def _assert_uploaded_file(study, field, filename, content):
 
 
 def _assert_upload_not_saved(study):
-    assert Upload.query.filter(Upload.study_id == study.id).count() == 0
+    assert db.session.execute(select(Upload).where(Upload.study_id == study.id)).scalar() is None
 
 
 def test__post__requires_login(client, faker):
@@ -111,9 +109,11 @@ def test__upload__upload_study_number(client, faker, collaborator_study):
     resp = _do_upload(client, faker, collaborator_study.id, study_number=study_number)
     assert__refresh_response(resp)
 
-    assert Upload.query.filter(
-        Upload.study_number == study_number and Upload.study_id == collaborator_study.id
-    ).first()
+    assert db.session.execute(
+        select(Upload)
+        .where(Upload.study_number == study_number)
+        .where(Upload.study_id == collaborator_study.id)
+    )
 
 
 def test__upload__upload_study_number__matches_format(client, faker, loggedin_user):
@@ -124,9 +124,11 @@ def test__upload__upload_study_number__matches_format(client, faker, loggedin_us
     resp = _do_upload(client, faker, study.id, study_number=study_number)
     assert__refresh_response(resp)
 
-    assert Upload.query.filter(
-        Upload.study_number == study_number and Upload.study_id == study.id
-    ).first()
+    assert db.session.execute(
+        select(Upload)
+        .where(Upload.study_number == study_number)
+        .where(Upload.study_id == study.id)
+    )
 
 
 def test__upload__upload_study_number__not_matches_format(client, faker, loggedin_user):
@@ -141,9 +143,10 @@ def test__upload__upload_study_number__not_matches_format(client, faker, loggedi
     e = resp.soup.find("ul", class_="errors")
     assert 'Study Number' in e.text
 
-    assert Upload.query.filter(
-        Upload.study_number == study_number
-    ).count() == 0
+    assert db.session.execute(
+        select(Upload)
+        .where(Upload.study_number == study_number)
+    )
 
 
 def test__upload__upload_study_number__duplicate_not_allowed(client, faker, collaborator_study):
@@ -156,9 +159,10 @@ def test__upload__upload_study_number__duplicate_not_allowed(client, faker, coll
     e = resp.soup.find("ul", class_="errors")
     assert 'Study Number' in e.text
 
-    assert Upload.query.filter(
-        Upload.study_number == upload.study_number
-    ).count() == 1
+    assert db.session.execute(
+        select(func.count(Upload.id))
+        .where(Upload.study_number == upload.study_number)
+    ).scalar() == 1
 
 
 def test__upload__upload_study_number__duplicate_allowed(client, faker, loggedin_user):
@@ -168,9 +172,10 @@ def test__upload__upload_study_number__duplicate_allowed(client, faker, loggedin
     resp = _do_upload(client, faker, upload.study.id, study_number=upload.study_number)
     assert__refresh_response(resp)
 
-    assert Upload.query.filter(
-        Upload.study_number == upload.study_number
-    ).count() == 2
+    assert db.session.execute(
+        select(func.count(Upload.id))
+        .where(Upload.study_number == upload.study_number)
+    ).scalar() == 2
 
 
 def test__upload__upload_study_number__duplicate_on_other_study(client, faker, loggedin_user):
@@ -181,9 +186,11 @@ def test__upload__upload_study_number__duplicate_on_other_study(client, faker, l
     resp = _do_upload(client, faker, study2.id, study_number=upload.study_number)
     assert__refresh_response(resp)
 
-    assert Upload.query.filter(
-        Upload.study_number == upload.study_number and Upload.study_id == study2.id
-    ).first()
+    assert db.session.execute(
+        select(Upload)
+        .where(Upload.study_number == upload.study_number)
+        .where(Upload.study_id == study2.id)
+    ).scalar()
 
 
 @pytest.mark.parametrize(
@@ -207,7 +214,7 @@ def test__upload__upload_BooleanField(client, faker, collaborator_study, require
     else:
         assert resp.status_code == http.HTTPStatus.OK
 
-        assert__error__message(resp.soup, field.field_name)
+        assert__error__message_modal(resp.soup, field.field_name)
         _assert_upload_not_saved(collaborator_study)
 
 
@@ -290,5 +297,5 @@ def test__upload__upload_FileField(client, faker, collaborator_study, required, 
     else:
         assert resp.status_code == http.HTTPStatus.OK
 
-        assert__error__message(resp.soup, field.field_name)
+        assert__error__message_modal(resp.soup, field.field_name)
         _assert_upload_not_saved(collaborator_study)

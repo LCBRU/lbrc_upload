@@ -2,6 +2,7 @@ import http
 from lbrc_flask.pytest.asserts import assert__requires_login, assert__refresh_response
 from flask import url_for
 from lbrc_upload.model import Upload
+from lbrc_flask.database import db
 
 
 def _url(**kwargs):
@@ -20,7 +21,7 @@ def test__upload__delete__must_be_owner(client, faker, collaborator_study):
 
     assert resp.status_code == http.HTTPStatus.FORBIDDEN
 
-    changed_upload = Upload.query.get(upload.id)
+    changed_upload = db.session.get(Upload, upload.id)
 
     assert not changed_upload.deleted
 
@@ -34,6 +35,6 @@ def test__upload__delete(client, faker, owned_study):
     )
     assert__refresh_response(resp)
 
-    changed_upload = Upload.query.get(upload.id)
+    changed_upload = db.session.get(Upload, upload.id)
 
     assert changed_upload.deleted

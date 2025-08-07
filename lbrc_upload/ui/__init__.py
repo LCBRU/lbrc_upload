@@ -14,7 +14,7 @@ from flask import (
 )
 
 from flask_security import login_required, current_user
-from sqlalchemy import or_, select
+from sqlalchemy import func, or_, select
 from lbrc_upload.model import Study, Upload, UploadData, UploadFile
 from lbrc_upload.ui.forms import UploadSearchForm, UploadFormBuilder
 from lbrc_upload.decorators import (
@@ -77,15 +77,14 @@ def index():
 @blueprint.route("/study/<int:study_id>")
 @must_be_study_owner()
 def study(study_id):
-    study = Study.query.get_or_404(study_id)
+    study: Study = db.get_or_404(Study, study_id)
 
     searchForm = UploadSearchForm(formdata=request.args)
 
     q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = q.order_by(Upload.date_created.desc(), Upload.study_number.asc())
 
-    uploads = q.order_by(Upload.date_created.desc()).paginate(
-        page=searchForm.page.data, per_page=5, error_out=False
-    )
+    uploads = db.paginate(select=q)
 
     return render_template(
         "ui/study.html",
@@ -99,16 +98,15 @@ def study(study_id):
 @blueprint.route("/study/<int:study_id>/my_uploads")
 @must_be_study_collaborator()
 def study_my_uploads(study_id):
-    study = Study.query.get_or_404(study_id)
+    study: Study = db.get_or_404(Study, study_id)
 
     search_form = SearchForm(formdata=request.args)
 
     q = get_study_uploads_query(study_id, search_form, True, False, False)
-    q = q.filter(Upload.uploader == current_user)
+    q = q.where(Upload.uploader == current_user)
+    q = q.order_by(Upload.date_created.desc(), Upload.study_number.asc())
 
-    uploads = q.order_by(Upload.date_created.desc()).paginate(
-        page=search_form.page.data, per_page=5, error_out=False
-    )
+    uploads = db.paginate(select=q)
 
     return render_template(
         "ui/my_uploads.html", study=study, uploads=uploads, search_form=search_form
@@ -118,7 +116,7 @@ def study_my_uploads(study_id):
 @blueprint.route("/study/<int:study_id>/upload", methods=["GET", "POST"])
 @must_be_study_collaborator()
 def upload_data(study_id):
-    study = Study.query.get_or_404(study_id)
+    study: Study = db.get_or_404(Study, study_id)
 
     if study.size_limit_exceeded:
         flash(category='error', message="Upload failed as study has exceeded it's size limit.")
@@ -129,12 +127,12 @@ def upload_data(study_id):
     form = builder.get_form()()
 
     if request.method == "POST":
-        q = Upload.query
-        q = q.filter(Upload.study_id == study_id)
-        q = q.filter(Upload.deleted == 0)
-        q = q.filter(Upload.study_number == form.study_number.data)
-
-        duplicate = q.count() > 0
+        duplicate = db.session.execute(
+            select(func.count(Upload.id))
+            .where(Upload.study_id == study_id)
+            .where(Upload.deleted == 0)
+            .where(Upload.study_number == form.study_number.data)
+        ).scalar() > 0
 
         form.validate_on_submit()
 
@@ -214,7 +212,7 @@ def upload_data(study_id):
 @blueprint.route("/upload/file/<int:upload_file_id>")
 @must_be_upload_file_study_owner("upload_file_id")
 def download_upload_file(upload_file_id):
-    uf = UploadFile.query.get_or_404(upload_file_id)
+    uf: UploadFile = db.get_or_404(UploadFile, upload_file_id)
 
     return send_file(
         uf.upload_filepath(),
@@ -226,7 +224,7 @@ def download_upload_file(upload_file_id):
 @blueprint.route("/study/<int:study_id>/csv")
 @must_be_study_owner()
 def study_csv(study_id):
-    study = Study.query.get_or_404(study_id)
+    study: Study = db.get_or_404(Study, study_id)
 
     searchForm = UploadSearchForm(formdata=request.args)
 
@@ -252,15 +250,14 @@ def study_csv(study_id):
 @blueprint.route("/Uploads/<int:study_id>/page_download")
 @must_be_study_owner()
 def study_page_download(study_id):
-    study = Study.query.get_or_404(study_id)
+    study: Study = db.get_or_404(Study, study_id)
 
     searchForm = UploadSearchForm(formdata=request.args)
 
     q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = q.order_by(Upload.date_created.desc())
 
-    uploads = list(q.order_by(Upload.date_created.desc()).paginate(
-        page=searchForm.page.data, per_page=5, error_out=False
-    ).items)
+    uploads = list(db.paginate(select=q).items)
 
     if sum([u.total_file_size for u in uploads]) > 1_000_000_000:
         flash('Files too large to download as a page')
@@ -320,20 +317,19 @@ def delete_upload(upload):
 
 
 def get_study_uploads_query(study_id, search_form, show_completed, show_deleted, hide_outstanding):
-    q = Upload.query
-    q = q.filter(Upload.study_id == study_id)
+    q = select(Upload).where(Upload.study_id == study_id)
 
     if not show_completed:
-        q = q.filter(Upload.completed == 0)
+        q = q.where(Upload.completed == 0)
 
     if not show_deleted:
-        q = q.filter(Upload.deleted == 0)
+        q = q.where(Upload.deleted == 0)
 
     if hide_outstanding:
-        q = q.filter(or_(Upload.deleted == 1, Upload.completed == 1))
+        q = q.where(or_(Upload.deleted == 1, Upload.completed == 1))
 
     if search_form.search.data:
-        q = q.filter(Upload.study_number == search_form.search.data)
+        q = q.where(Upload.study_number == search_form.search.data)
 
     return q
 
@@ -361,7 +357,7 @@ def write_study_upload_csv(filename, study, query):
 
         writer.writeheader()
 
-        for u in query.all():
+        for u in db.session.execute(query).scalars():
             row = {
                 COL_UPLOAD_ID: u.id,
                 COL_STUDY_NAME: u.study.name,
@@ -379,15 +375,14 @@ def write_study_upload_csv(filename, study, query):
 @blueprint.route("/study/<int:study_id>/delete_page", methods=["POST"])
 @must_be_study_owner()
 def upload_delete_page(study_id):
-    study = Study.query.get_or_404(study_id)
+    study: Study = db.get_or_404(Study, study_id)
 
     searchForm = UploadSearchForm()
 
     q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = q.order_by(Upload.date_created.desc())
 
-    uploads = q.order_by(Upload.date_created.desc()).paginate(
-        page=searchForm.page.data, per_page=5, error_out=False
-    )
+    uploads = db.paginate(select=q)
 
     for u in uploads.items:
         delete_upload(u)

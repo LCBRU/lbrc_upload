@@ -1,5 +1,6 @@
+from lbrc_upload.model import Study
 from tests.ui import assert__get___must_be_study_collaborator_is, assert__get___must_be_study_collaborator_isnt
-from lbrc_flask.pytest.asserts import assert__requires_login, get_and_assert_standards_modal, assert__modal_cancel, assert__modal_save
+from lbrc_flask.pytest.asserts import assert__requires_login, get_and_assert_standards_modal, assert__modal_cancel, assert__modal_save, assert__refresh_response
 import pytest
 from flask import url_for
 from lbrc_flask.forms.dynamic import FieldType
@@ -33,6 +34,16 @@ def test__get___must_study_collaborator_is(client, faker):
 
 def test__get___must_study_collaborator_isnt(client, faker):
     assert__get___must_be_study_collaborator_isnt(client, faker, _endpoint)
+
+
+@pytest.mark.app_crsf(True)
+def test__upload__space_exceeded(client, faker, loggedin_user):
+    study: Study  = faker.study().get_in_db(collaborator=loggedin_user, size_limit=80)
+    upload = faker.upload().get_in_db(study_number="fred", study=study, uploader=loggedin_user)
+    upload_file = faker.upload_file().get_in_db(upload=upload, size=90)
+
+    resp = client.post(_url(study_id=study.id))
+    assert__refresh_response(resp)
 
 
 @pytest.mark.app_crsf(True)

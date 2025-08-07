@@ -1,6 +1,8 @@
 import http
+from lbrc_upload.model import Study
 from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
 from lbrc_flask.pytest.asserts import assert__requires_login, assert__search_html, get_and_assert_standards, assert__page_navigation, assert__formaction_button, assert__htmx_post_button
+from lbrc_flask.python_helpers import sort_descending
 import pytest
 import re
 from flask import url_for
@@ -100,6 +102,32 @@ def test__study_details_uploads_and_complete(client, faker, owned_study, loggedi
 
 
 @pytest.mark.app_crsf(True)
+def test__study_details__space_exceeded(client, faker, loggedin_user):
+    study: Study  = faker.study().get_in_db(owner=loggedin_user, size_limit=80)
+    upload = faker.upload().get_in_db(study_number="fred", study=study, uploader=loggedin_user)
+    upload_file = faker.upload_file().get_in_db(upload=upload, size=90)
+
+    resp = _get(client, _url(study_id=study.id, showCompleted='y'), loggedin_user, study)
+
+    _assert_response(study, [upload], resp)
+
+    assert resp.soup.find("h4", class_="error") is not None
+
+
+@pytest.mark.app_crsf(True)
+def test__study_details__space_exceeded(client, faker, loggedin_user):
+    study: Study  = faker.study().get_in_db(owner=loggedin_user, size_limit=80)
+    upload = faker.upload().get_in_db(study_number="fred", study=study, uploader=loggedin_user)
+    upload_file = faker.upload_file().get_in_db(upload=upload, size=79)
+
+    resp = _get(client, _url(study_id=study.id, showCompleted='y'), loggedin_user, study)
+
+    _assert_response(study, [upload], resp)
+
+    assert resp.soup.find("h4", class_="error") is None
+
+
+@pytest.mark.app_crsf(True)
 def test__study_details_uploads__search_study_number(client, faker, owned_study, loggedin_user):
     upload_matching = faker.upload().get_in_db(study_number="fred", study=owned_study, uploader=loggedin_user)
     upload_unmatching = faker.upload().get_in_db(study_number="margaret", study=owned_study, uploader=loggedin_user)
@@ -126,7 +154,9 @@ def _assert_response(study, uploads, resp):
 
     assert len(upload_items) == len(uploads)
 
-    for u, li in zip(reversed(uploads), upload_items):
+    uploads = sorted(uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
+
+    for u, li in zip(uploads, upload_items):
         upload_matches_li(u, li)
 
 

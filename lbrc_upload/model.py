@@ -1,6 +1,6 @@
 import os
 import humanize
-from datetime import datetime
+from datetime import datetime, UTC
 from pathlib import Path
 from flask import current_app
 from sqlalchemy import Integer
@@ -18,7 +18,7 @@ class Site(db.Model):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(255))
     number = db.Column(db.String(20))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(UTC))
 
     def __str__(self):
         return self.name
@@ -57,7 +57,7 @@ class Study(db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(100))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(UTC))
     allow_duplicate_study_number = db.Column(db.Boolean, nullable=False, default=False)
     allow_empty_study_number = db.Column(db.Boolean, nullable=False, default=False)
     study_number_format = db.Column(db.String(50))
@@ -117,7 +117,7 @@ class Upload(db.Model):
     study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))
     study_number = db.Column(db.String(20))
     uploader_id = db.Column(db.Integer(), db.ForeignKey(User.id))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(UTC))
     study = db.relationship(Study, backref=db.backref("uploads"))
     uploader = db.relationship(User)
     completed = db.Column(db.Boolean, default=0)

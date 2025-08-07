@@ -2,8 +2,9 @@ import pytest
 from faker import Faker
 from lbrc_flask.pytest.fixtures import *
 from lbrc_flask.forms.dynamic import create_field_types
+from lbrc_flask.pytest.faker import FieldGroupProvider, FieldProvider
 from config import TestConfig
-from tests.faker import FieldGroupProvider, FieldProvider, SiteProvider, StudyProvider, UploadFileProvider, UploadProvider, UserProvider
+from tests.faker import SiteProvider, StudyProvider, UploadFileProvider, UploadProvider, UserProvider
 from lbrc_upload import create_app
 from lbrc_flask.pytest.helpers import login
 from lbrc_upload.security import init_authorization
@@ -35,7 +36,7 @@ def app():
     return create_app(TestConfig)
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture(scope="function")
 def faker():
     result = Faker("en_GB")
     result.add_provider(SiteProvider)
