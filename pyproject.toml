@@ -7,7 +7,7 @@ name = "lbrc_upload"
 authors = [
     {name = "Richard Bramley", email = "rabramley@gmail.com"},
 ]
-version = "2.0.0"
+version = "2.0.1"
 requires-python = "== 3.13.*"
 readme = "README.md"
 classifiers = ["License :: OSI Approved :: MIT License"]
