@@ -23,6 +23,7 @@
                     <button type="submit" formaction="{{ url_for('ui.study_csv', study_id=study.id) }}" formmethod="get">Download Upload Details</button>
                     <button type="submit" hx-post="{{ url_for('ui.upload_delete_page', study_id=study.id) }}" hx-confirm="Are you sure you wish to delete all of the uploads on this page?" >Delete All on Page</button>
                     <button type="submit" formaction="{{ url_for('ui.study_page_download', study_id=study.id) }}" formmethod="get">Download All on Page</button>
+                    <button type="submit" formaction="{{ url_for('ui.study_download_all', study_id=study.id) }}" formmethod="get">Download All</button>
                 </div>
             </fieldset>
         </form>

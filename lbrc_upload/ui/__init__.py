@@ -79,9 +79,9 @@ def index():
 def study(study_id):
     study: Study = db.get_or_404(Study, study_id)
 
-    searchForm = UploadSearchForm(formdata=request.args)
+    search_form = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = get_study_uploads_query(study_id, search_form.data)
     q = q.order_by(Upload.date_created.desc(), Upload.study_number.asc())
 
     uploads = db.paginate(select=q)
@@ -90,7 +90,7 @@ def study(study_id):
         "ui/study.html",
         study=study,
         uploads=uploads,
-        search_form=searchForm,
+        search_form=search_form,
         confirm_form=ConfirmForm(),
     )
 
@@ -102,7 +102,7 @@ def study_my_uploads(study_id):
 
     search_form = SearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, search_form, True, False, False)
+    q = get_study_uploads_query(study_id, search_form.data)
     q = q.where(Upload.uploader == current_user)
     q = q.order_by(Upload.date_created.desc(), Upload.study_number.asc())
 
@@ -226,9 +226,9 @@ def download_upload_file(upload_file_id):
 def study_csv(study_id):
     study: Study = db.get_or_404(Study, study_id)
 
-    searchForm = UploadSearchForm(formdata=request.args)
+    search_form = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = get_study_uploads_query(study_id, search_form.data)
 
     csv_filename = tempfile.NamedTemporaryFile()
 
@@ -252,13 +252,28 @@ def study_csv(study_id):
 def study_page_download(study_id):
     study: Study = db.get_or_404(Study, study_id)
 
-    searchForm = UploadSearchForm(formdata=request.args)
+    search_form = UploadSearchForm(formdata=request.args)
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = get_study_uploads_query(study_id, search_form.data)
     q = q.order_by(Upload.date_created.desc())
 
-    uploads = list(db.paginate(select=q).items)
+    return _mass_download(study=study, uploads=list(db.paginate(select=q).items), query=q)
 
+
+@blueprint.route("/Uploads/<int:study_id>/download_all")
+@must_be_study_owner()
+def study_download_all(study_id):
+    study: Study = db.get_or_404(Study, study_id)
+
+    search_form = UploadSearchForm(formdata=request.args)
+
+    q = get_study_uploads_query(study_id, search_form.data)
+    q = q.order_by(Upload.date_created.desc())
+
+    return _mass_download(study=study, uploads=list(db.paginate(select=q).items), query=q)
+
+
+def _mass_download(study, uploads, query):
     if sum([u.total_file_size for u in uploads]) > 1_000_000_000:
         flash('Files too large to download as a page')
         return redirect(request.referrer)
@@ -270,7 +285,7 @@ def study_page_download(study_id):
         csv_filename = temppath / f'{filename}.csv'
         print('created temporary directory', tmpdirname)
 
-        write_study_upload_csv(csv_filename, study, q)
+        write_study_upload_csv(csv_filename, study, query)
 
         for u in uploads:
             if not u.has_existing_files():
@@ -316,20 +331,24 @@ def delete_upload(upload):
     db.session.commit()
 
 
-def get_study_uploads_query(study_id, search_form, show_completed, show_deleted, hide_outstanding):
+def get_study_uploads_query(study_id, search_data):
     q = select(Upload).where(Upload.study_id == study_id)
 
-    if not show_completed:
-        q = q.where(Upload.completed == 0)
+    if x := search_data.get('search'):
+        for word in x.split():
+            q = q.where(Upload.study_number.like(f"%{word}%"))
 
-    if not show_deleted:
-        q = q.where(Upload.deleted == 0)
+    if (x := search_data.get('showCompleted')) is not None:
+        if not x:
+            q = q.where(Upload.completed == 0)
 
-    if hide_outstanding:
-        q = q.where(or_(Upload.deleted == 1, Upload.completed == 1))
+    if (x := search_data.get('showDeleted')) is not None:
+        if not x:
+            q = q.where(Upload.deleted == 0)
 
-    if search_form.search.data:
-        q = q.where(Upload.study_number == search_form.search.data)
+    if (x := search_data.get('hideOutstanding')) is not None:
+        if x:
+            q = q.where(or_(Upload.deleted == 1, Upload.completed == 1))
 
     return q
 
@@ -377,9 +396,9 @@ def write_study_upload_csv(filename, study, query):
 def upload_delete_page(study_id):
     study: Study = db.get_or_404(Study, study_id)
 
-    searchForm = UploadSearchForm()
+    search_form = UploadSearchForm()
 
-    q = get_study_uploads_query(study_id, searchForm, searchForm.showCompleted.data, searchForm.showDeleted.data, searchForm.hideOutstanding.data)
+    q = get_study_uploads_query(study_id, search_form.data)
     q = q.order_by(Upload.date_created.desc())
 
     uploads = db.paginate(select=q)

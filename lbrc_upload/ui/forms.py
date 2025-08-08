@@ -1,4 +1,5 @@
 from wtforms import (
+    HiddenField,
     IntegerField,
     SearchField,
     BooleanField,
@@ -13,6 +14,14 @@ class UploadSearchForm(FlashingForm):
     showCompleted = BooleanField("Show Completed")
     showDeleted = BooleanField("Show Deleted")
     hideOutstanding = BooleanField("Hide Outstanding")
+    page = IntegerField("Page", default=1)
+
+
+class MyUploadSearchForm(FlashingForm):
+    search = SearchField("Search", validators=[Length(max=20)])
+    showCompleted = HiddenField("Show Completed", default=True)
+    showDeleted = HiddenField("Show Deleted", default=False)
+    hideOutstanding = HiddenField("Hide Outstanding", default=False)
     page = IntegerField("Page", default=1)
 
 
