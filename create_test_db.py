@@ -2,7 +2,7 @@
 import string
 import shutil
 from pathlib import Path
-from random import randint, sample, choices, choice
+from random import randint, choices, choice
 from dotenv import load_dotenv
 from flask import current_app
 from lbrc_flask.database import db

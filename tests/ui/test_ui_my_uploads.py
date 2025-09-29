@@ -18,7 +18,7 @@ def _url(**kwargs):
 def _get(client, url, loggedin_user, study):
     resp = get_and_assert_standards(client, url, loggedin_user)
 
-    assert__search_html(resp.soup, clear_url=_url(study_id=study.id))
+    assert__search_html(resp.soup)
     assert__modal_create_button(soup=resp.soup, text='Upload Data', url=url_for('ui.upload_data', study_id=study.id))
     assert resp.soup.find("h2", string="{} Uploads".format(study.name)) is not None
 

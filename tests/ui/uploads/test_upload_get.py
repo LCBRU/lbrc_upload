@@ -13,7 +13,7 @@ def _url(**kwargs):
 
 
 def _get(client, url, loggedin_user, study):
-    resp = get_and_assert_standards_modal(client, url, loggedin_user, has_form=True)
+    resp = get_and_assert_standards_modal(client, url, has_form=True)
 
     assert resp.soup.find("h2", string=f"Upload data to study {study.name}") is not None
 

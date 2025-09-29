@@ -18,7 +18,7 @@ def _url(**kwargs):
 def _get(client, url, loggedin_user, study):
     resp = get_and_assert_standards(client, url, loggedin_user)
 
-    assert__search_html(resp.soup, clear_url=_url(_external=False, study_id=study.id))
+    assert__search_html(resp.soup)
     assert resp.soup.find('input', type="checkbox", id='showCompleted') is not None
     assert__formaction_button(resp.soup, 'Download Upload Details', url=url_for('ui.study_csv', study_id=study.id), method='get')
     assert resp.soup.find("h2", string="{} Uploads".format(study.name)) is not None
