@@ -32,8 +32,11 @@ def owned_study(client, faker, loggedin_user):
 
 
 @pytest.fixture(scope="function")
-def app():
-    return create_app(TestConfig)
+def app(tmp_path):
+    class LocalTestConfig(TestConfig):
+        FILE_UPLOAD_DIRECTORY = tmp_path
+
+    return create_app(LocalTestConfig)
 
 
 @pytest.fixture(scope="function")
