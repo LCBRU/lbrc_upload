@@ -9,14 +9,14 @@ from lbrc_flask.database import db
 from faker import Faker
 from lbrc_flask.forms.dynamic import FieldGroup, create_field_types, FieldType, Field
 from sqlalchemy import select
-from lbrc_upload.model import Site, Study, Upload, UploadData, UploadFile, User
-from lbrc_upload.security import init_authorization
 
 fake = Faker()
 
 load_dotenv()
 
 from lbrc_upload import create_app
+from lbrc_upload.model import Site, Study, Upload, UploadData, UploadFile, User
+from lbrc_upload.security import init_authorization
 
 application = create_app()
 application.app_context().push()
