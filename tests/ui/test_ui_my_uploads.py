@@ -56,7 +56,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
 
         my_uploads = self.faker.upload().get_list_in_db(item_count=my_study_count, study=self.existing_study, uploader=self.loggedin_user)
         my_uploads = sorted(my_uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
-        _ = self.faker.upload().get_list_in_db(item_count=other_user_study_count, study=self.existing_study, uploader=other_user)
+        other_user_uploads = self.faker.upload().get_list_in_db(item_count=other_user_study_count, study=self.existing_study, uploader=other_user)
 
         self.get_and_assert_standards(expected_count=my_study_count, expected_results=my_uploads)
 
@@ -69,7 +69,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
 
         matching_uploads = self.faker.upload().get_list_in_db(item_count=matching_count, study=self.existing_study, uploader=self.loggedin_user, study_number='fred')
         matching_uploads = sorted(matching_uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
-        _ = self.faker.upload().get_list_in_db(item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
+        non_matching_uploads = self.faker.upload().get_list_in_db(item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
 
         self.get_and_assert_standards(
             parameters={'search': 'fred'},
