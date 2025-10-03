@@ -1,59 +1,60 @@
 import http
-from tests.ui import assert__get___must_be_study_owner_is, assert__get___must_be_study_owner_isnt
-from lbrc_flask.pytest.asserts import assert__requires_login
+from lbrc_upload.model import Study
+from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, RequiresLoginGetTester, FlaskGetViewTester, CsvDownloadContentAsserter, PageCountHelper
 import pytest
 import csv
 from io import StringIO
 from flask import url_for
 
 
-_endpoint = 'ui.study_csv'
+class StudiesCsvTester:
+    @property
+    def endpoint(self):
+        return 'ui.study_csv'
+
+    @pytest.fixture(autouse=True)
+    def set_existing_study(self, client, faker):
+        self.owner_user = faker.user().get_in_db()
+        self.existing_study: Study = faker.study().get_in_db(owner=self.owner_user)
+        self.parameters = dict(study_id=self.existing_study.id)
 
 
-def _url(**kwargs):
-    return url_for(_endpoint, **kwargs)
+
+class TestStudiesCsvRequiresLogin(StudiesCsvTester, RequiresLoginGetTester):
+    ...
 
 
-def test__get__requires_login(client, faker):
-    study = faker.study().get_in_db()
-    assert__requires_login(client, _url(study_id=study.id, external=False))
+class TestStudiesCsvRequiresRole(StudiesCsvTester, RequiresRoleTester):
+    @property
+    def user_with_required_role(self):
+        return self.owner_user
+
+    @property
+    def user_without_required_role(self):
+        return self.faker.user().get_in_db()
 
 
-def test__get___must_study_owner_is(client, faker):
-    assert__get___must_be_study_owner_is(client, faker, _endpoint)
+class TestStudiesCsvDownload(StudiesCsvTester, FlaskGetViewTester):
+    @pytest.fixture(autouse=True)
+    def set_existing_study(self, client, faker, loggedin_user):
+        self.existing_study: Study = faker.study().get_in_db(owner=loggedin_user)
+        self.parameters = dict(study_id=self.existing_study.id)
 
+    @pytest.mark.parametrize("upload_count", [0, 2, 3, 100])
+    def test__get__no_filters(self, upload_count):
+        uploads = self.faker.upload().get_list_in_db(item_count=upload_count, study=self.existing_study, uploader=self.loggedin_user)
 
-def test__get___must_study_owner_isnt(client, faker):
-    assert__get___must_be_study_owner_isnt(client, faker, _endpoint)
+        resp = self.get()
+        assert resp.status_code == http.HTTPStatus.OK
 
-
-@pytest.mark.parametrize("upload_count", [(0), (2), (3), (100)])
-def test__study_csv__download(client, faker, owned_study, loggedin_user, upload_count):
-    uploads = []
-
-    for _ in range(upload_count):
-        upload = faker.upload().get_in_db(study=owned_study, uploader=loggedin_user)
-        uploads.append(upload)
-
-    resp = client.get(_url(study_id=owned_study.id))
-
-    assert resp.status_code == http.HTTPStatus.OK
-
-    decoded_content = resp.data.decode("utf-8")
-
-    rows = list(csv.reader(StringIO(decoded_content), delimiter=","))
-
-    assert rows[0] == [
-        "upload_id",
-        "study_name",
-        "Study Number",
-        "uploaded_by",
-        "date_created",
-    ]
-
-    for u, row in zip(uploads, rows[1:]):
-        assert row[0] == str(u.id)
-        assert row[1] == u.study.name
-        assert row[2] == u.study_number
-        assert row[3] == u.uploader.full_name
-        assert row[4] == u.date_created.strftime("%Y-%m-%d %H:%M:%S.%f")
+        content_asserter: CsvDownloadContentAsserter = CsvDownloadContentAsserter(
+            expected_headings=[
+                "upload_id",
+                "study_name",
+                "Study Number",
+                "uploaded_by",
+                "date_created",
+            ],
+            expected_results=uploads,
+        )
+        content_asserter.assert_all(resp)
