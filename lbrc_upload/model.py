@@ -113,7 +113,7 @@ class Study(db.Model, CommonMixin):
         return self.size_limit and self.total_file_size > self.size_limit
 
 
-class Upload(db.Model, CommonMixin):
+class Upload(CommonMixin, db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))

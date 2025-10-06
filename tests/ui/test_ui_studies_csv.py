@@ -1,6 +1,6 @@
 import http
 from lbrc_upload.model import Study
-from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, RequiresLoginGetTester, FlaskGetViewTester, CsvDownloadContentAsserter, PageCountHelper
+from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, RequiresLoginGetTester, FlaskViewLoggedInTester, CsvDownloadContentAsserter, PageCountHelper
 import pytest
 import csv
 from io import StringIO
@@ -34,7 +34,7 @@ class TestStudiesCsvRequiresRole(StudiesCsvTester, RequiresRoleTester):
         return self.faker.user().get_in_db()
 
 
-class TestStudiesCsvDownload(StudiesCsvTester, FlaskGetViewTester):
+class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker, loggedin_user):
         self.existing_study: Study = faker.study().get_in_db(owner=loggedin_user)
