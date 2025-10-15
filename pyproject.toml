@@ -13,9 +13,15 @@ readme = "README.md"
 classifiers = ["License :: OSI Approved :: MIT License"]
 
 dependencies = [
-    "lbrc_flask @ git+https://github.com/LCBRU/lbrc_flask.git",
-    "humanize",
+    "humanize > 4.12",
 ]
 
+[dependency-groups]
+dev = [
+    "lbrc-flask-dev",
+]
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.uv.sources]
+lbrc-flask-dev = { path = "../lbrc_flask", editable = true }
