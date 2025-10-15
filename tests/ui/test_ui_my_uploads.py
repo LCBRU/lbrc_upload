@@ -1,11 +1,11 @@
 from lbrc_upload.model import Study
 from lbrc_flask.python_helpers import sort_descending
-from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, FlaskViewLoggedInTester, RequiresLoginGetTester, PanelListContentAsserter, PageContentAsserter, PageCountHelper, SearchContentAsserter, HtmlPageContentAsserter
+from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, IndexTester, RequiresLoginGetTester, PanelListContentAsserter, PagedResultSet
 import pytest
 import re
 
 
-class MyUploadsRowResultTester(PanelListContentAsserter):
+class MyUploadsRowContentAsserter(PanelListContentAsserter):
     def assert_row_details(self, row, expected_result):
         assert row is not None
         assert expected_result is not None
@@ -45,10 +45,14 @@ class TestMyUploadsIndexRequiresRole(MyUploadsIndexTester, RequiresRoleTester):
         return self.faker.user().get_in_db()
 
 
-class TestMyUploadsIndex(MyUploadsIndexTester, FlaskViewLoggedInTester):
-    @pytest.mark.parametrize("my_study_count", PageCountHelper.test_page_edges())
+class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
+    @property
+    def content_asserter(self):
+        return MyUploadsRowContentAsserter
+    
+    @pytest.mark.parametrize("my_study_count", PagedResultSet.test_page_edges())
     @pytest.mark.parametrize("other_user_study_count", [0, 1, 2])
-    @pytest.mark.parametrize("current_page", PageCountHelper.test_current_pages())
+    @pytest.mark.parametrize("current_page", PagedResultSet.test_current_pages())
     def test__get__no_filters(self, my_study_count, other_user_study_count, current_page):
         other_user = self.faker.user().get_in_db()
         
@@ -62,25 +66,15 @@ class TestMyUploadsIndex(MyUploadsIndexTester, FlaskViewLoggedInTester):
 
         resp = self.get()
 
-        page_count_helper = PageCountHelper(page=current_page, results_count=len(my_uploads))
-
-        page_asserter = PageContentAsserter(
-            url=self.url(external=False),
-            page_count_helper=page_count_helper,
-        ).assert_all(resp)
-
-        MyUploadsRowResultTester(
-            expected_results=page_count_helper.get_current_page_from_results(my_uploads),
-            page_count_helper=page_count_helper,
-        ).assert_all(resp)
-
-        SearchContentAsserter().assert_all(resp)
-        HtmlPageContentAsserter(loggedin_user=self.loggedin_user).assert_all(resp)
+        self.assert_all(
+            page_count_helper=PagedResultSet(page=current_page, expected_results=my_uploads),
+            resp=resp,
+        )
 
 
-    @pytest.mark.parametrize("matching_count", PageCountHelper.test_page_edges())
+    @pytest.mark.parametrize("matching_count", PagedResultSet.test_page_edges())
     @pytest.mark.parametrize("unmatching_count", [0, 1, 2])
-    @pytest.mark.parametrize("current_page", PageCountHelper.test_current_pages())
+    @pytest.mark.parametrize("current_page", PagedResultSet.test_current_pages())
     def test__get__search_study_number(self, matching_count, unmatching_count, current_page):
         other_user = self.faker.user().get_in_db()
         
@@ -95,18 +89,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, FlaskViewLoggedInTester):
 
         resp = self.get()
 
-        page_count_helper = PageCountHelper(page=current_page, results_count=len(matching_uploads))
-
-        page_asserter = PageContentAsserter(
-            url=self.url(external=False),
-            page_count_helper=page_count_helper,
-        ).assert_all(resp)
-
-        MyUploadsRowResultTester(
-            expected_results=page_count_helper.get_current_page_from_results(matching_uploads),
-            page_count_helper=page_count_helper,
-        ).assert_all(resp)
-    
-
-        SearchContentAsserter().assert_all(resp)
-        HtmlPageContentAsserter(loggedin_user=self.loggedin_user).assert_all(resp)
+        self.assert_all(
+            page_count_helper=PagedResultSet(page=current_page, expected_results=matching_uploads),
+            resp=resp,
+        )
