@@ -1,154 +1,119 @@
 import http
-from lbrc_flask.pytest.asserts import assert__redirect, get_and_assert_standards, assert__modal_button
 import pytest
+from lbrc_flask.pytest.asserts import assert__redirect
 from itertools import cycle
 from flask import url_for
-from lbrc_flask.pytest.asserts import assert__requires_login
+from lbrc_flask.pytest.testers import RequiresLoginGetTester, FlaskViewLoggedInTester, TableContentAsserter, ResultSet
 
 
-_endpoint = 'ui.index'
-
-def _url(**kwargs):
-    return url_for(_endpoint, **kwargs)
-
-
-def test__get__requires_login(client, faker):
-    assert__requires_login(client, _url())
+class StudyListTester:
+    @property
+    def endpoint(self):
+        return 'ui.index'
 
 
-def test__study_list__no_studies__no_display(client, faker, loggedin_user):
-    resp = get_and_assert_standards(client, _url(), loggedin_user)
-
-    assert resp.status_code == http.HTTPStatus.OK
-    assert resp.soup.find("h2", string="Owned Studies") is None
-    assert resp.soup.find("h2", string="Collaborating Studies") is None
-    assert len(resp.soup.find_all("table", "table study_list")) == 0
+class TestStudyListRequiresLogin(StudyListTester, RequiresLoginGetTester):
+    ...
 
 
-def test__study_list__owns_1_study_redirects(client, faker, owned_study):
-    resp = client.get(_url())
-    assert__redirect(resp, endpoint='ui.study', study_id=owned_study.id)
+
+class OwnedStudyRowContentAsserter(TableContentAsserter):
+    def get_container(self, resp):
+        return resp.soup.find("table", id="owned_studies").find("tbody")
+
+    def assert_row_details(self, row, expected_result):
+        assert row is not None
+        assert expected_result is not None
+
+        assert row.find("a", href=url_for("ui.study", study_id=expected_result.id)) is not None
+        assert row.find("a", href=url_for("ui.study_csv", study_id=expected_result.id)) is not None
+        assert row.find_all("td")[1].string == str(expected_result.name)
+        assert row.find_all("td")[2].string == str(expected_result.upload_count)
+        assert row.find_all("td")[3].string == str(expected_result.outstanding_upload_count)
 
 
-@pytest.mark.parametrize("study_count", [(2), (3)])
-def test__study_list__owns_mult_studies(client, faker, loggedin_user, study_count):
-    studies = []
+class CollaboratorStudyRowContentAsserter(TableContentAsserter):
+    def get_container(self, resp):
+        return resp.soup.find("table", id="collaborator_studies").find("tbody")
 
-    for _ in range(study_count):
-        studies.append(faker.study().get_in_db(owner=loggedin_user))
+    def assert_row_details(self, row, expected_result):
+        assert row is not None
+        assert expected_result is not None
 
-    resp = get_and_assert_standards(client, _url(), loggedin_user)
-
-    assert resp.status_code == http.HTTPStatus.OK
-    assert resp.soup.find("h2", string="Owned Studies") is not None
-    assert resp.soup.find("h2", string="Collaborating Studies") is None
-    assert len(resp.soup.select("table")) == 1
-    assert len(resp.soup.select("table > tbody > tr")) == study_count
-
-    for s in studies:
-        assert resp.soup.find("a", href=url_for("ui.study", study_id=s.id)) is not None
-        assert (
-            resp.soup.find("a", href=url_for("ui.study_csv", study_id=s.id)) is not None
-        )
-        assert resp.soup.find("td", string=s.name) is not None
+        assert row.find("a", href=url_for("ui.study_my_uploads", study_id=expected_result.id)) is not None
+        upload_data_url = url_for("ui.upload_data", study_id=expected_result.id)
+        assert row.select(f'a[hx-get="{upload_data_url}"]') is not None
+        assert row.find_all("td")[1].string == str(expected_result.name)
+        assert row.find_all("td")[2].string == str(expected_result.upload_count)
 
 
-@pytest.mark.parametrize(
-    ["outstanding", "completed", "deleted"],
-    [(2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
-)
-def test__study_list__owned_study__upload_count(client, faker, loggedin_user, outstanding, completed, deleted):
-    user2 = faker.user().get_in_db()
+class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
+    def get_owned_studies_header(self, resp):
+        return resp.soup.find("h2", string="Owned Studies")
 
-    study = faker.study().get_in_db(owner=loggedin_user)
-    study2 = faker.study().get_in_db(owner=loggedin_user)
+    def get_collab_studies_header(self, resp):
+        return resp.soup.find("h2", string="Collaborating Studies")
 
-    # Cycle is used to alternately allocate
-    # the uploads to a different user
-    # thus we can test that we can see
-    # uploads by users other than ourselves
-    users = cycle([loggedin_user, user2])
+    def get_study_table_count(self, resp):
+        return len(resp.soup.find_all("table", "study_list"))
 
-    for _ in range(outstanding):
-        u = faker.upload().get_in_db(study=study, uploader=next(users))
+    def test__no_studies__no_redirect(self):
+        resp = self.get()
 
-    for _ in range(completed):
-        u = faker.upload().get_in_db(study=study, completed=True, uploader=next(users))
+        assert self.get_owned_studies_header(resp) is None
+        assert self.get_collab_studies_header(resp) is None
+        assert self.get_study_table_count(resp) == 0
 
-    for _ in range(deleted):
-        u = faker.upload().get_in_db(study=study, deleted=True, uploader=next(users))
+    def test__owns_1_study__redirects(self):
+        study = self.faker.study().get_in_db(owner=self.loggedin_user)
+        resp = self.get(expected_status_code=http.HTTPStatus.FOUND)
+        assert__redirect(resp, endpoint='ui.study', study_id=study.id)
 
-    resp = get_and_assert_standards(client, _url(), loggedin_user)
+    def test__owns_multiple_studies__no_redirect(self):
+        studies = self.faker.study().get_list_in_db(item_count=2, owner=self.loggedin_user)
+        resp = self.get()
 
-    assert resp.status_code == http.HTTPStatus.OK
+        assert self.get_owned_studies_header(resp) is not None
+        assert self.get_collab_studies_header(resp) is None
+        assert self.get_study_table_count(resp) == 1
 
-    study_row = resp.soup.find("td", string=study.name).parent
+        OwnedStudyRowContentAsserter(result_set=ResultSet(studies)).assert_all(resp)
 
-    assert study_row.find_all("td")[2].string == str(outstanding + completed)
-    assert study_row.find_all("td")[3].string == str(outstanding)
+    def test__collab_on_1_study__redirects(self):
+        study = self.faker.study().get_in_db(collaborator=self.loggedin_user)
+        resp = self.get(expected_status_code=http.HTTPStatus.FOUND)
+        assert__redirect(resp, endpoint='ui.study_my_uploads', study_id=study.id)
 
+    def test__collab_on_multiple_studies__no_redirect(self):
+        studies = self.faker.study().get_list_in_db(item_count=2, collaborator=self.loggedin_user)
+        resp = self.get()
 
-def test__study_list__coll_1_study_redirects(client, faker, collaborator_study):
-    resp = client.get(_url())
-    assert__redirect(resp, endpoint='ui.study_my_uploads', study_id=collaborator_study.id)
+        assert self.get_owned_studies_header(resp) is None
+        assert self.get_collab_studies_header(resp) is not None
+        assert self.get_study_table_count(resp) == 1
 
+        CollaboratorStudyRowContentAsserter(result_set=ResultSet(studies)).assert_all(resp)
 
-@pytest.mark.parametrize("study_count", [(2), (3)])
-def test__study_list__colls_mult_studies(client, faker, loggedin_user, study_count):
-    studies = []
+    @pytest.mark.parametrize(
+        ["outstanding", "completed", "deleted"],
+        [(2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
+    )
+    def test__study_list__owned_study__upload_count(self, outstanding, completed, deleted):
+        other_user = self.faker.user().get_in_db()
 
-    for _ in range(study_count):
-        studies.append(faker.study().get_in_db(collaborator=loggedin_user))
+        study = self.faker.study().get_in_db(owner=self.loggedin_user)
+        study2 = self.faker.study().get_in_db(owner=self.loggedin_user) # second study so we don't get redirected
 
-    resp = get_and_assert_standards(client, _url(), loggedin_user)
+        # Cycle is used to alternately allocate
+        # the uploads to a different user
+        # thus we can test that we can see
+        # uploads by users other than ourselves
+        users = cycle([self.loggedin_user, other_user])
 
-    assert resp.status_code == http.HTTPStatus.OK
-    assert resp.soup.find("h2", string="Owned Studies") is None
-    assert resp.soup.find("h2", string="Collaborating Studies") is not None
-    assert len(resp.soup.select("table")) == 1
-    assert len(resp.soup.select("table > tbody > tr")) == study_count
+        outstanding_uploads = self.faker.upload().get_list_in_db(item_count=outstanding, study=study, uploader=next(users))
+        completed_uploads = self.faker.upload().get_list_in_db(item_count=completed, study=study, completed=True, uploader=next(users))
+        deleted_uploads = self.faker.upload().get_list_in_db(item_count=deleted, study=study, deleted=True, uploader=next(users))
 
-    upload_links = {a.attrs['hx-get']: a for a in resp.soup.find_all('a', class_="upload")}
-    assert len(studies) == len(upload_links)
+        resp = self.get()
 
-    for s in studies:
-        assert (
-            resp.soup.find("a", href=url_for("ui.study_my_uploads", study_id=s.id))
-            is not None
-        )
-        url = url_for("ui.upload_data", study_id=s.id)
-        assert__modal_button(upload_links[url], url)
-        assert resp.soup.find("td", string=s.name) is not None
-
-
-@pytest.mark.parametrize(
-    ["me", "someone_else", "deleted"], [(2, 2, 0), (3, 0, 4), (2, 2, 4), (3, 0, 0)]
-)
-def test__study_list__owned_study__upload_count(client, faker, loggedin_user, me, someone_else, deleted):
-    user2 = faker.user().get_in_db()
-
-    study = faker.study().get_in_db(collaborator=loggedin_user)
-    study2 = faker.study().get_in_db(collaborator=loggedin_user)
-
-    for _ in range(me):
-        u = faker.upload().get_in_db(study=study, uploader=loggedin_user)
-
-    for _ in range(someone_else):
-        u = faker.upload().get_in_db(study=study, completed=True, uploader=user2)
-
-    # Cycle is used to alternately allocate
-    # the uploads to a different user
-    # thus we can test that we can see
-    # uploads by users other than ourselves
-    users = cycle([loggedin_user, user2])
-
-    for _ in range(deleted):
-        u = faker.upload().get_in_db(study=study, deleted=True, uploader=next(users))
-
-    resp = get_and_assert_standards(client, _url(), loggedin_user)
-
-    assert resp.status_code == http.HTTPStatus.OK
-
-    study_row = resp.soup.find("td", string=study.name).parent
-
-    assert study_row.find_all("td")[2].string == str(me)
+        OwnedStudyRowContentAsserter(result_set=ResultSet([study, study2])).assert_all(resp)

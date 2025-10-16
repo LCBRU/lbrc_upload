@@ -1,40 +1,59 @@
 import http
+import pytest
 from lbrc_flask.pytest.asserts import assert__requires_login, assert__refresh_response
+from lbrc_flask.pytest.testers import RequiresLoginPostTester, FlaskViewLoggedInTester
 from flask import url_for
 from lbrc_upload.model import Upload
 from lbrc_flask.database import db
+from tests.ui.uploads import UploadViewTester
 
 
-def _url(**kwargs):
-    return url_for('ui.upload_delete', **kwargs)
+class UploadDeleteViewTester(UploadViewTester):
+    @property
+    def endpoint(self):
+        return 'ui.upload_delete'
+
+    @pytest.fixture(autouse=True)
+    def set_original(self, client, faker):
+        self.existing = faker.upload().get_in_db()
+        self.parameters['id'] = self.existing.id
 
 
-def test__post__requires_login(client, faker):
-    upload = faker.upload().get_in_db()
-    assert__requires_login(client, _url(id=upload.id, external=False), post=True)
+class TestUploadDeleteRequiresLogin(UploadDeleteViewTester, RequiresLoginPostTester):
+    ...
 
 
-def test__upload__delete__must_be_owner(client, faker, collaborator_study):
-    upload = faker.upload().get_in_db(study=collaborator_study)
+class TestUploadDeleteRequiresOwner(UploadDeleteViewTester, FlaskViewLoggedInTester):
+    @property
+    def request_method(self):
+        return self.post
+    
+    @property
+    def user_with_required_role(self):
+        return self.existing.study.owner
 
-    resp = client.post(_url(id=upload.id), data={"id": upload.id})
-
-    assert resp.status_code == http.HTTPStatus.FORBIDDEN
-
-    changed_upload = db.session.get(Upload, upload.id)
-
-    assert not changed_upload.deleted
+    @property
+    def user_without_required_role(self):
+        return self.faker.user().get_in_db()
 
 
-def test__upload__delete(client, faker, owned_study):
-    upload = faker.upload().get_in_db(study=owned_study)
+class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
+    @pytest.fixture(autouse=True)
+    def set_original(self, client, faker, loggedin_user):
+        self.study = faker.study().get_in_db(owner=loggedin_user)
+        self.existing = faker.upload().get_in_db(study=self.study)
+        self.parameters['id'] = self.existing.id
 
-    resp = client.post(
-        _url(id=upload.id),
-        data={"id": upload.id},
-    )
-    assert__refresh_response(resp)
+    def test__post__valid(self):
+        resp = self.post()
 
-    changed_upload = db.session.get(Upload, upload.id)
+        assert__refresh_response(resp)
+        self.assert_db_count(1)
+        changed_upload = db.session.get(Upload, self.existing.id)
+        assert changed_upload.deleted
 
-    assert changed_upload.deleted
+    def test__post__id_invalid(self):
+        self.parameters['id'] = self.existing.id + 1
+        resp = self.post(expected_status_code=http.HTTPStatus.NOT_FOUND)
+
+        self.assert_db_count(1)
