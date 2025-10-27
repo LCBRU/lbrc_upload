@@ -1,7 +1,7 @@
 import http
 import pytest
 from lbrc_flask.pytest.asserts import assert__refresh_response
-from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester
+from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, RequiresRoleTester
 from lbrc_upload.model import Upload
 from lbrc_flask.database import db
 from tests.ui.uploads import UploadViewTester
@@ -26,10 +26,10 @@ class TestUploadDeleteRequiresLogin(UploadDeleteViewTester, RequiresLoginTester)
     ...
 
 
-class TestUploadDeleteRequiresOwner(UploadDeleteViewTester, FlaskViewLoggedInTester):
+class TestUploadDeleteRequiresOwner(UploadDeleteViewTester, RequiresRoleTester):
     @property
     def user_with_required_role(self):
-        return self.existing.study.owner
+        return self.existing.study.owners[0]
 
     @property
     def user_without_required_role(self):
