@@ -3,7 +3,7 @@ import pytest
 from lbrc_flask.pytest.asserts import assert__redirect
 from itertools import cycle
 from flask import url_for
-from lbrc_flask.pytest.testers import RequiresLoginGetTester, FlaskViewLoggedInTester, TableContentAsserter, ResultSet
+from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, TableContentAsserter, ResultSet
 
 
 class StudyListTester:
@@ -12,7 +12,7 @@ class StudyListTester:
         return 'ui.index'
 
 
-class TestStudyListRequiresLogin(StudyListTester, RequiresLoginGetTester):
+class TestStudyListRequiresLogin(StudyListTester, RequiresLoginTester):
     ...
 
 

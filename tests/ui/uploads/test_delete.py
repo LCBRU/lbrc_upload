@@ -1,14 +1,17 @@
 import http
 import pytest
-from lbrc_flask.pytest.asserts import assert__requires_login, assert__refresh_response
-from lbrc_flask.pytest.testers import RequiresLoginPostTester, FlaskViewLoggedInTester
-from flask import url_for
+from lbrc_flask.pytest.asserts import assert__refresh_response
+from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester
 from lbrc_upload.model import Upload
 from lbrc_flask.database import db
 from tests.ui.uploads import UploadViewTester
 
 
 class UploadDeleteViewTester(UploadViewTester):
+    @property
+    def request_method(self):
+        return self.post
+    
     @property
     def endpoint(self):
         return 'ui.upload_delete'
@@ -19,15 +22,11 @@ class UploadDeleteViewTester(UploadViewTester):
         self.parameters['id'] = self.existing.id
 
 
-class TestUploadDeleteRequiresLogin(UploadDeleteViewTester, RequiresLoginPostTester):
+class TestUploadDeleteRequiresLogin(UploadDeleteViewTester, RequiresLoginTester):
     ...
 
 
 class TestUploadDeleteRequiresOwner(UploadDeleteViewTester, FlaskViewLoggedInTester):
-    @property
-    def request_method(self):
-        return self.post
-    
     @property
     def user_with_required_role(self):
         return self.existing.study.owner

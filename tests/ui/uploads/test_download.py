@@ -1,7 +1,19 @@
 import http
+import pytest
 import os
 from lbrc_flask.pytest.asserts import assert__requires_login
 from flask import url_for
+
+
+# class UploadDeleteViewTester(UploadViewTester):
+#     @property
+#     def endpoint(self):
+#         return 'ui.upload_delete'
+
+#     @pytest.fixture(autouse=True)
+#     def set_original(self, client, faker):
+#         self.existing = faker.upload().get_in_db()
+#         self.parameters['id'] = self.existing.id
 
 
 def _url(**kwargs):

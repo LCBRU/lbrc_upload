@@ -1,6 +1,6 @@
 from lbrc_upload.model import Study
 from lbrc_flask.python_helpers import sort_descending
-from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, IndexTester, RequiresLoginGetTester, PanelListContentAsserter, PagedResultSet
+from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, IndexTester, PanelListContentAsserter, PagedResultSet
 import pytest
 import re
 
@@ -29,7 +29,7 @@ class MyUploadsIndexTester:
         self.parameters = dict(study_id=self.existing_study.id)
 
 
-class TestMyUploadsIndexRequiresLogin(MyUploadsIndexTester, RequiresLoginGetTester):
+class TestMyUploadsIndexRequiresLogin(MyUploadsIndexTester, RequiresLoginTester):
     ...
 
 

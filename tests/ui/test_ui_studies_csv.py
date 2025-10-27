@@ -1,6 +1,6 @@
 import http
 from lbrc_upload.model import Study
-from lbrc_flask.pytest.testers import RequiresLoginGetTester, RequiresRoleTester, RequiresLoginGetTester, FlaskViewLoggedInTester, CsvDownloadContentAsserter
+from lbrc_flask.pytest.testers import RequiresRoleTester, RequiresLoginTester, FlaskViewLoggedInTester, CsvDownloadContentAsserter
 import pytest
 
 
@@ -17,7 +17,7 @@ class StudiesCsvTester:
 
 
 
-class TestStudiesCsvRequiresLogin(StudiesCsvTester, RequiresLoginGetTester):
+class TestStudiesCsvRequiresLogin(StudiesCsvTester, RequiresLoginTester):
     ...
 
 
