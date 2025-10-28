@@ -5,6 +5,7 @@ from lbrc_upload.model.upload import Upload, UploadFile
 from lbrc_upload.model.study import Study
 from lbrc_flask.database import db
 
+
 def must_be_study_owner():
     def decorator(f):
         @wraps(f)

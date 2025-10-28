@@ -3,6 +3,7 @@ from sqlalchemy import or_, select
 from lbrc_upload.model.upload import Upload
 from lbrc_flask.database import db
 
+
 def get_study_uploads_query(study_id, search_data):
     q = select(Upload).where(Upload.study_id == study_id)
 
@@ -23,8 +24,6 @@ def get_study_uploads_query(study_id, search_data):
             q = q.where(or_(Upload.deleted == 1, Upload.completed == 1))
 
     return q
-
-
 
 
 def write_study_upload_csv(filename, study, query):
