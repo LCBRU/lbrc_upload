@@ -1,106 +1,92 @@
-# LBRC Upload
+# NIHR Leicester BRC Uploads
 
-Provide a site for study satalite sites to upload
-study image data.
+Catalogue of phage and bacterial samples
 
-## Installation and Running
+## Installation
 
-1. Download the code from github
-
+### Download Repository
+Down this repository using the command:
 ```bash
-git clone git@github.com:LCBRU/lbrc_upload.git
+gh repo clone LCBRU/lbrc_uploads
+```
+or
+```bash
+git clone https://github.com/LCBRU/lbrc_uploads.git
 ```
 
-2. Install the requirements
-
-Go to the `lbrc_upload` directory and type the command:
-
+### Prerequisites
+To install the pre-requisites on Ubuntu, use the commands:
 ```bash
+sudo apt install libldap2-dev
+sudo apt install libsasl2-dev
+```
+
+### Virtual Environment
+Install the python requirements into a new virtual environment in the project directory and install the toolset:
+```bash
+cd lbrc_uploads
+python3 -m venv .venv
+. .venv/bin/activate
+pip install --upgrade pip
+pip install pip-tools
 pip install -r requirements.txt
 ```
 
-3. Create the database using
-
-Staying in the `lbrc_upload` directory and type the command:
-
+### Python Requirements Management
+Python requirements are stored in the `requirements.in` file.  The locked versions of these requirements, and any sub-requirements, are stored in the `requirements.txt` file.  The `requirements.txt` file is created from the `requirements.in` file by running the command:
 ```bash
-./manage.py version_control
-./manage.py upgrade
+pip-compile
 ```
+This should be run whenever new requirements have been added to the `requirements.in` file or new requirement versions are being tested.
 
-4. Run the application
+Both the `requirements.in` and `requirements.txt` files should be checked into git.
 
-Staying in the `lbrc_upload` directory and type the command:
+### Parameters
+Parameters used for running the application should be stored in the `.env` file.  This **should not** be checked into git.
 
+An example of what parameters are needed to run the application are contained within the `example.env` file.
+
+## Running the Application
+1. Create an empty database using the parameters set in the `.env` file.
+2. Create a test data by running the command `python create_test_db.py`
+3. Run the application using the command `python app.py`
+
+## Database
+
+### Creating Migrations
+Database changes are managed using the [Alembic](https://alembic.sqlalchemy.org/en/latest/) library.
+
+The easiest way to make a change to the database is to amend the data objects in the application
+and then get Alembic to automatically create the migration using the following command:
 ```bash
-./app.py
+alembic revision --autogenerate -m "{description}"
 ```
+This creates a file in the `alembic/versions` directory that starts with a unique splat of random characters, followed by your `{description}` from above.
 
-## Development
+The file contains `upgrade` and `downgrade` functions that you will need to create. It also contains some variables:
+- `revision`: the revision unique random code
+- `down_revision`: the code of the previous revision's code. This is used to determine revision order.
+- `branch_labels`: sutin else.
 
-### Testing
+This file should be validated as the autogeneration function does not always work correctly.  The [Alembic documentations](https://alembic.sqlalchemy.org/en/latest/) will help you validate the code or write custom code.
 
-To test the application, run the following command from the project folder:
-
+### Running Migrations
+Run the alembic `upgrade` sub-command to upgrade the database to the latest version:
 ```bash
-pytest
+alembic upgrade head
 ```
+See the [Alembic Tutorial](https://alembic.sqlalchemy.org/en/latest/tutorial.html) for more information.
 
-### Database Schema Amendments
+## Asynchronous Processing
+If configured correctly in the `.env` file, it is possible to run processes asynchronously (in the background) using [Celery](https://docs.celeryq.dev/en/stable/getting-started/introduction.html).
 
-#### Create Migration
+### Redis
+Celery uses a broker as a message queue.  The easiest one to install and use for testimng is [Redis](https://redis.io/).  Use the instructions on the website to install it.
 
-To create a migration run the command
+Then, follow the instructions from [Celery using Redis](https://docs.celeryq.dev/en/stable/getting-started/backends-and-brokers/redis.html), setting the configuration in the `.env` file for the `BROKER_URL` and `CELERY_RESULT_BACKEND`.
 
+### Running the Celery Worker Process
+To run the celery worker process, run the command:
 ```bash
-./manage.py script "{Description of change}"
-```
-
-You will then need to change the newly-created script created in the
-`migrations` directory to make the necessary upgrade and downgrade
-changes.
-
-#### Apply Migrations to Database
-
-After amending the models, run the following command to create the
-migrations and apply them to the database:
-
-```bash
-./manage.py upgrade
-```
-
-## Deployment
-
-The application is deployed on a University of Leicester LAMP server using
-the procedure set out in the Python 3 section of the [LCBRU Flask Application Installation page](https://lcbru-trac.rcs.le.ac.uk/wiki/UoL%20LAMP%20HowTo%20Install%20Python%20Flask%20Applications).
-
-A script called `upgrade.sh` which downloads the repository, puts it in the correct location and copies
-in the configutaion file into the correct place is in the `deployment` directory.
-
-### Configuraion
-
-Configuration for the live application is stored in a `application.cfg` file in
-the `upload` directory.  An example `application.cfg` is contained in the `deployment`
-directory called `example.application.cfg`.
-
-### Database
-
-The database upgrades are handled by SQLAlchemy-migrate and are run using the `manage_live.py` program
-once the configuration has been copied into place and the database created.
-
-#### Installation
-
-To initialise the database run the commands:
-
-```bash
-manage_live.py version_control
-manage_live.py upgrade
-```
-
-#### Upgrade
-
-To upgrade the database to the current version, run the command:
-
-```bash
-manage_live.py upgrade
+celery -A celery_worker.celery worker -l info -B
 ```

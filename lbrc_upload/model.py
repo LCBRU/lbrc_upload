@@ -5,12 +5,11 @@ from pathlib import Path
 from flask import current_app
 from sqlalchemy import Integer
 from werkzeug.utils import secure_filename
-from lbrc_flask.security import User as BaseUser
+from lbrc_flask.security import User as BaseUser, AuditMixin
 from lbrc_flask.database import db
-from lbrc_flask.security import AuditMixin
 from lbrc_flask.model import CommonMixin
 from lbrc_flask.forms.dynamic import FieldGroup, Field
-from sqlalchemy.orm import Mapped, mapped_column, relationship, backref
+from sqlalchemy.orm import Mapped, mapped_column
 
 
 class Site(db.Model, CommonMixin):
@@ -55,7 +54,7 @@ studies_collaborators = db.Table(
 )
 
 
-class Study(db.Model, CommonMixin):
+class Study(AuditMixin, CommonMixin, db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(100))
@@ -113,7 +112,7 @@ class Study(db.Model, CommonMixin):
         return self.size_limit and self.total_file_size > self.size_limit
 
 
-class Upload(CommonMixin, db.Model):
+class Upload(AuditMixin, CommonMixin, db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))
@@ -137,7 +136,7 @@ class Upload(CommonMixin, db.Model):
         return humanize.naturalsize(self.total_file_size)
 
 
-class UploadData(db.Model, CommonMixin):
+class UploadData(AuditMixin, CommonMixin, db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     upload_id = db.Column(db.Integer(), db.ForeignKey(Upload.id))
@@ -151,7 +150,7 @@ class UploadData(db.Model, CommonMixin):
         return "<%s: {%s}>" % (self.__class__.__name__, ', '.join(items))
 
 
-class UploadFile(db.Model, CommonMixin):
+class UploadFile(AuditMixin, CommonMixin, db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     upload_id = db.Column(db.Integer(), db.ForeignKey(Upload.id))
