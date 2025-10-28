@@ -1,5 +1,5 @@
 import http
-from lbrc_upload.model import Study
+from lbrc_upload.model.study import Study
 from lbrc_flask.pytest.testers import RequiresRoleTester, RequiresLoginTester, FlaskViewLoggedInTester, CsvDownloadContentAsserter
 import pytest
 

@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 from lbrc_flask.database import db
 from lbrc_flask.pytest.form_tester import FormTester, FormTesterTextField, FormTesterDateField, FormTesterRadioField
 
-from lbrc_upload.model import Upload
+from lbrc_upload.model.upload import Upload
 
 
 class UploadFormTester(FormTester):

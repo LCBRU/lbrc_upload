@@ -15,7 +15,8 @@ from flask import (
 
 from flask_security import login_required, current_user
 from sqlalchemy import func, or_, select
-from lbrc_upload.model import Study, Upload, UploadData, UploadFile
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
+from lbrc_upload.model.study import Study
 from lbrc_upload.ui.forms import UploadSearchForm, UploadFormBuilder
 from lbrc_upload.decorators import (
     must_be_study_owner,

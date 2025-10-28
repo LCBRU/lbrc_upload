@@ -2,7 +2,7 @@ import http
 import pytest
 from lbrc_flask.pytest.asserts import assert__refresh_response
 from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, RequiresRoleTester
-from lbrc_upload.model import Upload
+from lbrc_upload.model.upload import Upload
 from lbrc_flask.database import db
 from tests.ui.uploads import UploadViewTester
 

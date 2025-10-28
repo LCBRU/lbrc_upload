@@ -1,4 +1,5 @@
-from lbrc_upload.model import Study, User, Site
+from lbrc_upload.model.study import Study
+from lbrc_upload.model.user import User, Site
 from lbrc_flask.database import db
 from lbrc_flask.admin import AdminCustomView, init_admin as flask_init_admin
 from lbrc_flask.forms.dynamic import get_dynamic_forms_admin_forms

@@ -15,7 +15,9 @@ fake = Faker()
 load_dotenv()
 
 from lbrc_upload import create_app
-from lbrc_upload.model import Site, Study, Upload, UploadData, UploadFile, User
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
+from lbrc_upload.model.study import Study
+from lbrc_upload.model.user import User, Site
 from lbrc_upload.security import init_authorization
 
 application = create_app()

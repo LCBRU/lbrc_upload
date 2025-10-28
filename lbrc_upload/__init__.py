@@ -4,7 +4,7 @@ from lbrc_flask.security import init_security, Role
 from lbrc_flask.forms.dynamic import init_dynamic_forms
 from config import Config
 from .ui import blueprint as ui_blueprint
-from .model import User
+from .model.user import User
 from .admin import init_admin
 
 

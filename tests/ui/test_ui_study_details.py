@@ -1,5 +1,5 @@
 from itertools import cycle
-from lbrc_upload.model import Study
+from lbrc_upload.model.study import Study
 from lbrc_flask.pytest.asserts import assert__htmx_post_button
 from lbrc_flask.python_helpers import sort_descending
 from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, IndexTester, PanelListContentAsserter, PagedResultSet
