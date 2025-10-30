@@ -84,7 +84,7 @@ class StudyCreator(FakeCreator):
             collaborator = self.faker.user().get()
 
         if (field_group := kwargs.get('field_group')) is None:
-            field_group = self.faker.field_group().get()
+            field_group = self.faker.field_group().get(name=name)
 
         study_number_format = kwargs.get('study_number_format')
 
@@ -188,11 +188,11 @@ class UploadFileCreator(FakeCreator):
         self.faker.add_provider(UploadProvider)
         self.faker.add_provider(FieldProvider)
 
-        if (field := kwargs.get('field')) is None:
-            field = self.faker.field().get(field_type=FieldType.get_file())
-
         if (upload := kwargs.get('upload')) is None:
             upload = self.faker.upload().get()
+
+        if (field := kwargs.get('field')) is None:
+            field = self.faker.field().get(field_type=FieldType.get_file(), field_group=upload.study.field_group)
 
         if (filename := kwargs.get('filename')) is None:
             filename = self.faker.file_name()

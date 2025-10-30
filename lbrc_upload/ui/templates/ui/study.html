@@ -75,7 +75,7 @@
                         </nav>    
                         <nav class="link_list">
                             {% if u.has_existing_files() %}
-                                <a class="icon download_all warning" onclick="download_all({{u.id}});" href="javascript:;" role="button">Download All</a>
+                                <a class="icon download_all warning" href="{{ url_for('ui.upload_download_all', id=u.id)}}" role="button">Download All</a>
                             {% endif %}
                             {% if u.deleted and u.has_existing_files() %}
                                 <a title="Delete all files for upload {{ study.get_study_number_name() }} {{ u.study_number }}" hx-post="{{ url_for('ui.upload_delete', id=u.id) }}" hx-confirm="Are you sure you wish to delete all files for upload '{{ u.study_number }}'?" href="javascript:;" class="icon delete error" role="button">Delete All</a>
@@ -90,21 +90,4 @@
 
 {{ render_pagination(uploads, 'ui.study', form=search_form, study_id=study.id) }}
 
-<script>
-    function download_all (upload_id) {
-        const all_files = Array.from(document.querySelectorAll(`.upload_${upload_id}_file`));
-
-        var interval = setInterval(download_files, 1000, all_files);
-
-        function download_files() {
-            var l = all_files.pop();
-
-            l.click();
-
-            if (all_files.length == 0) {
-                clearInterval(interval);
-            }
-        }
-    }
-</script>
 {% endblock %}

@@ -176,6 +176,15 @@ def upload_delete_page(study_id):
     return refresh_response()
 
 
+@blueprint.route("/Upload/<int:id>/download_all")
+@must_be_upload_study_owner("id")
+def upload_download_all(id):
+    upload: Upload = db.get_or_404(Upload, id)
+    q = select(Upload).where(Upload.id == upload.id)
+
+    return _mass_download(study=upload.study, uploads=[upload], query=q)
+
+
 @blueprint.route("/Uploads/<int:study_id>/download_all")
 @must_be_study_owner()
 def study_download_all(study_id):
