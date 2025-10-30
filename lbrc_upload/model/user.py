@@ -1,7 +1,7 @@
-from datetime import datetime, UTC
 from lbrc_flask.security import User as BaseUser
 from lbrc_flask.database import db
 from lbrc_flask.model import CommonMixin
+from sqlalchemy import func
 
 
 class Site(db.Model, CommonMixin):
@@ -11,7 +11,7 @@ class Site(db.Model, CommonMixin):
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(255))
     number = db.Column(db.String(20))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(UTC))
+    date_created = db.Column(db.DateTime, nullable=False, default=func.now())
 
     def __str__(self):
         return self.name

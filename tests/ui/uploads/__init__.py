@@ -3,7 +3,7 @@ from sqlalchemy import func, select
 from lbrc_flask.database import db
 from lbrc_flask.pytest.form_tester import FormTester, FormTesterTextField, FormTesterDateField, FormTesterRadioField
 
-from lbrc_upload.model.upload import Upload
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 
 
 class UploadFormTester(FormTester):
@@ -34,8 +34,14 @@ class UploadFormTester(FormTester):
 
 
 class UploadViewTester:
-    def assert_db_count(self, expected_count):
+    def assert_db_count(self, expected_count: int):
         assert db.session.execute(select(func.count(Upload.id))).scalar() == expected_count
+
+    def assert_db_data_count(self, upload_id: int, expected_count: int):
+        assert db.session.execute(select(func.count(UploadData.id)).where(UploadData.upload_id == upload_id)).scalar() == expected_count
+
+    def assert_db_file_count(self, upload_id: int, expected_count: int):
+        assert db.session.execute(select(func.count(UploadFile.id)).where(UploadFile.upload_id == upload_id)).scalar() == expected_count
 
     def assert_actual_equals_expected(self, expected: Upload, actual: Upload):
         assert actual is not None

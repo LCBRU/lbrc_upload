@@ -1,6 +1,6 @@
 import humanize
-from datetime import datetime, UTC
 from sqlalchemy import Integer
+from sqlalchemy.sql import func
 from lbrc_flask.security import AuditMixin
 from lbrc_flask.database import db
 from lbrc_flask.model import CommonMixin
@@ -27,7 +27,7 @@ class Study(AuditMixin, CommonMixin, db.Model):
 
     id = db.Column(db.Integer(), primary_key=True)
     name = db.Column(db.String(100))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(UTC))
+    date_created = db.Column(db.DateTime, nullable=False, default=func.now())
     allow_duplicate_study_number = db.Column(db.Boolean, nullable=False, default=False)
     allow_empty_study_number = db.Column(db.Boolean, nullable=False, default=False)
     study_number_format = db.Column(db.String(50))

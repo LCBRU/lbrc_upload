@@ -8,7 +8,6 @@ from flask import (
     request,
     send_file,
 )
-
 from flask_security import current_user
 from sqlalchemy import select
 from lbrc_upload.model.upload import Upload

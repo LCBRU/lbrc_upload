@@ -1,8 +1,12 @@
+import os
+from random import choice
+from typing import Optional
 from lbrc_flask.forms.dynamic import FieldType
-from lbrc_upload.model.upload import Upload, UploadFile
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
 from lbrc_upload.model.user import User, Site
 from lbrc_flask.pytest.faker import FakeCreator, FieldProvider, FieldGroupProvider
+from lbrc_flask.database import db
 from faker.providers import BaseProvider
 
 
@@ -145,6 +149,37 @@ class UploadProvider(BaseProvider):
         return UploadCreator()
 
 
+class UploadDataCreator(FakeCreator):
+    def __init__(self):
+        super().__init__(UploadData)
+
+    def get(self, **kwargs):
+        self.faker.add_provider(UploadProvider)
+        self.faker.add_provider(FieldProvider)
+
+        if (field := kwargs.get('field')) is None:
+            field_type_name = choice(FieldType.all_simple_field_types())
+            field_type = FieldType._get_field_type(field_type_name)
+            field = self.faker.field().get(field_type=field_type)
+
+        if (upload := kwargs.get('upload')) is None:
+            upload = self.faker.upload().get()
+
+        if (value := kwargs.get('value')) is None:
+            value = self.faker.pystr(min_chars=5, max_chars=10).upper()
+
+        return UploadData(
+            field=field,
+            upload=upload,
+            value=value,
+        )
+
+
+class UploadDataProvider(BaseProvider):
+    def upload_data(self):
+        return UploadDataCreator()
+
+
 class UploadFileCreator(FakeCreator):
     def __init__(self):
         super().__init__(UploadFile)
@@ -170,6 +205,24 @@ class UploadFileCreator(FakeCreator):
             filename=filename,
             size=size,
         )
+
+    def create_files_in_filesystem(self, upload_files: list[UploadFile], content: Optional[str] = None):
+        for uf in upload_files:
+            self.create_file_in_filesystem(uf, content)
+
+    def create_file_in_filesystem(self, upload_file: UploadFile, content: Optional[str] = None):
+        content = content or self.faker.text()
+
+        filepath = upload_file.upload_filepath()
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+
+        with open(filepath, "w") as f:
+            f.write(content)
+
+        upload_file.size = os.path.getsize(filepath)
+
+        db.session.add(upload_file)
+        db.session.commit()
 
 
 class UploadFileProvider(BaseProvider):

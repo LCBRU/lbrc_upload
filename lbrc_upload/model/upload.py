@@ -1,9 +1,8 @@
 import os
 import humanize
-from datetime import datetime, UTC
 from pathlib import Path
 from flask import current_app
-from sqlalchemy import Integer
+from sqlalchemy import Integer, func
 from werkzeug.utils import secure_filename
 from lbrc_flask.security import AuditMixin
 from lbrc_flask.database import db
@@ -20,7 +19,7 @@ class Upload(AuditMixin, CommonMixin, db.Model):
     study_id = db.Column(db.Integer(), db.ForeignKey(Study.id))
     study_number = db.Column(db.String(20))
     uploader_id = db.Column(db.Integer(), db.ForeignKey(User.id))
-    date_created = db.Column(db.DateTime, nullable=False, default=datetime.now(UTC))
+    date_created = db.Column(db.DateTime, nullable=False, default=func.now())
     study = db.relationship(Study, backref=db.backref("uploads"))
     uploader = db.relationship(User)
     completed = db.Column(db.Boolean, default=0)

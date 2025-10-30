@@ -71,12 +71,10 @@ def upload_data(study_id):
             study_fields = {}
 
         for field_name, value in form.data.items():
-
             if field_name in study_fields:
                 field = study_fields[field_name]
 
                 if field.field_type.is_file:
-
                     if type(value) is list:
                         files = value
                     else:
@@ -93,13 +91,12 @@ def upload_data(study_id):
 
                         uf.size = p.stat().st_size
                 else:
-
                     ud = UploadData(upload=u, field=field, value=field.data_value(value))
 
                     db.session.add(ud)
 
         db.session.commit()
-
+        
         email(
             subject="BRC Upload: {}".format(study.name),
             message="A new set of files has been uploaded for the {} study.".format(
