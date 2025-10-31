@@ -46,6 +46,14 @@ class UploadData(AuditMixin, CommonMixin, db.Model):
     field = db.relationship(Field)
     value = db.Column(db.String(500))
 
+    @property
+    def field_name(self):
+        return self.field.field_name
+
+    @property
+    def formatted_value(self):
+        return self.field.format_value(self.value)
+
     def __repr__(self):
         items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
         return "<%s: {%s}>" % (self.__class__.__name__, ', '.join(items))

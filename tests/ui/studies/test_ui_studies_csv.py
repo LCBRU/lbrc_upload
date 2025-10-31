@@ -1,7 +1,8 @@
 import http
+import pytest
 from lbrc_upload.model.study import Study
 from lbrc_flask.pytest.testers import RequiresRoleTester, RequiresLoginTester, FlaskViewLoggedInTester, CsvDownloadContentAsserter
-import pytest
+from lbrc_flask.forms.dynamic import FieldType
 
 
 class StudiesCsvTester:
@@ -26,6 +27,9 @@ class StudyCsvAsserter(CsvDownloadContentAsserter):
         assert row['Study Number'] == expected_result.study_number
         assert row['uploaded_by'] == expected_result.uploader.full_name
         assert row['date_created'] == expected_result.date_created.strftime("%Y-%m-%d %H:%M:%S")
+
+        for field_data in expected_result.data:
+            assert row[field_data.field_name] == field_data.value
 
 
 class TestStudiesCsvRequiresLogin(StudiesCsvTester, RequiresLoginTester):
@@ -71,9 +75,13 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
 
     @pytest.mark.parametrize("upload_count", [0, 2, 3, 100])
     @pytest.mark.parametrize("field_count", [1, 3, 5])
-    def test__get__with_fields(self, upload_count, field_count):
-        fields = self.faker.field().get_list_in_db(item_count=field_count, field_group=self.existing_study.field_group)
+    def test__get__with_multiple_fields(self, upload_count, field_count):
+        fields = self.faker.field().get_list_in_db(item_count=field_count, field_group=self.existing_study.field_group, field_type=FieldType.get_string())
         uploads = self.faker.upload().get_list_in_db(item_count=upload_count, study=self.existing_study, uploader=self.loggedin_user)
+
+        for u in uploads:
+            for f in fields:
+                self.faker.upload_data().get_in_db(upload=u, field=f)
 
         resp = self.get()
         assert resp.status_code == http.HTTPStatus.OK
@@ -85,4 +93,19 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
             expected_results=uploads,
         )
         content_asserter.assert_all(resp)
-        assert False # Need to extend StudyCsvAsserter to handle dynamic fields
+
+    @pytest.mark.parametrize("value", [True, False])
+    def test__get__boolean_field(self, value):
+        field = self.faker.field().get_in_db(field_group=self.existing_study.field_group, field_type=FieldType.get_boolean())
+        upload = self.faker.upload().get_in_db(study=self.existing_study, uploader=self.loggedin_user)
+        self.faker.upload_data().get_in_db(upload=upload, field=field, value=str(value))
+
+        resp = self.get()
+
+        headings = self.BASE_CSV_HEADINGS + [field.field_name]
+
+        content_asserter: StudyCsvAsserter = StudyCsvAsserter(
+            expected_headings=headings,
+            expected_results=[upload],
+        )
+        content_asserter.assert_all(resp)
