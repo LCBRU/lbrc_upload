@@ -15,13 +15,17 @@
         {% else %}
             <h4>{{study.total_file_size_message}} used</h4>
         {% endif %}
-        <form action="{{ url_for('ui.study', study_id=study.id) }}" method="GET" enctype="multipart/form-data">
+        <form action="{{ url_for('ui.study', study_id=study.id) }}" method="GET" enctype="multipart/form-data" hx-include="[name='upload_id']">
             <fieldset>
                 {{ render_form_fields(search_form) }}
 
+                {% for u in uploads.items %}
+                    <input type="hidden" name="upload_id" value="{{ u.id }}">
+                {% endfor %}
+
                 <div class="button_bar">
                     <button type="submit" formaction="{{ url_for('ui.study_csv', study_id=study.id) }}" formmethod="get">Download Upload Details</button>
-                    <button type="submit" hx-post="{{ url_for('ui.upload_delete_page', study_id=study.id) }}" hx-confirm="Are you sure you wish to delete all of the uploads on this page?" >Delete All on Page</button>
+                    <button type="submit" hx-get="{{ url_for('ui.study_delete_upload_list_confirm', study_id=study.id) }}" hx-target="body" hx-swap="beforeend" href="javascript:;">Delete All on Page</button>
                     <button type="submit" formaction="{{ url_for('ui.study_page_download', study_id=study.id) }}" formmethod="get">Download All on Page</button>
                     <button type="submit" formaction="{{ url_for('ui.study_download_all', study_id=study.id) }}" formmethod="get">Download All</button>
                 </div>

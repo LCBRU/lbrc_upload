@@ -1,8 +1,10 @@
 import datetime
+import http
 from pathlib import Path
 import shutil
 import tempfile
 from flask import (
+    abort,
     redirect,
     render_template,
     url_for,
@@ -16,6 +18,7 @@ from sqlalchemy import func, select
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
 from lbrc_upload.services.studies import get_study_uploads_query, write_study_upload_csv
+from lbrc_upload.services.uploads import delete_upload, mass_upload_download
 from lbrc_upload.ui.forms import UploadFormBuilder
 from lbrc_upload.decorators import (
     must_be_study_collaborator,
@@ -143,36 +146,42 @@ def upload_delete(id):
     return refresh_response()
 
 
-def delete_upload(upload):
-    upload.deleted = 1
-
-    for uf in upload.files:
-        for uf in upload.files:
-            filepath = Path(uf.upload_filepath())
-            if filepath.exists():
-                filepath.unlink()
-            uf.size = 0
-            db.session.add(uf)
-
-    db.session.add(upload)
-    db.session.commit()
-
-
-@blueprint.route("/study/<int:study_id>/delete_page", methods=["POST"])
+@blueprint.route("/study/<int:study_id>/upload_delete_list", methods=["GET"])
 @must_be_study_owner()
-def upload_delete_page(study_id):
-    study: Study = db.get_or_404(Study, study_id)
+def study_delete_upload_list_confirm(study_id):
+    study = db.get_or_404(Study, study_id)
 
-    search_form = UploadSearchForm()
+    upload_ids = request.args.getlist('upload_id')
 
-    q = get_study_uploads_query(study_id, search_form.data)
-    q = q.order_by(Upload.date_created.desc())
+    uploads = db.session.execute(
+        select(Upload)
+        .where(Upload.id.in_(upload_ids))
+        .where(Upload.study_id == study.id)
+    ).scalars().all()
 
-    uploads = db.paginate(select=q)
+    return render_template(
+        "ui/upload_delete_list_confirm.html",
+        study=study,
+        uploads=uploads,
+    )
 
-    for u in uploads.items:
-        delete_upload(u)
-    
+
+@blueprint.route("/study/<int:study_id>/upload_delete_list", methods=["POST"])
+@must_be_study_owner()
+def study_delete_upload_list(study_id):
+    study = db.get_or_404(Study, study_id)
+
+    upload_ids = request.form.getlist('upload_id')
+
+    uploads = db.session.execute(
+        select(Upload)
+        .where(Upload.id.in_(upload_ids))
+        .where(Upload.study_id == study.id)
+    ).scalars().all()
+
+    for upload in uploads:
+        delete_upload(upload)
+
     return refresh_response()
 
 
@@ -182,7 +191,7 @@ def upload_download_all(id):
     upload: Upload = db.get_or_404(Upload, id)
     q = select(Upload).where(Upload.id == upload.id)
 
-    return _mass_download(study=upload.study, uploads=[upload], query=q)
+    return mass_upload_download(study=upload.study, uploads=[upload], query=q)
 
 
 @blueprint.route("/Uploads/<int:study_id>/download_all")
@@ -195,7 +204,7 @@ def study_download_all(study_id):
     q = get_study_uploads_query(study_id, search_form.data)
     q = q.order_by(Upload.date_created.desc())
 
-    return _mass_download(study=study, uploads=list(db.paginate(select=q).items), query=q)
+    return mass_upload_download(study=study, uploads=list(db.paginate(select=q).items), query=q)
 
 
 @blueprint.route("/Uploads/<int:study_id>/page_download")
@@ -208,39 +217,4 @@ def study_page_download(study_id):
     q = get_study_uploads_query(study_id, search_form.data)
     q = q.order_by(Upload.date_created.desc())
 
-    return _mass_download(study=study, uploads=list(db.paginate(select=q).items), query=q)
-
-
-def _mass_download(study, uploads, query):
-    if sum([u.total_file_size for u in uploads]) > 1_000_000_000:
-        flash('Files too large to download as a page')
-        return redirect(request.referrer)
-
-    with tempfile.TemporaryDirectory() as tmpdirname:
-        temppath = Path(tmpdirname)
-        datestring = datetime.datetime.now().strftime('%Y%M%d%H%m%S')
-        filename = f'{study.name}_{datestring}'
-        csv_filename = temppath / f'{filename}.csv'
-        print('created temporary directory', tmpdirname)
-
-        write_study_upload_csv(csv_filename, study, query)
-
-        for u in uploads:
-            if not u.has_existing_files():
-                continue
-
-            upload_dir_path = temppath / u.study_number
-            upload_dir_path.mkdir(parents=True, exist_ok=True)
-
-            for uf in u.files:
-                if uf.file_exists():
-                    upload_file_path = upload_dir_path / uf.get_download_filename()
-                    shutil.copy(uf.upload_filepath(), upload_file_path)
-        
-        with tempfile.NamedTemporaryFile(delete=False) as zipfilename:
-            zipname = shutil.make_archive(zipfilename.name, 'zip', temppath)
-            return send_file(
-                zipname,
-                as_attachment=True,
-                download_name=f'{filename}.zip'
-                )
+    return mass_upload_download(study=study, uploads=list(db.paginate(select=q).items), query=q)

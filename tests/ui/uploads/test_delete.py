@@ -62,7 +62,7 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
         "field_count", [1, 3, 5]
     )
     def test__post__data_not_deleted(self, field_count):
-        fields = self.faker.upload_data().get_list_in_db(
+        self.faker.upload_data().get_list_in_db(
             item_count=field_count, upload=self.existing
         )
 
@@ -71,13 +71,14 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
         assert__refresh_response(resp)
         self.assert_db_count(1)
         self.assert_db_data_count(self.existing.id, field_count)
-        changed_upload = db.session.get(Upload, self.existing.id)
-        assert changed_upload.deleted
+
+        db.session.refresh(self.existing)
+        assert self.existing.deleted
 
     @pytest.mark.parametrize(
         "file_count", [1, 3, 5]
     )
-    def test__post__fields_deleted(self, file_count):
+    def test__post__files_deleted(self, file_count):
         files = self.faker.upload_file().get_list_in_db(
             item_count=file_count, upload=self.existing
         )

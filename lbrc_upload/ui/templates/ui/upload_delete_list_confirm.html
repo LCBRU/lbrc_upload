@@ -1,0 +1,36 @@
+{% extends "lbrc/modal.html" %}
+{% from "lbrc/form_macros.html" import render_form_fields, render_modal_button_bar %}
+
+
+{% block content %}
+    <h2>Delete Uploads for Study '{{study.name}}'</h2>
+    <h3>Confirm Deletion of the following uploads</h3>
+
+    <table>
+        <thead>
+            <tr>
+                <th>{{ study.get_study_number_name() }}</th>
+                <th>Upload Date</th>
+                <th>Uploader</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in uploads %}
+                <tr>
+                    <td>{{ u.study_number }}</td>
+                    <td>{{ u.date_created | date_format }}</td>
+                    <td>{{ u.uploader.full_name }}</td>
+                </tr>
+            {% endfor %}
+    </table>
+    
+    <form hx-post="{{ url_for('ui.study_delete_upload_list', study_id=study.id) }}" hx-indicator="#spinner" method="POST" enctype="multipart/form-data">
+        <fieldset>
+            {% for u in uploads %}
+                <input type="hidden" name="upload_id" value="{{ u.id }}">
+            {% endfor %}
+
+            {{render_modal_button_bar(submit_label='Delete')}}
+        </fieldset>
+    </form>
+{% endblock %}
