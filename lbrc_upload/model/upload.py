@@ -24,6 +24,8 @@ class Upload(AuditMixin, CommonMixin, db.Model):
     uploader = db.relationship(User)
     completed = db.Column(db.Boolean, default=0)
     deleted = db.Column(db.Boolean, default=0)
+    deleted_date = db.Column(db.DateTime, nullable=True)
+    deleted_by = db.Column(db.String(200), nullable=True)
 
     def has_existing_files(self):
         return any(uf.file_exists() for uf in self.files)

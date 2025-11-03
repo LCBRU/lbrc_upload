@@ -3,12 +3,15 @@ import shutil
 import tempfile
 from pathlib import Path
 from flask import flash, redirect, request, send_file
+from flask_security import current_user
 from lbrc_upload.services.studies import write_study_upload_csv
 from lbrc_flask.database import db
 
 
 def delete_upload(upload):
     upload.deleted = 1
+    upload.deleted_date = datetime.datetime.now(datetime.timezone.utc)
+    upload.deleted_by = current_user.email
 
     for uf in upload.files:
         for uf in upload.files:

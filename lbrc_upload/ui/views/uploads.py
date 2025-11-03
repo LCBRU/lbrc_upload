@@ -71,6 +71,7 @@ def upload_data(study_id):
         url=url_for('ui.upload_data', study_id=study.id),
     )
 
+
 def save_upload(study, form):
     upload = Upload(
             study=study,
@@ -93,11 +94,12 @@ def save_upload(study, form):
                 save_upload_file(upload, value, field)
             else:
                 ud = UploadData(upload=upload, field=field, value=field.data_value(value))
-
                 db.session.add(ud)
 
     db.session.commit()
+
     return upload
+
 
 def save_upload_file(upload, value, field):
     if type(value) is list:
@@ -115,6 +117,7 @@ def save_upload_file(upload, value, field):
         f.save(p)
 
         uf.size = p.stat().st_size
+
 
 def send_upload_notifications(study, upload):
     email(

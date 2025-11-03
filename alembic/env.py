@@ -9,7 +9,9 @@ load_dotenv()
 
 from alembic import context
 from lbrc_flask.database import db
-import lbrc_upload.model
+import lbrc_upload.model.study
+import lbrc_upload.model.upload
+import lbrc_upload.model.user
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
