@@ -1,0 +1,47 @@
+<html>
+    <head>
+        <style>
+            body {
+                color: #333;
+                font-family: 'Raleway', sans-serif;
+            }
+
+            h1 {
+                font-size: 1.4em;
+            }
+
+            a {
+                color: #555;
+                text-decoration: underline;
+            }
+            a:hover {
+                color: rgb(36, 36, 136);
+                cursor: pointer;
+                text-decoration: underline;
+            }
+        </style>
+    </head>
+    <body>
+            <h1>NIHR Leicester Biomedical Research Centre: Uploads</h1>
+            <h2>{{ study.name }}</h2>
+
+            <p>Your participants details have been received</p>
+
+            <table>
+                <tbody>
+                    <tr>
+                        <td><strong>Study Number</strong></td>
+                        <td>{{ upload.study_number }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Uploader</strong></td>
+                        <td>{{ upload.uploader.full_name }}</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Uploaded</strong></td>
+                        <td>{{ upload.date_created | datetime_format }}</td>
+                    </tr>
+                </tbody>
+            </table>
+    </body>
+</html>

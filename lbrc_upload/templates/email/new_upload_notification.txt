@@ -1,0 +1,12 @@
+NIHR Leicester Biomedical Research Centre: Uploads
+--------------------------------------------------
+
+**Study**: {{ study.name }}
+
+New participants details have been received
+
+**Study Number**: {{ upload.study_number }}
+
+**Uploader**: { upload.uploader.full_name }}
+
+**Uploaded**: {{ upload.date_created | datetime_format }}

@@ -1,11 +1,5 @@
-import datetime
-import http
 from pathlib import Path
-import shutil
-import tempfile
 from flask import (
-    abort,
-    redirect,
     render_template,
     url_for,
     request,
@@ -15,9 +9,10 @@ from flask import (
 
 from flask_security import current_user
 from sqlalchemy import func, select
+from wtforms import ValidationError
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
-from lbrc_upload.services.studies import get_study_uploads_query, write_study_upload_csv
+from lbrc_upload.services.studies import get_study_uploads_query
 from lbrc_upload.services.uploads import delete_upload, mass_upload_download
 from lbrc_upload.ui.forms import UploadFormBuilder
 from lbrc_upload.decorators import (
@@ -33,6 +28,23 @@ from lbrc_flask.response import refresh_response
 from .. import blueprint
 
 
+class DuplicateStudyNumberValidator:
+    def __init__(self, study: Study):
+        self.study = study
+        self.message = "Study Number already exists for this study"
+
+    def __call__(self, form, field):
+        duplicate = db.session.execute(
+            select(func.count(Upload.id))
+            .where(Upload.study_id == self.study.id)
+            .where(Upload.deleted == 0)
+            .where(Upload.study_number == field.data)
+        ).scalar() > 0
+
+        if duplicate and not self.study.allow_duplicate_study_number:
+            raise ValidationError(self.message) 
+
+
 @blueprint.route("/study/<int:study_id>/upload", methods=["GET", "POST"])
 @must_be_study_collaborator()
 def upload_data(study_id):
@@ -45,77 +57,11 @@ def upload_data(study_id):
     builder = UploadFormBuilder(study)
 
     form = builder.get_form()()
+    form.study_number.validators.append(DuplicateStudyNumberValidator(study))
 
-    if request.method == "POST":
-        duplicate = db.session.execute(
-            select(func.count(Upload.id))
-            .where(Upload.study_id == study_id)
-            .where(Upload.deleted == 0)
-            .where(Upload.study_number == form.study_number.data)
-        ).scalar() > 0
-
-        form.validate_on_submit()
-
-        if duplicate and not study.allow_duplicate_study_number:
-            form.study_number.errors.append("Study Number already exists for this study")
-            flash("Study Number already exists for this study", "error")
-
-    if len(form.errors) == 0 and form.is_submitted():
-
-        u = Upload(
-            study=study, uploader=current_user, study_number=form.study_number.data
-        )
-
-        db.session.add(u)
-
-        if study.field_group:
-            study_fields = {f.field_name: f for f in study.field_group.fields}
-        else:
-            study_fields = {}
-
-        for field_name, value in form.data.items():
-            if field_name in study_fields:
-                field = study_fields[field_name]
-
-                if field.field_type.is_file:
-                    if type(value) is list:
-                        files = value
-                    else:
-                        files = [value]
-
-                    for f in filter(None, files):
-                        uf = UploadFile(upload=u, field=field, filename=f.filename)
-                        db.session.add(uf)
-                        db.session.flush()  # Make sure uf has ID assigned
-
-                        p = Path(uf.upload_filepath())
-                        p.parent.mkdir(parents=True, exist_ok=True)
-                        f.save(p)
-
-                        uf.size = p.stat().st_size
-                else:
-                    ud = UploadData(upload=u, field=field, value=field.data_value(value))
-
-                    db.session.add(ud)
-
-        db.session.commit()
-        
-        email(
-            subject="BRC Upload: {}".format(study.name),
-            message="A new set of files has been uploaded for the {} study.".format(
-                study.name
-            ),
-            recipients=[r.email for r in study.owners if not r.suppress_email],
-        )
-
-        email(
-            subject="BRC Upload: {}".format(study.name),
-            message='Your files for participant "{}" on study "{}" have been successfully uploaded.'.format(
-                u.study_number, study.name
-            ),
-            recipients=[current_user.email],
-        )
-
+    if form.validate_on_submit():
+        upload = save_upload(study, form)
+        send_upload_notifications(study, upload)
         return refresh_response()
 
     return render_template(
@@ -124,6 +70,70 @@ def upload_data(study_id):
         form=form,
         url=url_for('ui.upload_data', study_id=study.id),
     )
+
+def save_upload(study, form):
+    upload = Upload(
+            study=study,
+            uploader=current_user,
+            study_number=form.study_number.data,
+        )
+
+    db.session.add(upload)
+
+    if study.field_group:
+        study_fields = {f.field_name: f for f in study.field_group.fields}
+    else:
+        study_fields = {}
+
+    for field_name, value in form.data.items():
+        if field_name in study_fields:
+            field = study_fields[field_name]
+
+            if field.field_type.is_file:
+                save_upload_file(upload, value, field)
+            else:
+                ud = UploadData(upload=upload, field=field, value=field.data_value(value))
+
+                db.session.add(ud)
+
+    db.session.commit()
+    return upload
+
+def save_upload_file(upload, value, field):
+    if type(value) is list:
+        files = value
+    else:
+        files = [value]
+
+    for f in filter(None, files):
+        uf = UploadFile(upload=upload, field=field, filename=f.filename)
+        db.session.add(uf)
+        db.session.flush()  # Make sure uf has ID assigned
+
+        p = Path(uf.upload_filepath())
+        p.parent.mkdir(parents=True, exist_ok=True)
+        f.save(p)
+
+        uf.size = p.stat().st_size
+
+def send_upload_notifications(study, upload):
+    email(
+            subject=f"BRC Upload: {study.name}",
+            recipients=[r.email for r in study.owners if not r.suppress_email],
+            message_template='email/new_upload_notification.txt',
+            html_template='email/new_upload_notification.html',
+            study=study,
+            upload=upload,
+        )
+
+    email(
+            subject=f"BRC Upload: {study.name}",
+            recipients=[current_user.email],
+            message_template='email/new_upload_confirmation.txt',
+            html_template='email/new_upload_confirmation.html',
+            study=study,
+            upload=upload,
+        )
 
 
 @blueprint.route("/upload/file/<int:upload_file_id>")
