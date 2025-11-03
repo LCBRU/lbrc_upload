@@ -10,7 +10,8 @@ from flask import (
 )
 from flask_security import current_user
 from sqlalchemy import select
-from lbrc_upload.model.upload import Upload
+from sqlalchemy.orm import selectinload
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
 from lbrc_upload.services.studies import get_study_uploads_query, write_study_upload_csv
 from lbrc_upload.ui.forms import UploadSearchForm
@@ -60,6 +61,15 @@ def study(study_id):
 
     q = get_study_uploads_query(study_id, search_form.data)
     q = q.order_by(Upload.date_created.desc(), Upload.study_number.asc())
+    q = q.options(
+        selectinload(Upload.uploader)
+    )
+    q = q.options(
+        selectinload(Upload.data).selectinload(UploadData.field)
+    )    
+    q = q.options(
+        selectinload(Upload.files).selectinload(UploadFile.field)
+    )    
 
     uploads = db.paginate(select=q)
 
