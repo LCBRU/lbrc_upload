@@ -92,6 +92,15 @@ def study_my_uploads(study_id):
     q = get_study_uploads_query(study_id, search_form.data)
     q = q.where(Upload.uploader == current_user)
     q = q.order_by(Upload.date_created.desc(), Upload.study_number.asc())
+    q = q.options(
+        selectinload(Upload.uploader)
+    )
+    q = q.options(
+        selectinload(Upload.data).selectinload(UploadData.field)
+    )    
+    q = q.options(
+        selectinload(Upload.files).selectinload(UploadFile.field)
+    )    
 
     uploads = db.paginate(select=q)
 
@@ -108,6 +117,15 @@ def study_csv(study_id):
     search_form = UploadSearchForm(formdata=request.args)
 
     q = get_study_uploads_query(study_id, search_form.data)
+    q = q.options(
+        selectinload(Upload.uploader)
+    )
+    q = q.options(
+        selectinload(Upload.data).selectinload(UploadData.field)
+    )    
+    q = q.options(
+        selectinload(Upload.files).selectinload(UploadFile.field)
+    )    
 
     csv_filename = tempfile.NamedTemporaryFile()
 
