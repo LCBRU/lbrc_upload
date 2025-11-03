@@ -1,7 +1,5 @@
-from functools import lru_cache
-import time
 import humanize
-from sqlalchemy import Integer, select
+from sqlalchemy import Integer
 from sqlalchemy.sql import func
 from lbrc_flask.security import AuditMixin
 from lbrc_flask.database import db
@@ -9,7 +7,6 @@ from lbrc_flask.model import CommonMixin
 from lbrc_flask.forms.dynamic import FieldGroup
 from sqlalchemy.orm import Mapped, mapped_column
 from lbrc_upload.model.user import User
-from lbrc_upload import model
 
 
 studies_owners = db.Table(
@@ -24,17 +21,6 @@ studies_collaborators = db.Table(
     db.Column("study_id", db.Integer(), db.ForeignKey("study.id")),
     db.Column("user_id", db.Integer(), db.ForeignKey(User.id)),
 )
-
-
-@lru_cache()
-def sum_uploads_file_size(study_id):
-    q = (
-        select(func.sum(model.UploadFile.size))
-        .join(model.UploadFile.upload)
-        .where(model.Upload.study_id == study_id)
-        .where(model.Upload.deleted == 0)
-    )
-    return db.session.execute(q).scalar() or 0
 
 
 class Study(AuditMixin, CommonMixin, db.Model):
@@ -80,7 +66,7 @@ class Study(AuditMixin, CommonMixin, db.Model):
 
     @property
     def total_file_size(self):
-        return sum_uploads_file_size(study_id=self.id)
+        return sum(u.total_file_size for u in self.uploads)
 
     @property
     def total_file_size_message(self):
