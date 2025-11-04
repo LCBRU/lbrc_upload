@@ -3,7 +3,7 @@
 {% block menu_page_content %}
 <section class="container">
     <ul class="panel_list">
-        {% if owned_studies.count() > 0 %}
+        {% if owned_studies | length > 0 %}
             <li>
                 <header>
                     <h2>Owned Studies</h2>
@@ -26,14 +26,14 @@
                             </td>
                             <td>{{ s.name }}</td>
                             <td>{{ s.upload_count }}</td>
-                            <td>{{ s.outstanding_upload_count }}</td>
+                            <td>{{ s.outstanding_count }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </li>
         {% endif %}
-        {% if collaborator_studies.count() > 0 %}
+        {% if collaborator_studies | length > 0 %}
             <li>
                 <header>
                     <h2>Collaborating Studies</h2>
@@ -54,7 +54,7 @@
                                 <a title="Upload data to study {{ s.name }}" hx-get="{{ url_for('ui.upload_data', study_id=s.id) }}" hx-target="body" hx-swap="beforeend" href="javascript:;" class="icon upload"></a>
                             </td>
                             <td>{{ s.name }}</td>
-                            <td>{{ s.upload_count_for_user(current_user) }}</td>
+                            <td>{{ s.my_upload_count }}</td>
                         </tr>
                         {% endfor %}
                     </tbody>

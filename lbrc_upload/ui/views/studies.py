@@ -9,10 +9,11 @@ from flask import (
     send_file,
 )
 from flask_security import current_user
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 from sqlalchemy.orm import selectinload
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
+from lbrc_upload.model.user import User
 from lbrc_upload.services.studies import get_study_uploads_query, write_study_upload_csv
 from lbrc_upload.ui.forms import UploadSearchForm
 from lbrc_upload.decorators import (
@@ -30,26 +31,67 @@ def index():
     # If the user is only associated with one study,
     # just take them to the relevant action page for
     # that study
-    if (
-        current_user.owned_studies.count() == 0
-        and current_user.collaborator_studies.count() == 1
-    ):
-        return redirect(
-            url_for(
-                "ui.study_my_uploads", study_id=current_user.collaborator_studies[0].id
-            )
-        )
-    if (
-        current_user.owned_studies.count() == 1
-        and current_user.collaborator_studies.count() == 0
-    ):
+    owned_studies = index_owned_studies()
+    collab_studies = index_collaborator_studies()
+
+    if len(owned_studies) == 0 and len(collab_studies) == 1:
+        return redirect(url_for("ui.study_my_uploads", study_id=current_user.collaborator_studies[0].id))
+    if len(owned_studies) == 1 and len(collab_studies) == 0:
         return redirect(url_for("ui.study", study_id=current_user.owned_studies[0].id))
 
     return render_template(
         "ui/index.html",
-        owned_studies=current_user.owned_studies,
-        collaborator_studies=current_user.collaborator_studies,
+        owned_studies=owned_studies,
+        collaborator_studies=collab_studies,
     )
+
+
+def index_owned_studies():
+    q = select(
+        Study.id,
+        Study.name,
+        func.count(Upload.id).label('upload_count'),
+        func.sum(func.IF(Upload.completed ==0, 1, 0)).label('outstanding_count'),
+    ).outerjoin(
+        Upload, and_(
+            Upload.study_id == Study.id,
+            Upload.deleted == 0,
+        )
+    ).where(
+        Study.owners.any(User.id == current_user.id)
+    ).group_by(
+        Study.id,
+        Study.name,
+    ).order_by(
+        Study.name,
+        Study.id,
+    )
+
+    return db.session.execute(q).mappings().all()
+
+
+def index_collaborator_studies():
+    q = select(
+        Study.id,
+        Study.name,
+        func.count(Upload.id).label('my_upload_count'),
+    ).outerjoin(
+        Upload, and_(
+            Upload.study_id == Study.id,
+            Upload.deleted == 0,
+            Upload.uploader_id == current_user.id,
+        )
+    ).where(
+        Study.collaborators.any(User.id == current_user.id)
+    ).group_by(
+        Study.id,
+        Study.name,
+    ).order_by(
+        Study.name,
+        Study.id,
+    )
+
+    return db.session.execute(q).mappings().all()
 
 
 @blueprint.route("/study/<int:study_id>")

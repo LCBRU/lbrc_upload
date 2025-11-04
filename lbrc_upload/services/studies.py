@@ -62,5 +62,3 @@ def write_study_upload_csv(filename, study, query):
             row = dict(row, **{f.field.field_name: f.filename for f in u.files})
 
             writer.writerow(row)
-
-
