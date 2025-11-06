@@ -140,7 +140,20 @@ def study(study_id):
 @blueprint.route("/study/<int:study_id>/my_uploads")
 @must_be_study_collaborator()
 def study_my_uploads(study_id):
-    study: Study = db.get_or_404(Study, study_id)
+    # Use a query with options to eager load all the related data we
+    # will need to display the study page, to avoid n+1 query issues
+    q = select(Study).where(Study.id == study_id)
+    q = q.options(
+        selectinload(Study.uploads).selectinload(Upload.data).selectinload(UploadData.field)
+    )
+    q = q.options(
+        selectinload(Study.uploads).selectinload(Upload.files).selectinload(UploadFile.field)
+    )    
+
+    study: Study = db.session.execute(q).scalar_one()
+
+    if study is None:
+        abort(http.HTTPStatus.NOT_FOUND)
 
     search_form = SearchForm(formdata=request.args)
 
