@@ -2,7 +2,7 @@ import datetime
 import shutil
 import tempfile
 from pathlib import Path
-from flask import flash, redirect, request, send_file
+from flask import current_app, flash, redirect, request, send_file
 from flask_security import current_user
 from lbrc_upload.services.studies import write_study_upload_csv
 from lbrc_flask.database import db
@@ -30,7 +30,7 @@ def mass_upload_download(study, uploads, query):
         flash('Files too large to download as a page')
         return redirect(request.referrer)
 
-    with tempfile.TemporaryDirectory() as tmpdirname:
+    with tempfile.TemporaryDirectory(dir=current_app.config["TEMP_DIRECTORY"]) as tmpdirname:
         temppath = Path(tmpdirname)
         datestring = datetime.datetime.now().strftime('%Y%M%d%H%m%S')
         filename = f'{study.name}_{datestring}'
