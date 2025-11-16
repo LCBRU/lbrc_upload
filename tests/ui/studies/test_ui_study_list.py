@@ -29,6 +29,9 @@ class OwnedStudyRowContentAsserter(TableContentAsserter):
         assert row is not None
         assert expected_result is not None
 
+        print('>>>>>', row)
+        print(url_for("ui.study", study_id=expected_result.id))
+
         assert row.find("a", href=url_for("ui.study", study_id=expected_result.id)) is not None
         assert row.find("a", href=url_for("ui.study_csv", study_id=expected_result.id)) is not None
         assert row.find_all("td")[1].string == str(expected_result.name)
@@ -43,6 +46,9 @@ class CollaboratorStudyRowContentAsserter(TableContentAsserter):
     def assert_row_details(self, row, expected_result):
         assert row is not None
         assert expected_result is not None
+
+        print('>>>>>', row)
+        print(url_for("ui.study_my_uploads", study_id=expected_result.id))
 
         assert row.find("a", href=url_for("ui.study_my_uploads", study_id=expected_result.id)) is not None
         upload_data_url = url_for("ui.upload_data", study_id=expected_result.id)
@@ -75,7 +81,11 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
 
     def test__owns_multiple_studies__no_redirect(self):
         studies = self.faker.study().get_list_in_db(item_count=2, owner=self.loggedin_user)
+        studies = self.sort_studies(studies)
         resp = self.get()
+
+        print('ASSERTING OWNS MULTPLE'*100)
+        print(resp.soup.prettify())
 
         assert self.get_owned_studies_header(resp) is not None
         assert self.get_collab_studies_header(resp) is None
@@ -92,7 +102,12 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
 
     def test__collab_on_multiple_studies__no_redirect(self):
         studies = self.faker.study().get_list_in_db(item_count=2, collaborator=self.loggedin_user)
+        studies = self.sort_studies(studies)
+
         resp = self.get()
+
+        print('ASSERTING COLLAB STUDIES'*100)
+        print(resp.soup.prettify())
 
         assert self.get_owned_studies_header(resp) is None
         assert self.get_collab_studies_header(resp) is not None
@@ -111,6 +126,8 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
 
         study = self.faker.study().get_in_db(owner=self.loggedin_user)
         study2 = self.faker.study().get_in_db(owner=self.loggedin_user) # second study so we don't get redirected
+
+        studies = self.sort_studies([study, study2])
 
         # Cycle is used to alternately allocate
         # the uploads to a different user
