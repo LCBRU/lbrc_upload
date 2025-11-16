@@ -4,12 +4,16 @@ from lbrc_flask.pytest.asserts import assert__redirect
 from itertools import cycle
 from flask import url_for
 from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, TableContentAsserter, ResultSet
+from lbrc_upload.model.study import Study
 
 
 class StudyListTester:
     @property
     def endpoint(self):
         return 'ui.index'
+    
+    def sort_studies(self, studies: list[Study]):
+        return sorted(studies, key=lambda s: (s.name, s.id))
 
 
 class TestStudyListRequiresLogin(StudyListTester, RequiresLoginTester):
@@ -77,7 +81,9 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         assert self.get_collab_studies_header(resp) is None
         assert self.get_study_table_count(resp) == 1
 
-        OwnedStudyRowContentAsserter(result_set=ResultSet(studies)).assert_all(resp)
+        OwnedStudyRowContentAsserter(
+            result_set=ResultSet(self.sort_studies(studies))
+        ).assert_all(resp)
 
     def test__collab_on_1_study__redirects(self):
         study = self.faker.study().get_in_db(collaborator=self.loggedin_user)
@@ -92,7 +98,9 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         assert self.get_collab_studies_header(resp) is not None
         assert self.get_study_table_count(resp) == 1
 
-        CollaboratorStudyRowContentAsserter(result_set=ResultSet(studies)).assert_all(resp)
+        CollaboratorStudyRowContentAsserter(
+            result_set=ResultSet(self.sort_studies(studies))
+        ).assert_all(resp)
 
     @pytest.mark.parametrize(
         ["outstanding", "completed", "deleted"],
@@ -116,4 +124,6 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
 
         resp = self.get()
 
-        OwnedStudyRowContentAsserter(result_set=ResultSet([study, study2])).assert_all(resp)
+        OwnedStudyRowContentAsserter(
+            result_set=ResultSet(self.sort_studies([study, study2]))
+        ).assert_all(resp)

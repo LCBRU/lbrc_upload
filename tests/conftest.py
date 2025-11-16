@@ -1,10 +1,10 @@
 import pytest
 from faker import Faker
+from tests.faker import UploadsProvider
 from lbrc_flask.pytest.fixtures import *
 from lbrc_flask.forms.dynamic import create_field_types
-from lbrc_flask.pytest.faker import FieldGroupProvider, FieldProvider
+from lbrc_flask.pytest.faker import FieldsProvider
 from config import TestConfig
-from tests.faker import SiteProvider, StudyProvider, UploadDataProvider, UploadFileProvider, UploadProvider, UserProvider
 from lbrc_upload import create_app
 from lbrc_flask.pytest.helpers import login
 from lbrc_upload.security import init_authorization
@@ -42,13 +42,7 @@ def app(tmp_path):
 @pytest.fixture(scope="function")
 def faker():
     result = Faker("en_GB")
-    result.add_provider(SiteProvider)
-    result.add_provider(UserProvider)
-    result.add_provider(FieldGroupProvider)
-    result.add_provider(FieldProvider)
-    result.add_provider(StudyProvider)
-    result.add_provider(UploadProvider)
-    result.add_provider(UploadDataProvider)
-    result.add_provider(UploadFileProvider)
+    result.add_provider(FieldsProvider)
+    result.add_provider(UploadsProvider)
 
     yield result

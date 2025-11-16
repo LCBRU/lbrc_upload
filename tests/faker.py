@@ -5,14 +5,13 @@ from lbrc_flask.forms.dynamic import FieldType
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
 from lbrc_upload.model.user import User, Site
-from lbrc_flask.pytest.faker import FakeCreator, FieldProvider, FieldGroupProvider
+from lbrc_flask.pytest.faker import FakeCreator
 from lbrc_flask.database import db
 from faker.providers import BaseProvider
 
 
 class SiteCreator(FakeCreator):
-    def __init__(self):
-        super().__init__(Site)
+    cls = Site
 
     def get(self, **kwargs):
         return Site(
@@ -21,18 +20,10 @@ class SiteCreator(FakeCreator):
         )
 
 
-class SiteProvider(BaseProvider):
-    def site(self):
-        return SiteCreator()
-
-
 class UserCreator(FakeCreator):
-    def __init__(self):
-        super().__init__(User)
+    cls = User
 
     def get(self, **kwargs):
-        self.faker.add_provider(SiteProvider)
-
         if (first_name := kwargs.get('first_name')) is None:
             first_name = self.faker.first_name()
 
@@ -61,19 +52,10 @@ class UserCreator(FakeCreator):
         )
 
 
-class UserProvider(BaseProvider):
-    def user(self):
-        return UserCreator()
-
-
 class StudyCreator(FakeCreator):
-    def __init__(self):
-        super().__init__(Study)
+    cls = Study
 
     def get(self, **kwargs):
-        self.faker.add_provider(UserProvider)
-        self.faker.add_provider(FieldGroupProvider)
-
         if (name := kwargs.get('name')) is None:
             name = self.faker.pystr(min_chars=5, max_chars=10).upper()
 
@@ -107,19 +89,10 @@ class StudyCreator(FakeCreator):
         return result
 
 
-class StudyProvider(BaseProvider):
-    def study(self):
-        return StudyCreator()
-
-
 class UploadCreator(FakeCreator):
-    def __init__(self):
-        super().__init__(Upload)
+    cls = Upload
 
     def get(self, **kwargs):
-        self.faker.add_provider(StudyProvider)
-        self.faker.add_provider(UserProvider)
-
         if (study := kwargs.get('study')) is None:
             study = self.faker.study().get()
 
@@ -144,19 +117,10 @@ class UploadCreator(FakeCreator):
         )
 
 
-class UploadProvider(BaseProvider):
-    def upload(self):
-        return UploadCreator()
-
-
 class UploadDataCreator(FakeCreator):
-    def __init__(self):
-        super().__init__(UploadData)
+    cls = UploadData
 
     def get(self, **kwargs):
-        self.faker.add_provider(UploadProvider)
-        self.faker.add_provider(FieldProvider)
-
         if (field := kwargs.get('field')) is None:
             field_type_name = choice(FieldType.all_simple_field_types())
             field_type = FieldType._get_field_type(field_type_name)
@@ -175,19 +139,10 @@ class UploadDataCreator(FakeCreator):
         )
 
 
-class UploadDataProvider(BaseProvider):
-    def upload_data(self):
-        return UploadDataCreator()
-
-
 class UploadFileCreator(FakeCreator):
-    def __init__(self):
-        super().__init__(UploadFile)
+    cls = UploadFile
 
     def get(self, **kwargs):
-        self.faker.add_provider(UploadProvider)
-        self.faker.add_provider(FieldProvider)
-
         if (upload := kwargs.get('upload')) is None:
             upload = self.faker.upload().get()
 
@@ -225,6 +180,21 @@ class UploadFileCreator(FakeCreator):
         db.session.commit()
 
 
-class UploadFileProvider(BaseProvider):
+class UploadsProvider(BaseProvider):
     def upload_file(self):
-        return UploadFileCreator()
+        return UploadFileCreator(self)
+
+    def site(self):
+        return SiteCreator(self)
+
+    def user(self):
+        return UserCreator(self)
+
+    def study(self):
+        return StudyCreator(self)
+
+    def upload(self):
+        return UploadCreator(self)
+
+    def upload_data(self):
+        return UploadDataCreator(self)
