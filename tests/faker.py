@@ -1,4 +1,5 @@
 import os
+from functools import cache
 from random import choice
 from typing import Optional
 from lbrc_flask.forms.dynamic import FieldType
@@ -181,20 +182,26 @@ class UploadFileCreator(FakeCreator):
 
 
 class UploadsProvider(BaseProvider):
+    @cache
     def upload_file(self):
         return UploadFileCreator(self)
 
+    @cache
     def site(self):
         return SiteCreator(self)
 
+    @cache
     def user(self):
         return UserCreator(self)
 
+    @cache
     def study(self):
         return StudyCreator(self)
 
+    @cache
     def upload(self):
         return UploadCreator(self)
 
+    @cache
     def upload_data(self):
         return UploadDataCreator(self)
