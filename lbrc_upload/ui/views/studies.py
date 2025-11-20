@@ -11,7 +11,7 @@ from flask import (
     abort,
 )
 from flask_security import current_user
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, func, select, case
 from sqlalchemy.orm import selectinload
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
@@ -53,7 +53,10 @@ def index_owned_studies():
         Study.id,
         Study.name,
         func.count(Upload.id).label('upload_count'),
-        func.sum(func.IF(Upload.completed ==0, 1, 0)).label('outstanding_count'),
+        func.sum(case(
+            (Upload.completed == 0, 1),
+            else_= 0,
+        )).label('outstanding_count'),
     ).outerjoin(
         Upload, and_(
             Upload.study_id == Study.id,
