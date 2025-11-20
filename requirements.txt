@@ -141,7 +141,7 @@ jsonschema-specifications==2025.9.1
     # via jsonschema
 kombu==5.5.4
     # via celery
-lbrc-flask @ git+https://github.com/LCBRU/lbrc_flask.git@cd9827ee8041aebf03d451d59ecef70bf9bbbd22
+lbrc-flask @ git+https://github.com/LCBRU/lbrc_flask.git@31de82376376afe1b768e28dc562659391c3d258
     # via -r requirements.in
 ldap3==2.9.1
     # via lbrc-flask
