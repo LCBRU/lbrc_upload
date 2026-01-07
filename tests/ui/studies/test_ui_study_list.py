@@ -29,9 +29,6 @@ class OwnedStudyRowContentAsserter(TableContentAsserter):
         assert row is not None
         assert expected_result is not None
 
-        print('>>>>>', row)
-        print(url_for("ui.study", study_id=expected_result.id))
-
         assert row.find("a", href=url_for("ui.study", study_id=expected_result.id)) is not None
         assert row.find("a", href=url_for("ui.study_csv", study_id=expected_result.id)) is not None
         assert row.find_all("td")[1].string == str(expected_result.name)
@@ -46,9 +43,6 @@ class CollaboratorStudyRowContentAsserter(TableContentAsserter):
     def assert_row_details(self, row, expected_result):
         assert row is not None
         assert expected_result is not None
-
-        print('>>>>>', row)
-        print(url_for("ui.study_my_uploads", study_id=expected_result.id))
 
         assert row.find("a", href=url_for("ui.study_my_uploads", study_id=expected_result.id)) is not None
         upload_data_url = url_for("ui.upload_data", study_id=expected_result.id)
