@@ -6,7 +6,7 @@ from lbrc_flask.forms.dynamic import FieldType
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
 from lbrc_upload.model.user import User, Site
-from lbrc_flask.pytest.faker import FakeCreator
+from lbrc_flask.pytest.faker import FakeCreator, FakeCreatorArgs
 from lbrc_flask.database import db
 from faker.providers import BaseProvider
 
@@ -15,33 +15,24 @@ class SiteCreator(FakeCreator):
     cls = Site
 
     def get(self, **kwargs):
+        args = FakeCreatorArgs(kwargs)
+
         return Site(
-            name=self.faker.company(),
-            number=self.faker.pystr(min_chars=5, max_chars=10),
+            name=args.get('name', self.faker.company()),
+            number=args.get('number', self.faker.pystr(min_chars=5, max_chars=10)),
         )
 
 
 class UserCreator(FakeCreator):
     cls = User
 
-    def get(self, **kwargs):
-        if (first_name := kwargs.get('first_name')) is None:
-            first_name = self.faker.first_name()
-
-        if (last_name := kwargs.get('last_name')) is None:
-            last_name = self.faker.last_name()
-
-        if (username := kwargs.get('username')) is None:
-            username = self.faker.pystr(min_chars=5, max_chars=10).lower()
-
-        if (email := kwargs.get('email')) is None:
-            email = self.faker.email()
-
-        if (active := kwargs.get('active')) is None:
-            active = True
-
-        if (site := kwargs.get('site')) is None:
-            site = self.faker.site().get()
+    def _create_item(self, save: bool, args: FakeCreatorArgs):
+        first_name = args.get('first_name', self.faker.first_name())
+        last_name = args.get('last_name', self.faker.last_name())
+        username = args.get('username', self.faker.pystr(min_chars=5, max_chars=10).lower())
+        email = args.get('email', self.faker.email())
+        active = args.get('active', True)
+        site = args.get('site', self.faker.site().get())
 
         return User(
             first_name=first_name,
@@ -56,25 +47,14 @@ class UserCreator(FakeCreator):
 class StudyCreator(FakeCreator):
     cls = Study
 
-    def get(self, **kwargs):
-        if (name := kwargs.get('name')) is None:
-            name = self.faker.pystr(min_chars=5, max_chars=10).upper()
-
-        if (owner := kwargs.get('owner')) is None:
-            owner = self.faker.user().get()
-
-        if (collaborator := kwargs.get('collaborator')) is None:
-            collaborator = self.faker.user().get()
-
-        if (field_group := kwargs.get('field_group')) is None:
-            field_group = self.faker.field_group().get(name=name)
-
-        study_number_format = kwargs.get('study_number_format')
-
-        if (allow_duplicate_study_number := kwargs.get('allow_duplicate_study_number')) is None:
-            allow_duplicate_study_number = False
-
-        size_limit = kwargs.get('size_limit')
+    def _create_item(self, save: bool, args: FakeCreatorArgs):
+        name = args.get('name', self.faker.unique.pystr(min_chars=10, max_chars=20).lower())
+        owner = args.get('owner', self.faker.user().get())
+        collaborator = args.get('collaborator', self.faker.user().get())
+        field_group = args.get('field_group', self.faker.field_group().get(name=name))
+        study_number_format = args.get('study_number_format')
+        allow_duplicate_study_number = args.get('allow_duplicate_study_number', False)
+        size_limit = args.get('size_limit')
 
         result = Study(
             name=name,
@@ -93,21 +73,12 @@ class StudyCreator(FakeCreator):
 class UploadCreator(FakeCreator):
     cls = Upload
 
-    def get(self, **kwargs):
-        if (study := kwargs.get('study')) is None:
-            study = self.faker.study().get()
-
-        if (uploader := kwargs.get('uploader')) is None:
-            uploader = self.faker.user().get()
-
-        if (study_number := kwargs.get('study_number')) is None:
-            study_number = self.faker.pystr(min_chars=5, max_chars=10).upper()
-
-        if (completed := kwargs.get('completed')) is None:
-            completed = False
-
-        if (deleted := kwargs.get('deleted')) is None:
-            deleted = False
+    def _create_item(self, save: bool, args: FakeCreatorArgs):
+        study = args.get('study', self.faker.study().get())
+        uploader = args.get('uploader', self.faker.user().get())
+        study_number = args.get('study_number', self.faker.pystr(min_chars=5, max_chars=10).upper())
+        completed = args.get('completed', False)
+        deleted = args.get('deleted', False)
 
         return Upload(
             study=study,
@@ -121,17 +92,15 @@ class UploadCreator(FakeCreator):
 class UploadDataCreator(FakeCreator):
     cls = UploadData
 
-    def get(self, **kwargs):
-        if (field := kwargs.get('field')) is None:
+    def _create_item(self, save: bool, args: FakeCreatorArgs):
+        if (field := args.get('field')) is None:
             field_type_name = choice(FieldType.all_simple_field_types())
             field_type = FieldType._get_field_type(field_type_name)
-            field = self.faker.field().get(field_type=field_type)
+            field_group = args.get('field_group', self.faker.field_group().get(save=save))
+            field = self.faker.field().get(field_type=field_type, field_group=field_group, save=save)
 
-        if (upload := kwargs.get('upload')) is None:
-            upload = self.faker.upload().get()
-
-        if (value := kwargs.get('value')) is None:
-            value = self.faker.pystr(min_chars=5, max_chars=10).upper()
+        upload = args.get('upload', self.faker.upload().get())
+        value = args.get('value', self.faker.pystr(min_chars=5, max_chars=10).upper())
 
         return UploadData(
             field=field,
@@ -143,17 +112,11 @@ class UploadDataCreator(FakeCreator):
 class UploadFileCreator(FakeCreator):
     cls = UploadFile
 
-    def get(self, **kwargs):
-        if (upload := kwargs.get('upload')) is None:
-            upload = self.faker.upload().get()
-
-        if (field := kwargs.get('field')) is None:
-            field = self.faker.field().get(field_type=FieldType.get_file(), field_group=upload.study.field_group)
-
-        if (filename := kwargs.get('filename')) is None:
-            filename = self.faker.file_name()
-
-        size = kwargs.get("size")
+    def _create_item(self, save: bool, args: FakeCreatorArgs):
+        upload = args.get('upload', self.faker.upload().get())
+        field = args.get('field', self.faker.field().get(field_type=FieldType.get_file(), field_group=upload.study.field_group))
+        filename = args.get('filename', self.faker.file_name())
+        size = args.get("size")
 
         return UploadFile(
             field=field,
