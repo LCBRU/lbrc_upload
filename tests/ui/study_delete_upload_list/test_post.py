@@ -39,8 +39,8 @@ class TestSiteDeletePost(StudyDeleteUploadListTester, FlaskViewLoggedInTester):
     FILE_COUNT_PER_UPLOAD = 2
 
     @pytest.fixture(autouse=True)
-    def set_original(self, client, faker, loggedin_user):
-        self.existing = faker.study().get_in_db(owner=loggedin_user)
+    def set_original(self, client, faker, login_fixture):
+        self.existing = faker.study().get_in_db(owner=self.loggedin_user)
         self.parameters['study_id'] = self.existing.id
 
     def assert_remaining_uploads(self, expected_uploads):

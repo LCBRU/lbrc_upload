@@ -6,19 +6,11 @@ from lbrc_flask.forms.dynamic import create_field_types
 from lbrc_flask.pytest.faker import FieldsProvider
 from config import TestConfig
 from lbrc_upload import create_app
-from lbrc_flask.pytest.helpers import login
-from lbrc_upload.security import init_authorization
 
 
 @pytest.fixture(scope="function", autouse=True)
 def standard_lookups(client, faker):
     return create_field_types()
-
-
-@pytest.fixture(scope="function")
-def loggedin_user(client, faker):
-    init_authorization()
-    return login(client, faker)
 
 
 @pytest.fixture(scope="function")

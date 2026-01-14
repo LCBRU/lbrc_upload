@@ -39,8 +39,8 @@ class TestUploadDeleteRequiresOwner(UploadDeleteViewTester, RequiresRoleTester):
 
 class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
-    def set_original(self, client, faker, loggedin_user):
-        self.study = faker.study().get_in_db(owner=loggedin_user)
+    def set_original(self, client, faker, login_fixture):
+        self.study = faker.study().get_in_db(owner=self.loggedin_user)
         self.existing = faker.upload().get_in_db(study=self.study)
         self.parameters['id'] = self.existing.id
 
