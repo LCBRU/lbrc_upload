@@ -53,9 +53,12 @@ class StudyRowContentAsserter(PanelListContentAsserter):
 
 
 class TestStudyIndex(StudyDetailsTester, IndexTester):
+    def user_to_login(self, faker):
+        return faker.user().get_in_db()
+
     @pytest.fixture(autouse=True)
-    def set_existing_study(self, client, faker, loggedin_user):
-        self.existing_study: Study = faker.study().get_in_db(owner=loggedin_user)
+    def set_existing_study(self, client, faker, login_fixture):
+        self.existing_study: Study = faker.study().get_in_db(owner=self.loggedin_user)
         self.parameters = dict(study_id=self.existing_study.id)
 
     @property
