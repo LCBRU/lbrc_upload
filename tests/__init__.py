@@ -12,11 +12,7 @@ from lbrc_flask.database import db
 
 
 def login(client, faker):
-    s = faker.site().get()
-    u = faker.user().get()
-    u.site = s
-    db.session.add(s)
-    db.session.add(u)
+    u = faker.user().get(save=True)
     db.session.commit()
 
     resp = client.get("/login")
@@ -37,13 +33,13 @@ def login(client, faker):
 
 
 def add_content_for_all_areas(faker, user):
-    study = faker.study().get()
+    study = faker.study().get(save=False)
     study.owners.append(user)
     study.collaborators.append(user)
 
     db.session.add(study)
 
-    upload = faker.upload().get()
+    upload = faker.upload().get(save=False)
     upload.completed = False
     upload.study = study
     upload.uploader = user
