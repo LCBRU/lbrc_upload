@@ -71,13 +71,13 @@ class TestSiteDeletePost(StudyDeleteUploadListTester, FlaskViewLoggedInTester):
 
     def add_data_to_uploads(self, uploads):
         for upload in uploads:
-            self.faker.upload_data().get_list_in_db(
+            self.faker.upload_data().get_list(save=True, 
                 item_count=self.DATA_COUNT_PER_UPLOAD, upload=upload
             )
 
     def add_files_to_uploads(self, uploads):
         for upload in uploads:
-            files = self.faker.upload_file().get_list_in_db(
+            files = self.faker.upload_file().get_list(save=True, 
                 item_count=self.FILE_COUNT_PER_UPLOAD, upload=upload
             )
             self.faker.upload_file().create_files_in_filesystem(files)
@@ -85,10 +85,10 @@ class TestSiteDeletePost(StudyDeleteUploadListTester, FlaskViewLoggedInTester):
     @pytest.mark.parametrize("to_delete", [0, 1, 3, 5])
     @pytest.mark.parametrize("to_remain", [0, 1, 3, 5])
     def test__get__valid(self, to_delete, to_remain):
-        to_delete_uploads = self.faker.upload().get_list_in_db(
+        to_delete_uploads = self.faker.upload().get_list(save=True, 
             item_count=to_delete, study=self.existing
         )
-        to_remain_uploads = self.faker.upload().get_list_in_db(
+        to_remain_uploads = self.faker.upload().get_list(save=True, 
             item_count=to_remain, study=self.existing
         )
         self.add_data_to_uploads(to_delete_uploads + to_remain_uploads)

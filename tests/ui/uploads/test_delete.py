@@ -62,7 +62,7 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
         "field_count", [1, 3, 5]
     )
     def test__post__data_not_deleted(self, field_count):
-        self.faker.upload_data().get_list_in_db(
+        self.faker.upload_data().get_list(save=True, 
             item_count=field_count, upload=self.existing
         )
 
@@ -79,7 +79,7 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
         "file_count", [1, 3, 5]
     )
     def test__post__files_deleted(self, file_count):
-        files = self.faker.upload_file().get_list_in_db(
+        files = self.faker.upload_file().get_list(save=True, 
             item_count=file_count, upload=self.existing
         )
 
@@ -104,12 +104,12 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
     )
     def test__post__other_upload_files_not_deleted(self, file_count):
         other_upload = self.faker.upload().get(save=True, )
-        other_files = self.faker.upload_file().get_list_in_db(
+        other_files = self.faker.upload_file().get_list(save=True, 
             item_count=file_count, upload=other_upload
         )
         self.faker.upload_file().create_files_in_filesystem(other_files)
 
-        files = self.faker.upload_file().get_list_in_db(
+        files = self.faker.upload_file().get_list(save=True, 
             item_count=file_count, upload=self.existing
         )
         self.faker.upload_file().create_files_in_filesystem(files)

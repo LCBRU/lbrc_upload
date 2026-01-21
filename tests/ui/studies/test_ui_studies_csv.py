@@ -69,7 +69,7 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
 
     @pytest.mark.parametrize("upload_count", [0, 2, 3, 100])
     def test__get__no_filters(self, upload_count):
-        uploads = self.faker.upload().get_list_in_db(item_count=upload_count, study=self.existing_study, uploader=self.loggedin_user)
+        uploads = self.faker.upload().get_list(save=True, item_count=upload_count, study=self.existing_study, uploader=self.loggedin_user)
 
         resp = self.get()
         assert resp.status_code == http.HTTPStatus.OK
@@ -83,8 +83,8 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
     @pytest.mark.parametrize("upload_count", [0, 2, 3, 100])
     @pytest.mark.parametrize("field_count", [1, 3, 5])
     def test__get__with_multiple_fields(self, upload_count, field_count):
-        fields = self.faker.field().get_list_in_db(item_count=field_count, field_group=self.existing_study.field_group, field_type=FieldType.get_string())
-        uploads = self.faker.upload().get_list_in_db(item_count=upload_count, study=self.existing_study, uploader=self.loggedin_user)
+        fields = self.faker.field().get_list(save=True, item_count=field_count, field_group=self.existing_study.field_group, field_type=FieldType.get_string())
+        uploads = self.faker.upload().get_list(save=True, item_count=upload_count, study=self.existing_study, uploader=self.loggedin_user)
 
         for u in uploads:
             for f in fields:

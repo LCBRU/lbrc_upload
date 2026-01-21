@@ -74,7 +74,7 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         assert__redirect(resp, endpoint='ui.study', study_id=study.id)
 
     def test__owns_multiple_studies__no_redirect(self):
-        studies = self.faker.study().get_list_in_db(item_count=2, owner=self.loggedin_user)
+        studies = self.faker.study().get_list(save=True, item_count=2, owner=self.loggedin_user)
         studies = self.sort_studies(studies)
         resp = self.get()
 
@@ -95,7 +95,7 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         assert__redirect(resp, endpoint='ui.study_my_uploads', study_id=study.id)
 
     def test__collab_on_multiple_studies__no_redirect(self):
-        studies = self.faker.study().get_list_in_db(item_count=2, collaborator=self.loggedin_user)
+        studies = self.faker.study().get_list(save=True, item_count=2, collaborator=self.loggedin_user)
         studies = self.sort_studies(studies)
 
         resp = self.get()
@@ -129,9 +129,9 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         # uploads by users other than ourselves
         users = cycle([self.loggedin_user, other_user])
 
-        outstanding_uploads = self.faker.upload().get_list_in_db(item_count=outstanding, study=study, uploader=next(users))
-        completed_uploads = self.faker.upload().get_list_in_db(item_count=completed, study=study, completed=True, uploader=next(users))
-        deleted_uploads = self.faker.upload().get_list_in_db(item_count=deleted, study=study, deleted=True, uploader=next(users))
+        outstanding_uploads = self.faker.upload().get_list(save=True, item_count=outstanding, study=study, uploader=next(users))
+        completed_uploads = self.faker.upload().get_list(save=True, item_count=completed, study=study, completed=True, uploader=next(users))
+        deleted_uploads = self.faker.upload().get_list(save=True, item_count=deleted, study=study, deleted=True, uploader=next(users))
 
         resp = self.get()
 

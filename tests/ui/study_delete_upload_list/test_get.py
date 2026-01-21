@@ -47,7 +47,7 @@ class TestSiteDeletePost(StudyDeleteUploadListTester, FlaskViewLoggedInTester):
         "upload_count", [0, 1, 3, 5]
     )
     def test__get__valid(self, upload_count):
-        uploads = self.faker.upload().get_list_in_db(
+        uploads = self.faker.upload().get_list(save=True, 
             item_count=upload_count, study=self.existing
         )
         for u in uploads:

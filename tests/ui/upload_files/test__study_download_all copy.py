@@ -44,12 +44,12 @@ class TestStudyDownloadAll(StudyDownloadAllViewTester, FlaskViewLoggedInTester):
         "file_count", [0, 1, 3, 5]
     )
     def test__post__valid(self, upload_count, file_count):
-        uploads = self.faker.upload().get_list_in_db(
+        uploads = self.faker.upload().get_list(save=True, 
             item_count=upload_count, study=self.study
         )
 
         for upload in uploads:
-            files = self.faker.upload_file().get_list_in_db(
+            files = self.faker.upload_file().get_list(save=True, 
                 item_count=file_count, upload=self.existing
             )
             self.faker.upload_file().create_files_in_filesystem(files)

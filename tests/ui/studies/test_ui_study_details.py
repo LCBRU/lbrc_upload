@@ -73,7 +73,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
 
         users = cycle([other_user, self.loggedin_user])        
 
-        uploads = self.faker.upload().get_list_in_db(item_count=upload_count, study=self.existing_study, uploader=next(users))
+        uploads = self.faker.upload().get_list(save=True, item_count=upload_count, study=self.existing_study, uploader=next(users))
         uploads = sorted(uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
 
         for u in uploads:
@@ -94,13 +94,13 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
     def test__get__search_study_number(self, matching_count, unmatching_count, current_page):
         other_user = self.faker.user().get(save=True)
         
-        matching_uploads = self.faker.upload().get_list_in_db(item_count=matching_count, study=self.existing_study, uploader=self.loggedin_user, study_number='fred')
+        matching_uploads = self.faker.upload().get_list(save=True, item_count=matching_count, study=self.existing_study, uploader=self.loggedin_user, study_number='fred')
         matching_uploads = sorted(matching_uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
 
         for u in matching_uploads:
             self.faker.upload_file().get(save=True, upload=u)
 
-        non_matching_uploads = self.faker.upload().get_list_in_db(item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
+        non_matching_uploads = self.faker.upload().get_list(save=True, item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
 
         self.parameters['search'] = 'fred'
         self.parameters['page'] = current_page
