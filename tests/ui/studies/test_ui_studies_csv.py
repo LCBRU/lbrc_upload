@@ -12,8 +12,8 @@ class StudiesCsvTester:
 
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker):
-        self.owner_user = faker.user().get_in_db()
-        self.existing_study: Study = faker.study().get_in_db(owner=self.owner_user)
+        self.owner_user = faker.user().get(save=True)
+        self.existing_study: Study = faker.study().get(save=True, owner=self.owner_user)
         self.parameters = dict(study_id=self.existing_study.id)
 
 
@@ -45,7 +45,7 @@ class TestStudiesCsvRequiresRole(StudiesCsvTester, RequiresRoleTester):
 
     @property
     def user_without_required_role(self):
-        return self.faker.user().get_in_db()
+        return self.faker.user().get(save=True)
 
 
 class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
@@ -60,11 +60,11 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
     owner_user = None
 
     def user_to_login(self, faker):
-        return faker.user().get_in_db()
+        return faker.user().get(save=True)
 
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker, login_fixture):
-        self.existing_study: Study = faker.study().get_in_db(owner=self.loggedin_user)
+        self.existing_study: Study = faker.study().get(save=True, owner=self.loggedin_user)
         self.parameters = dict(study_id=self.existing_study.id)
 
     @pytest.mark.parametrize("upload_count", [0, 2, 3, 100])
@@ -88,7 +88,7 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
 
         for u in uploads:
             for f in fields:
-                self.faker.upload_data().get_in_db(upload=u, field=f)
+                self.faker.upload_data().get(save=True, upload=u, field=f)
 
         resp = self.get()
         assert resp.status_code == http.HTTPStatus.OK
@@ -103,9 +103,9 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
 
     @pytest.mark.parametrize("value", [True, False])
     def test__get__boolean_field(self, value):
-        field = self.faker.field().get_in_db(field_group=self.existing_study.field_group, field_type=FieldType.get_boolean())
-        upload = self.faker.upload().get_in_db(study=self.existing_study, uploader=self.loggedin_user)
-        self.faker.upload_data().get_in_db(upload=upload, field=field, value=str(value))
+        field = self.faker.field().get(save=True, field_group=self.existing_study.field_group, field_type=FieldType.get_boolean())
+        upload = self.faker.upload().get(save=True, study=self.existing_study, uploader=self.loggedin_user)
+        self.faker.upload_data().get(save=True, upload=upload, field=field, value=str(value))
 
         resp = self.get()
 

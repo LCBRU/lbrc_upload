@@ -19,7 +19,7 @@ class UploadDeleteViewTester(UploadViewTester):
 
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker):
-        self.existing = faker.upload().get_in_db()
+        self.existing = faker.upload().get(save=True, )
         self.parameters['id'] = self.existing.id
 
 
@@ -34,14 +34,14 @@ class TestUploadDeleteRequiresOwner(UploadDeleteViewTester, RequiresRoleTester):
 
     @property
     def user_without_required_role(self):
-        return self.faker.user().get_in_db()
+        return self.faker.user().get(save=True, )
 
 
 class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker, login_fixture):
-        self.study = faker.study().get_in_db(owner=self.loggedin_user)
-        self.existing = faker.upload().get_in_db(study=self.study)
+        self.study = faker.study().get(save=True, owner=self.loggedin_user)
+        self.existing = faker.upload().get(save=True, study=self.study)
         self.parameters['id'] = self.existing.id
 
     def test__post__valid(self):
@@ -103,7 +103,7 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
         "file_count", [1, 3, 5]
     )
     def test__post__other_upload_files_not_deleted(self, file_count):
-        other_upload = self.faker.upload().get_in_db()
+        other_upload = self.faker.upload().get(save=True, )
         other_files = self.faker.upload_file().get_list_in_db(
             item_count=file_count, upload=other_upload
         )

@@ -16,7 +16,7 @@ class StudyDetailsTester:
 
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker):
-        self.existing_study: Study = faker.study().get_in_db()
+        self.existing_study: Study = faker.study().get(save=True)
         self.parameters = dict(study_id=self.existing_study.id)
 
 
@@ -27,13 +27,13 @@ class TestStudyDetailsRequiresLogin(StudyDetailsTester, RequiresLoginTester):
 class TestStudyRequiresRole(StudyDetailsTester, RequiresRoleTester):
     @property
     def user_with_required_role(self):
-        owner_user = self.faker.user().get_in_db()
+        owner_user = self.faker.user().get(save=True)
         self.existing_study.owners.append(owner_user)
         return owner_user
 
     @property
     def user_without_required_role(self):
-        return self.faker.user().get_in_db()
+        return self.faker.user().get(save=True)
 
 
 class StudyRowContentAsserter(PanelListContentAsserter):
@@ -54,11 +54,11 @@ class StudyRowContentAsserter(PanelListContentAsserter):
 
 class TestStudyIndex(StudyDetailsTester, IndexTester):
     def user_to_login(self, faker):
-        return faker.user().get_in_db()
+        return faker.user().get(save=True)
 
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker, login_fixture):
-        self.existing_study: Study = faker.study().get_in_db(owner=self.loggedin_user)
+        self.existing_study: Study = faker.study().get(save=True, owner=self.loggedin_user)
         self.parameters = dict(study_id=self.existing_study.id)
 
     @property
@@ -68,7 +68,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
     @pytest.mark.parametrize("upload_count", PagedResultSet.test_page_edges())
     @pytest.mark.parametrize("current_page", PagedResultSet.test_current_pages())
     def test__get__no_filters(self, upload_count, current_page):
-        other_user = self.faker.user().get_in_db()
+        other_user = self.faker.user().get(save=True)
         self.existing_study.collaborators.append(other_user)
 
         users = cycle([other_user, self.loggedin_user])        
@@ -77,7 +77,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
         uploads = sorted(uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
 
         for u in uploads:
-            self.faker.upload_file().get_in_db(upload=u)
+            self.faker.upload_file().get(save=True, upload=u)
 
         self.parameters['page'] = current_page
 
@@ -92,13 +92,13 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
     @pytest.mark.parametrize("unmatching_count", [0, 1, 2])
     @pytest.mark.parametrize("current_page", PagedResultSet.test_current_pages())
     def test__get__search_study_number(self, matching_count, unmatching_count, current_page):
-        other_user = self.faker.user().get_in_db()
+        other_user = self.faker.user().get(save=True)
         
         matching_uploads = self.faker.upload().get_list_in_db(item_count=matching_count, study=self.existing_study, uploader=self.loggedin_user, study_number='fred')
         matching_uploads = sorted(matching_uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
 
         for u in matching_uploads:
-            self.faker.upload_file().get_in_db(upload=u)
+            self.faker.upload_file().get(save=True, upload=u)
 
         non_matching_uploads = self.faker.upload().get_list_in_db(item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
 
@@ -117,8 +117,8 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
         db.session.add(self.existing_study)
         db.session.commit()
         
-        upload = self.faker.upload().get_in_db(study=self.existing_study, uploader=self.loggedin_user)
-        upload_file = self.faker.upload_file().get_in_db(upload=upload, size=90)
+        upload = self.faker.upload().get(save=True, study=self.existing_study, uploader=self.loggedin_user)
+        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=90)
 
         resp = self.get()
 
@@ -129,8 +129,8 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
         db.session.add(self.existing_study)
         db.session.commit()
         
-        upload = self.faker.upload().get_in_db(study=self.existing_study, uploader=self.loggedin_user)
-        upload_file = self.faker.upload_file().get_in_db(upload=upload, size=79)
+        upload = self.faker.upload().get(save=True, study=self.existing_study, uploader=self.loggedin_user)
+        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=79)
 
         resp = self.get()
 

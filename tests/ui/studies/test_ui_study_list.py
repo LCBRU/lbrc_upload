@@ -69,7 +69,7 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         assert self.get_study_table_count(resp) == 0
 
     def test__owns_1_study__redirects(self):
-        study = self.faker.study().get_in_db(owner=self.loggedin_user)
+        study = self.faker.study().get(save=True, owner=self.loggedin_user)
         resp = self.get(expected_status_code=http.HTTPStatus.FOUND)
         assert__redirect(resp, endpoint='ui.study', study_id=study.id)
 
@@ -90,7 +90,7 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         ).assert_all(resp)
 
     def test__collab_on_1_study__redirects(self):
-        study = self.faker.study().get_in_db(collaborator=self.loggedin_user)
+        study = self.faker.study().get(save=True, collaborator=self.loggedin_user)
         resp = self.get(expected_status_code=http.HTTPStatus.FOUND)
         assert__redirect(resp, endpoint='ui.study_my_uploads', study_id=study.id)
 
@@ -116,10 +116,10 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         [(2, 2, 0), (3, 0, 4), (2, 2, 2), (3, 0, 0)],
     )
     def test__study_list__owned_study__upload_count(self, outstanding, completed, deleted):
-        other_user = self.faker.user().get_in_db()
+        other_user = self.faker.user().get(save=True)
 
-        study = self.faker.study().get_in_db(owner=self.loggedin_user)
-        study2 = self.faker.study().get_in_db(owner=self.loggedin_user) # second study so we don't get redirected
+        study = self.faker.study().get(save=True, owner=self.loggedin_user)
+        study2 = self.faker.study().get(save=True, owner=self.loggedin_user) # second study so we don't get redirected
 
         studies = self.sort_studies([study, study2])
 

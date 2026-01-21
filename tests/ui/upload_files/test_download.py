@@ -10,11 +10,11 @@ class UploadFileDownloadViewTester:
 
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker):
-        self.collaborator = faker.user().get_in_db()
-        self.owner = faker.user().get_in_db()
-        self.study = faker.study().get_in_db(owner=self.owner, collaborator=self.collaborator)
-        self.upload = faker.upload().get_in_db(study=self.study)
-        self.existing = faker.upload_file().get_in_db(upload=self.upload)
+        self.collaborator = faker.user().get(save=True)
+        self.owner = faker.user().get(save=True)
+        self.study = faker.study().get(save=True, owner=self.owner, collaborator=self.collaborator)
+        self.upload = faker.upload().get(save=True, study=self.study)
+        self.existing = faker.upload_file().get(save=True, upload=self.upload)
         self.file_contents = faker.text()
 
         filename = self.existing.upload_filepath()
@@ -37,7 +37,7 @@ class TestUploadFileDownloadRequiresOwner(UploadFileDownloadViewTester, Requires
 
     @property
     def user_without_required_role(self):
-        return self.faker.user().get_in_db()
+        return self.faker.user().get(save=True)
 
 
 class TestUploadFileDownloadDeniesCollaborator(UploadFileDownloadViewTester, RequiresRoleTester):

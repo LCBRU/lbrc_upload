@@ -12,7 +12,7 @@ class UploadDownloadAllViewTester(UploadViewTester):
 
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker):
-        self.existing = faker.upload().get_in_db()
+        self.existing = faker.upload().get(save=True)
         self.parameters['id'] = self.existing.id
 
 
@@ -27,14 +27,14 @@ class TestUploadDownloadAllRequiresOwner(UploadDownloadAllViewTester, RequiresRo
 
     @property
     def user_without_required_role(self):
-        return self.faker.user().get_in_db()
+        return self.faker.user().get(save=True)
 
 
 class TestUploadDownloadAll(UploadDownloadAllViewTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker, login_fixture):
-        self.study = faker.study().get_in_db(owner=self.loggedin_user)
-        self.existing = faker.upload().get_in_db(study=self.study)
+        self.study = faker.study().get(save=True, owner=self.loggedin_user)
+        self.existing = faker.upload().get(save=True, study=self.study)
         self.parameters['id'] = self.existing.id
 
     @pytest.mark.parametrize(

@@ -25,7 +25,7 @@ class MyUploadsIndexTester:
 
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker):
-        self.existing_study: Study = faker.study().get_in_db()
+        self.existing_study: Study = faker.study().get(save=True)
         self.parameters = dict(study_id=self.existing_study.id)
 
 
@@ -36,13 +36,13 @@ class TestMyUploadsIndexRequiresLogin(MyUploadsIndexTester, RequiresLoginTester)
 class TestMyUploadsIndexRequiresRole(MyUploadsIndexTester, RequiresRoleTester):
     @property
     def user_with_required_role(self):
-        collab_user = self.faker.user().get_in_db()
+        collab_user = self.faker.user().get(save=True)
         self.existing_study.collaborators.append(collab_user)
         return collab_user
 
     @property
     def user_without_required_role(self):
-        return self.faker.user().get_in_db()
+        return self.faker.user().get(save=True)
 
 
 class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
@@ -54,7 +54,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
     @pytest.mark.parametrize("other_user_study_count", [0, 1, 2])
     @pytest.mark.parametrize("current_page", PagedResultSet.test_current_pages())
     def test__get__no_filters(self, my_study_count, other_user_study_count, current_page):
-        other_user = self.faker.user().get_in_db()
+        other_user = self.faker.user().get(save=True)
         
         self.existing_study.collaborators.append(self.loggedin_user)
 
@@ -76,7 +76,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
     @pytest.mark.parametrize("unmatching_count", [0, 1, 2])
     @pytest.mark.parametrize("current_page", PagedResultSet.test_current_pages())
     def test__get__search_study_number(self, matching_count, unmatching_count, current_page):
-        other_user = self.faker.user().get_in_db()
+        other_user = self.faker.user().get(save=True)
         
         self.existing_study.collaborators.append(self.loggedin_user)
 

@@ -15,12 +15,12 @@ def standard_lookups(client, faker):
 
 @pytest.fixture(scope="function")
 def collaborator_study(client, faker, loggedin_user):
-    return faker.study().get_in_db(collaborator=loggedin_user)
+    return faker.study().get(save=True, collaborator=loggedin_user)
 
 
 @pytest.fixture(scope="function")
 def owned_study(client, faker, loggedin_user):
-    return faker.study().get_in_db(owner=loggedin_user)
+    return faker.study().get(save=True, owner=loggedin_user)
 
 
 @pytest.fixture(scope="function")
