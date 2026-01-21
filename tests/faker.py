@@ -51,7 +51,7 @@ class StudyCreator(FakeCreator):
         name = args.get('name', self.faker.unique.pystr(min_chars=10, max_chars=20).lower())
         owner = args.get_or_create('owner', self.faker.user())
         collaborator = args.get_or_create('collaborator', self.faker.user())
-        field_group = args.get('field_group', self.faker.field_group().get(name=name))
+        field_group = args.get('field_group', self.faker.field_group().get(save=save, name=name))
         study_number_format = args.get('study_number_format')
         allow_duplicate_study_number = args.get('allow_duplicate_study_number', False)
         size_limit = args.get('size_limit')
@@ -114,7 +114,7 @@ class UploadFileCreator(FakeCreator):
 
     def _create_item(self, save: bool, args: FakeCreatorArgs):
         upload = args.get_or_create('upload', self.faker.upload())
-        field = args.get('field', self.faker.field().get(field_type=FieldType.get_file(), field_group=upload.study.field_group))
+        field = args.get('field', self.faker.field().get(save=save, field_type=FieldType.get_file(), field_group=upload.study.field_group))
         filename = args.get('filename', self.faker.file_name())
         size = args.get("size")
 

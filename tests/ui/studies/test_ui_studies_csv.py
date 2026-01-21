@@ -28,6 +28,8 @@ class StudyCsvAsserter(CsvDownloadContentAsserter):
         assert row['uploaded_by'] == expected_result.uploader.full_name
         assert row['date_created'] == expected_result.date_created.strftime("%Y-%m-%d %H:%M:%S")
 
+        print([fd.value for fd in expected_result.data])
+        print(row)
         for field_data in expected_result.data:
             assert row[field_data.field_name] == field_data.value
 
