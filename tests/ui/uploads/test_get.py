@@ -28,9 +28,9 @@ class UploadGetViewTester(UploadViewTester):
 
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker):
-        self.collaborator = faker.user().get_in_db()
-        self.owner = faker.user().get_in_db()
-        self.study = faker.study().get_in_db(owner=self.owner, collaborator=self.collaborator, size_limit=self.SIZE_LIMIT)
+        self.collaborator = faker.user().get(save=True)
+        self.owner = faker.user().get(save=True)
+        self.study = faker.study().get(save=True, owner=self.owner, collaborator=self.collaborator, size_limit=self.SIZE_LIMIT)
 
         self.parameters['study_id'] = self.study.id
 
@@ -52,7 +52,7 @@ class TestUploadGetRequiresCollaborator(UploadGetViewTester, RequiresRoleTester)
 class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker, login_fixture):
-        self.study = faker.study().get_in_db(collaborator=self.loggedin_user, size_limit=self.SIZE_LIMIT)
+        self.study = faker.study().get(save=True, collaborator=self.loggedin_user, size_limit=self.SIZE_LIMIT)
 
         self.parameters['study_id'] = self.study.id
 
@@ -66,14 +66,14 @@ class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
             a.assert_all(resp)
 
     def test__get__valid(self):
-        upload = self.faker.upload().get_in_db(study=self.study)
-        upload_file = self.faker.upload_file().get_in_db(upload=upload, size=self.SIZE_LIMIT - 1)
+        upload = self.faker.upload().get(save=True, study=self.study)
+        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=self.SIZE_LIMIT - 1)
         resp = self.get()
         self.assert_response(resp)
 
     def test__get__space_exceeded(self):
-        upload = self.faker.upload().get_in_db(study=self.study)
-        upload_file = self.faker.upload_file().get_in_db(upload=upload, size=self.SIZE_LIMIT + 1)
+        upload = self.faker.upload().get(save=True, study=self.study)
+        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=self.SIZE_LIMIT + 1)
         resp = self.get()
         assert__refresh_response(resp)
 
@@ -83,7 +83,8 @@ class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
         FieldType.all_non_choices_field_types(),
     )
     def test__uget__form_dynamic_input(self, field_type_name):
-        field = self.faker.field().get_in_db(
+        field = self.faker.field().get(
+            save=True,
             field_type=FieldType._get_field_type(field_type_name),
             field_group=self.study.field_group,
             order=1,
@@ -103,7 +104,8 @@ class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
             "z": "z",
         }
 
-        field = self.faker.field().get_in_db(
+        field = self.faker.field().get(
+            save=True,
             field_type=FieldType._get_field_type(field_type_name),
             field_group=self.study.field_group,
             order=1,
@@ -114,12 +116,14 @@ class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
         assert__input_with_options(resp.soup, field_type_name, field.field_name, options=options)
 
     def test__get__multiple_fields(self):
-        field1 = self.faker.field().get_in_db(
+        field1 = self.faker.field().get(
+            save=True,
             field_type=FieldType.get_textarea(),
             field_group=self.study.field_group,
             order=1,
         )
-        field2 = self.faker.field().get_in_db(
+        field2 = self.faker.field().get(
+            save=True,
             field_type=FieldType.get_string(),
             field_group=self.study.field_group,
             order=2,

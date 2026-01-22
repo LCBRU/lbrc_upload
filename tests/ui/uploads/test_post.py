@@ -25,9 +25,9 @@ class UploadGetViewTester(UploadViewTester):
 
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker):
-        self.collaborator = faker.user().get_in_db()
-        self.owner = faker.user().get_in_db()
-        self.study = faker.study().get_in_db(owner=self.owner, collaborator=self.collaborator, size_limit=self.SIZE_LIMIT)
+        self.collaborator = faker.user().get(save=True)
+        self.owner = faker.user().get(save=True)
+        self.study = faker.study().get(save=True, owner=self.owner, collaborator=self.collaborator, size_limit=self.SIZE_LIMIT)
 
         self.parameters['study_id'] = self.study.id
 
@@ -49,7 +49,7 @@ class TestUploadPostRequiresCollaborator(UploadGetViewTester, RequiresRoleTester
 class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
     def set_original(self, client, faker, login_fixture):
-        self.study = faker.study().get_in_db(collaborator=self.loggedin_user, size_limit=self.SIZE_LIMIT)
+        self.study = faker.study().get(save=True, collaborator=self.loggedin_user, size_limit=self.SIZE_LIMIT)
 
         self.parameters['study_id'] = self.study.id
 
@@ -166,7 +166,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
     def test__post__study_number__duplicate_not_allowed(self):
         study_number = "UNIQUE123"
 
-        original_upload = self.faker.upload().get_in_db(study=self.study, study_number=study_number)
+        original_upload = self.faker.upload().get(save=True, study=self.study, study_number=study_number)
 
         resp = self.post(self.study_data(study_number=study_number))
 
@@ -180,7 +180,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
 
         study_number = "UNIQUE123"
 
-        original_upload = self.faker.upload().get_in_db(study=self.study, study_number=study_number)
+        original_upload = self.faker.upload().get(save=True, study=self.study, study_number=study_number)
 
         resp = self.post(self.study_data(study_number=study_number))
 
@@ -190,8 +190,8 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
     def test__post__study_number__duplicate_allowed_on_different_studies(self):
         study_number = "UNIQUE123"
 
-        another_study = self.faker.study().get_in_db()
-        original_upload = self.faker.upload().get_in_db(study=another_study, study_number=study_number)
+        another_study = self.faker.study().get(save=True)
+        original_upload = self.faker.upload().get(save=True, study=another_study, study_number=study_number)
 
         resp = self.post(self.study_data(study_number=study_number))
 
@@ -208,7 +208,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         ],
     )
     def test__post__BooleanField(self, required, value, should_be_loaded, saved_value):
-        field = self.faker.field().get_in_db(field_group=self.study.field_group, field_type=FieldType.get_boolean(), required=required)
+        field = self.faker.field().get(save=True, field_group=self.study.field_group, field_type=FieldType.get_boolean(), required=required)
 
         self.post_and_assert_field(value, should_be_loaded, field, saved_value=saved_value)
 
@@ -222,7 +222,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         ],
     )
     def test__post__IntegerField(self, required, value, should_be_loaded):
-        field = self.faker.field().get_in_db(field_group=self.study.field_group, field_type=FieldType.get_integer(), required=required)
+        field = self.faker.field().get(save=True, field_group=self.study.field_group, field_type=FieldType.get_integer(), required=required)
 
         self.post_and_assert_field(value, should_be_loaded, field)
 
@@ -236,7 +236,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         ],
     )
     def test__post__RadioField(self, required, value, should_be_loaded):
-        field = self.faker.field().get_in_db(field_group=self.study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
+        field = self.faker.field().get(save=True, field_group=self.study.field_group, field_type=FieldType.get_radio(), choices="xy|z", required=required)
 
         self.post_and_assert_field(value, should_be_loaded, field)
 
@@ -250,7 +250,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         ],
     )
     def test__post__StringField(self, required, max_length, value, should_be_loaded):
-        field = self.faker.field().get_in_db(field_group=self.study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
+        field = self.faker.field().get(save=True, field_group=self.study.field_group, field_type=FieldType.get_string(), max_length=max_length, required=required)
 
         self.post_and_assert_field(value, should_be_loaded, field)
 
@@ -264,7 +264,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         ],
     )
     def test__post__FileField(self, required, allowed_file_extensions, extension, should_be_loaded):
-        field = self.faker.field().get_in_db(field_group=self.study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
+        field = self.faker.field().get(save=True, field_group=self.study.field_group, field_type=FieldType.get_file(), allowed_file_extensions=allowed_file_extensions, required=required)
 
         content = self.faker.text()
         filename = self.faker.file_name(extension=extension)
