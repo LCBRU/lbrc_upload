@@ -108,6 +108,6 @@ database.sqlite3
 file_uploads
 .vscode
 src
-uploads
+file_uploads
 temp
 requirements.dev
