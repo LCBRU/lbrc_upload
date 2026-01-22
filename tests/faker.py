@@ -32,7 +32,7 @@ class UserCreator(FakeCreator):
         username = args.get('username', self.faker.pystr(min_chars=5, max_chars=10).lower())
         email = args.get('email', self.faker.unique.email())
         active = args.get('active', True)
-        site = args.get_or_create('site', self.faker.site())
+        site = args.get('site', lambda: self.faker.site().get(save=save))
 
         return User(
             first_name=first_name,
@@ -49,8 +49,8 @@ class StudyCreator(FakeCreator):
 
     def _create_item(self, save: bool, args: FakeCreatorArgs):
         name = args.get('name', self.faker.unique.pystr(min_chars=10, max_chars=20).lower())
-        owner = args.get_or_create('owner', self.faker.user())
-        collaborator = args.get_or_create('collaborator', self.faker.user())
+        owner = args.get('owner', lambda: self.faker.user().get(save=save))
+        collaborator = args.get('collaborator', lambda: self.faker.user().get(save=save))
         field_group = args.get('field_group', self.faker.field_group().get(save=save, name=name))
         study_number_format = args.get('study_number_format')
         allow_duplicate_study_number = args.get('allow_duplicate_study_number', False)
@@ -74,8 +74,8 @@ class UploadCreator(FakeCreator):
     cls = Upload
 
     def _create_item(self, save: bool, args: FakeCreatorArgs):
-        study = args.get_or_create('study', self.faker.study())
-        uploader = args.get_or_create('uploader', self.faker.user())
+        study = args.get('study', lambda: self.faker.study().get(save=save))
+        uploader = args.get('uploader', lambda: self.faker.user().get(save=save))
         study_number = args.get('study_number', self.faker.pystr(min_chars=5, max_chars=10).upper())
         completed = args.get('completed', False)
         deleted = args.get('deleted', False)
@@ -99,7 +99,7 @@ class UploadDataCreator(FakeCreator):
             field_group = args.get('field_group', self.faker.field_group().get(save=save))
             field = self.faker.field().get(field_type=field_type, field_group=field_group, save=save)
 
-        upload = args.get_or_create('upload', self.faker.upload())
+        upload = args.get('upload', lambda: self.faker.upload().get(save=save))
         value = args.get('value', self.faker.pystr(min_chars=5, max_chars=10).upper())
 
         return UploadData(
@@ -113,7 +113,7 @@ class UploadFileCreator(FakeCreator):
     cls = UploadFile
 
     def _create_item(self, save: bool, args: FakeCreatorArgs):
-        upload = args.get_or_create('upload', self.faker.upload())
+        upload = args.get('upload', lambda: self.faker.upload().get(save=save))
         field = args.get('field', self.faker.field().get(save=save, field_type=FieldType.get_file(), field_group=upload.study.field_group))
         filename = args.get('filename', self.faker.file_name())
         size = args.get("size")
