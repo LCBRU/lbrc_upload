@@ -4,7 +4,7 @@ from lbrc_flask.model import CommonMixin
 from sqlalchemy import func
 
 
-class Site(db.Model, CommonMixin):
+class Site(CommonMixin, db.Model):
 
     LBRC = "Leicester Biomedical Research Centre"
 
