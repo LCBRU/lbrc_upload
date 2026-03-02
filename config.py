@@ -7,5 +7,4 @@ class Config(BaseConfig):
 
 
 class TestConfig(BaseTestConfig):
-    FILE_UPLOAD_DIRECTORY = os.getenv("TEST_FILE_UPLOAD_DIRECTORY", Config.FILE_UPLOAD_DIRECTORY)
     TEMP_DIRECTORY = Config.TEMP_DIRECTORY
