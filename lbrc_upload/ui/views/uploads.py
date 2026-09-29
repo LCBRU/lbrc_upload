@@ -63,6 +63,7 @@ def upload_data(study_id):
         "lbrc/form_modal.html",
         title=f"Upload data to study {study.name}",
         form=form,
+        submit_label="Upload",
         url=url_for('ui.upload_data', study_id=study.id),
     )
 
