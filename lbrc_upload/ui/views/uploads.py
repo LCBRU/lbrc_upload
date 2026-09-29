@@ -1,30 +1,25 @@
 from pathlib import Path
-from flask import (
-    render_template,
-    url_for,
-    request,
-    flash,
-    send_file
-)
 
+from flask import flash, render_template, request, send_file, url_for
 from flask_security import current_user
+from lbrc_flask.database import db
+from lbrc_flask.emailing import email
+from lbrc_flask.response import refresh_response
 from sqlalchemy import func, select
 from wtforms import ValidationError
-from lbrc_upload.model.upload import Upload, UploadData, UploadFile
-from lbrc_upload.model.study import Study
-from lbrc_upload.services.studies import get_study_uploads_query
-from lbrc_upload.services.uploads import delete_upload, mass_upload_download
-from lbrc_upload.ui.forms import UploadFormBuilder
+
 from lbrc_upload.decorators import (
     must_be_study_collaborator,
+    must_be_study_owner,
     must_be_upload_file_study_owner,
     must_be_upload_study_owner,
-    must_be_study_owner,
 )
-from lbrc_upload.ui.forms import UploadSearchForm
-from lbrc_flask.emailing import email
-from lbrc_flask.database import db
-from lbrc_flask.response import refresh_response
+from lbrc_upload.model.study import Study
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
+from lbrc_upload.services.studies import get_study_uploads_query
+from lbrc_upload.services.uploads import delete_upload, mass_upload_download
+from lbrc_upload.ui.forms import UploadFormBuilder, UploadSearchForm
+
 from .. import blueprint
 
 
