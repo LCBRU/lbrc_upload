@@ -1,13 +1,13 @@
 import humanize
-from sqlalchemy import Integer
-from sqlalchemy.sql import func
-from lbrc_flask.security import AuditMixin
 from lbrc_flask.database import db
-from lbrc_flask.model import CommonMixin
 from lbrc_flask.forms.dynamic import FieldGroup
+from lbrc_flask.model import CommonMixin
+from lbrc_flask.security import AuditMixin
+from sqlalchemy import Integer
 from sqlalchemy.orm import Mapped, mapped_column
-from lbrc_upload.model.user import User
+from sqlalchemy.sql import func
 
+from lbrc_upload.model.user import User
 
 studies_owners = db.Table(
     "studies_owners",
