@@ -2,13 +2,15 @@ import os
 from functools import cache
 from random import choice
 from typing import Optional
-from lbrc_flask.forms.dynamic import FieldType
-from lbrc_upload.model.upload import Upload, UploadData, UploadFile
-from lbrc_upload.model.study import Study
-from lbrc_upload.model.user import User, Site
-from lbrc_flask.pytest.faker import FakeCreator, FakeCreatorArgs
-from lbrc_flask.database import db
+
 from faker.providers import BaseProvider
+from lbrc_flask.database import db
+from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.pytest.faker import FakeCreator, FakeCreatorArgs
+
+from lbrc_upload.model.study import Study
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
+from lbrc_upload.model.user import Site, User
 
 
 class SiteCreator(FakeCreator):

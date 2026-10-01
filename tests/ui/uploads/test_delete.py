@@ -1,10 +1,16 @@
 import http
 import os
+
 import pytest
-from lbrc_flask.pytest.asserts import assert__refresh_response
-from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, RequiresRoleTester
-from lbrc_upload.model.upload import Upload
 from lbrc_flask.database import db
+from lbrc_flask.pytest.asserts import assert__refresh_response
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+
+from lbrc_upload.model.upload import Upload
 from tests.ui.uploads import UploadViewTester
 
 
@@ -54,7 +60,7 @@ class TestSiteDeletePost(UploadDeleteViewTester, FlaskViewLoggedInTester):
 
     def test__post__id_invalid(self):
         self.parameters['id'] = self.existing.id + 1
-        resp = self.post(expected_status_code=http.HTTPStatus.NOT_FOUND)
+        self.post(expected_status_code=http.HTTPStatus.NOT_FOUND)
 
         self.assert_db_count(1)
 

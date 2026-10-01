@@ -1,7 +1,9 @@
 import csv
-from sqlalchemy import or_, select
-from lbrc_upload.model.upload import Upload
+
 from lbrc_flask.database import db
+from sqlalchemy import or_, select
+
+from lbrc_upload.model.upload import Upload
 
 
 def get_study_uploads_query(study_id, search_data):
@@ -11,17 +13,14 @@ def get_study_uploads_query(study_id, search_data):
         for word in x.split():
             q = q.where(Upload.study_number.like(f"%{word}%"))
 
-    if (x := search_data.get('showCompleted')) is not None:
-        if not x:
-            q = q.where(Upload.completed == 0)
+    if (x := search_data.get('showCompleted')) is not None and not x:
+        q = q.where(Upload.completed == 0)
 
-    if (x := search_data.get('showDeleted')) is not None:
-        if not x:
-            q = q.where(Upload.deleted == 0)
+    if (x := search_data.get('showDeleted')) is not None and not x:
+        q = q.where(Upload.deleted == 0)
 
-    if (x := search_data.get('hideOutstanding')) is not None:
-        if x:
-            q = q.where(or_(Upload.deleted == 1, Upload.completed == 1))
+    if (x := search_data.get('hideOutstanding')) is not None and x:
+        q = q.where(or_(Upload.deleted == 1, Upload.completed == 1))
 
     return q
 

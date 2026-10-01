@@ -1,12 +1,20 @@
-from itertools import cycle
-from lbrc_upload.model.study import Study
-from lbrc_flask.pytest.asserts import assert__htmx_post_button
-from lbrc_flask.python_helpers import sort_descending
-from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, IndexTester, PanelListContentAsserter, PagedResultSet
-import pytest
 import re
+from itertools import cycle
+
+import pytest
 from flask import url_for
 from lbrc_flask.database import db
+from lbrc_flask.pytest.asserts import assert__htmx_post_button
+from lbrc_flask.pytest.testers import (
+    IndexTester,
+    PagedResultSet,
+    PanelListContentAsserter,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+from lbrc_flask.python_helpers import sort_descending
+
+from lbrc_upload.model.study import Study
 
 
 class StudyDetailsTester:
@@ -17,7 +25,7 @@ class StudyDetailsTester:
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker):
         self.existing_study: Study = faker.study().get(save=True)
-        self.parameters = dict(study_id=self.existing_study.id)
+        self.parameters = {'study_id': self.existing_study.id}
 
 
 class TestStudyDetailsRequiresLogin(StudyDetailsTester, RequiresLoginTester):
@@ -59,7 +67,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker, login_fixture):
         self.existing_study: Study = faker.study().get(save=True, owner=self.loggedin_user)
-        self.parameters = dict(study_id=self.existing_study.id)
+        self.parameters = {'study_id': self.existing_study.id}
 
     @property
     def content_asserter(self):
@@ -100,7 +108,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
         for u in matching_uploads:
             self.faker.upload_file().get(save=True, upload=u)
 
-        non_matching_uploads = self.faker.upload().get_list(save=True, item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
+        self.faker.upload().get_list(save=True, item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
 
         self.parameters['search'] = 'fred'
         self.parameters['page'] = current_page
@@ -118,7 +126,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
         db.session.commit()
         
         upload = self.faker.upload().get(save=True, study=self.existing_study, uploader=self.loggedin_user)
-        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=90)
+        self.faker.upload_file().get(save=True, upload=upload, size=90)
 
         resp = self.get()
 
@@ -130,7 +138,7 @@ class TestStudyIndex(StudyDetailsTester, IndexTester):
         db.session.commit()
         
         upload = self.faker.upload().get(save=True, study=self.existing_study, uploader=self.loggedin_user)
-        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=79)
+        self.faker.upload_file().get(save=True, upload=upload, size=79)
 
         resp = self.get()
 

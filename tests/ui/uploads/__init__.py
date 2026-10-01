@@ -1,5 +1,6 @@
-from sqlalchemy import func, select
 from lbrc_flask.database import db
+from sqlalchemy import func, select
+
 from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 
 

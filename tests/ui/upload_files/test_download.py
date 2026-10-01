@@ -1,6 +1,11 @@
-import pytest
 import os
-from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, FlaskViewTester
+
+import pytest
+from lbrc_flask.pytest.testers import (
+    FlaskViewTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
 
 
 class UploadFileDownloadViewTester:

@@ -1,6 +1,14 @@
 import re
+
 import pytest
-from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, RequiresRoleTester, TableContentAsserter, ResultSet
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+    ResultSet,
+    TableContentAsserter,
+)
+
 from tests.ui.uploads import UploadViewTester
 
 

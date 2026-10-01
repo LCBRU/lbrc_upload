@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-import string
 import shutil
+import string
 from pathlib import Path
-from random import randint, choices, choice
+from random import choice, choices, randint
+
 from dotenv import load_dotenv
+from faker import Faker
 from flask import current_app
 from lbrc_flask.database import db
-from faker import Faker
-from lbrc_flask.forms.dynamic import FieldGroup, create_field_types, FieldType, Field
+from lbrc_flask.forms.dynamic import Field, FieldGroup, FieldType, create_field_types
 from sqlalchemy import select
 
 fake = Faker()
@@ -15,9 +16,9 @@ fake = Faker()
 load_dotenv()
 
 from lbrc_upload import create_app
-from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from lbrc_upload.model.study import Study
-from lbrc_upload.model.user import User, Site
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
+from lbrc_upload.model.user import Site, User
 from lbrc_upload.security import init_authorization
 
 application = create_app()
@@ -118,6 +119,8 @@ db.session.commit()
 db.session.close()
 
 from alembic.config import Config
+
 from alembic import command
+
 alembic_cfg = Config("alembic.ini")
 command.stamp(alembic_cfg, "head")

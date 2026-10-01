@@ -1,8 +1,14 @@
 from pathlib import Path
+
 import pytest
-from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, RequiresRoleTester, TableContentAsserter, ResultSet
-from tests.ui.uploads import UploadViewTester
 from lbrc_flask.database import db
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+
+from tests.ui.uploads import UploadViewTester
 
 
 class StudyDeleteUploadListTester(UploadViewTester):
@@ -96,7 +102,7 @@ class TestSiteDeletePost(StudyDeleteUploadListTester, FlaskViewLoggedInTester):
 
         data = {'upload_id': [u.id for u in to_delete_uploads]}
 
-        resp = self.post(data=data)
+        self.post(data=data)
 
         self.assert_db_count(to_remain + to_delete)
 
@@ -108,7 +114,7 @@ class TestSiteDeletePost(StudyDeleteUploadListTester, FlaskViewLoggedInTester):
         data = {'upload_id': [upload.id + 1000]}  # Non-existent ID
         self.add_data_to_uploads(uploads=[upload])
         self.add_files_to_uploads(uploads=[upload])
-        resp = self.post(data=data)
+        self.post(data=data)
 
         self.assert_db_count(1)
 

@@ -1,9 +1,16 @@
 import http
-import pytest
-from lbrc_flask.pytest.asserts import assert__redirect
 from itertools import cycle
+
+import pytest
 from flask import url_for
-from lbrc_flask.pytest.testers import RequiresLoginTester, FlaskViewLoggedInTester, TableContentAsserter, ResultSet
+from lbrc_flask.pytest.asserts import assert__redirect
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    ResultSet,
+    TableContentAsserter,
+)
+
 from lbrc_upload.model.study import Study
 
 
@@ -121,7 +128,7 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         study = self.faker.study().get(save=True, owner=self.loggedin_user)
         study2 = self.faker.study().get(save=True, owner=self.loggedin_user) # second study so we don't get redirected
 
-        studies = self.sort_studies([study, study2])
+        self.sort_studies([study, study2])
 
         # Cycle is used to alternately allocate
         # the uploads to a different user
@@ -129,9 +136,9 @@ class TestStudyList(StudyListTester, FlaskViewLoggedInTester):
         # uploads by users other than ourselves
         users = cycle([self.loggedin_user, other_user])
 
-        outstanding_uploads = self.faker.upload().get_list(save=True, item_count=outstanding, study=study, uploader=next(users))
-        completed_uploads = self.faker.upload().get_list(save=True, item_count=completed, study=study, completed=True, uploader=next(users))
-        deleted_uploads = self.faker.upload().get_list(save=True, item_count=deleted, study=study, deleted=True, uploader=next(users))
+        self.faker.upload().get_list(save=True, item_count=outstanding, study=study, uploader=next(users))
+        self.faker.upload().get_list(save=True, item_count=completed, study=study, completed=True, uploader=next(users))
+        self.faker.upload().get_list(save=True, item_count=deleted, study=study, deleted=True, uploader=next(users))
 
         resp = self.get()
 

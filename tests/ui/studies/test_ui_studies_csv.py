@@ -1,8 +1,16 @@
 import http
+import typing
+
 import pytest
-from lbrc_upload.model.study import Study
-from lbrc_flask.pytest.testers import RequiresRoleTester, RequiresLoginTester, FlaskViewLoggedInTester, CsvDownloadContentAsserter
 from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.pytest.testers import (
+    CsvDownloadContentAsserter,
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+
+from lbrc_upload.model.study import Study
 
 
 class StudiesCsvTester:
@@ -14,7 +22,7 @@ class StudiesCsvTester:
     def set_existing_study(self, client, faker):
         self.owner_user = faker.user().get(save=True)
         self.existing_study: Study = faker.study().get(save=True, owner=self.owner_user)
-        self.parameters = dict(study_id=self.existing_study.id)
+        self.parameters = {'study_id': self.existing_study.id}
 
 
 class StudyCsvAsserter(CsvDownloadContentAsserter):
@@ -49,7 +57,7 @@ class TestStudiesCsvRequiresRole(StudiesCsvTester, RequiresRoleTester):
 
 
 class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
-    BASE_CSV_HEADINGS = [
+    BASE_CSV_HEADINGS : typing.ClassVar = [
         "upload_id",
         "study_name",
         "Study Number",
@@ -65,7 +73,7 @@ class TestStudiesCsvDownload(StudiesCsvTester, FlaskViewLoggedInTester):
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker, login_fixture):
         self.existing_study: Study = faker.study().get(save=True, owner=self.loggedin_user)
-        self.parameters = dict(study_id=self.existing_study.id)
+        self.parameters = {'study_id': self.existing_study.id}
 
     @pytest.mark.parametrize("upload_count", [0, 2, 3, 100])
     def test__get__no_filters(self, upload_count):

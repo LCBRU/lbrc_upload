@@ -1,11 +1,12 @@
 import pytest
 from faker import Faker
-from tests.faker import UploadsProvider
-from lbrc_flask.pytest.fixtures import *
 from lbrc_flask.forms.dynamic import create_field_types
 from lbrc_flask.pytest.faker import FieldsProvider
+from lbrc_flask.pytest.fixtures import *
+
 from config import TestConfig
 from lbrc_upload import create_app
+from tests.faker import UploadsProvider
 
 
 @pytest.fixture(scope="function", autouse=True)

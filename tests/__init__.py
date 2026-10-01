@@ -1,4 +1,5 @@
 import warnings
+
 from dotenv import load_dotenv
 
 # Filter out deprecation warnings from dependencies that we have no control over
@@ -22,7 +23,7 @@ def login(client, faker):
         "input", {"name": "csrf_token"}, type="hidden", id="csrf_token"
     )
 
-    data = dict(email=u.email, password=u.password)
+    data = {"email": u.email, "password": u.password}
 
     if crf_token:
         data["csrf_token"] = crf_token.get("value")

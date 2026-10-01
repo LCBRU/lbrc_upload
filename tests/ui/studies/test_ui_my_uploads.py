@@ -1,8 +1,16 @@
-from lbrc_upload.model.study import Study
-from lbrc_flask.python_helpers import sort_descending
-from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, IndexTester, PanelListContentAsserter, PagedResultSet
-import pytest
 import re
+
+import pytest
+from lbrc_flask.pytest.testers import (
+    IndexTester,
+    PagedResultSet,
+    PanelListContentAsserter,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+from lbrc_flask.python_helpers import sort_descending
+
+from lbrc_upload.model.study import Study
 
 
 class MyUploadsRowContentAsserter(PanelListContentAsserter):
@@ -26,7 +34,7 @@ class MyUploadsIndexTester:
     @pytest.fixture(autouse=True)
     def set_existing_study(self, client, faker):
         self.existing_study: Study = faker.study().get(save=True)
-        self.parameters = dict(study_id=self.existing_study.id)
+        self.parameters = {"study_id": self.existing_study.id}
 
 
 class TestMyUploadsIndexRequiresLogin(MyUploadsIndexTester, RequiresLoginTester):
@@ -60,7 +68,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
 
         my_uploads = self.faker.upload().get_list(save=True, item_count=my_study_count, study=self.existing_study, uploader=self.loggedin_user)
         my_uploads = sorted(my_uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
-        other_user_uploads = self.faker.upload().get_list(save=True, item_count=other_user_study_count, study=self.existing_study, uploader=other_user)
+        self.faker.upload().get_list(save=True, item_count=other_user_study_count, study=self.existing_study, uploader=other_user)
 
         self.parameters['page'] = current_page
 
@@ -82,7 +90,7 @@ class TestMyUploadsIndex(MyUploadsIndexTester, IndexTester):
 
         matching_uploads = self.faker.upload().get_list(save=True, item_count=matching_count, study=self.existing_study, uploader=self.loggedin_user, study_number='fred')
         matching_uploads = sorted(matching_uploads, key=lambda x: (sort_descending(x.date_created), x.study_number))
-        non_matching_uploads = self.faker.upload().get_list(save=True, item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
+        self.faker.upload().get_list(save=True, item_count=unmatching_count, study=self.existing_study, uploader=other_user, study_number='margaret')
 
         self.parameters['search'] = 'fred'
         self.parameters['page'] = current_page

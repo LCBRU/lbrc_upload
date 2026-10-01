@@ -1,14 +1,16 @@
 import os
-import humanize
 from pathlib import Path
+
+import humanize
 from flask import current_app
-from sqlalchemy import Integer, func
-from werkzeug.utils import secure_filename
-from lbrc_flask.security import AuditMixin
 from lbrc_flask.database import db
-from lbrc_flask.model import CommonMixin
 from lbrc_flask.forms.dynamic import Field
+from lbrc_flask.model import CommonMixin
+from lbrc_flask.security import AuditMixin
+from sqlalchemy import Integer, func
 from sqlalchemy.orm import Mapped, mapped_column
+from werkzeug.utils import secure_filename
+
 from lbrc_upload.model.study import Study
 from lbrc_upload.model.user import User
 
@@ -57,8 +59,8 @@ class UploadData(AuditMixin, CommonMixin, db.Model):
         return self.field.format_value(self.value)
 
     def __repr__(self):
-        items = ("%s = %r" % (k, v) for k, v in self.__dict__.items())
-        return "<%s: {%s}>" % (self.__class__.__name__, ', '.join(items))
+        items = (f"{k} = {v!r}" for k, v in self.__dict__.items())
+        return "<{}: {{{}}}>".format(self.__class__.__name__, ', '.join(items))
 
 
 class UploadFile(AuditMixin, CommonMixin, db.Model):
@@ -80,10 +82,10 @@ class UploadFile(AuditMixin, CommonMixin, db.Model):
     def filepath(self):
         return os.path.join(
             secure_filename(
-                "{}_{}".format(self.upload.study.id, self.upload.study.name)
+                f"{self.upload.study.id}_{self.upload.study.name}"
             ),
             secure_filename(
-                "{}_{}_{}".format(self.id, self.upload.study_number, self.filename)
+                f"{self.id}_{self.upload.study_number}_{self.filename}"
             ),
         )
 

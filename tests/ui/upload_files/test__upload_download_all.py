@@ -1,6 +1,12 @@
 import http
+
 import pytest
-from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, FlaskViewLoggedInTester
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+
 from tests.ui.upload_files import assert_file_download_zip_contents
 from tests.ui.uploads import UploadViewTester
 
@@ -52,5 +58,5 @@ class TestUploadDownloadAll(UploadDownloadAllViewTester, FlaskViewLoggedInTester
 
     def test__post__id_invalid(self):
         self.parameters['id'] = self.existing.id + 1
-        resp = self.get(expected_status_code=http.HTTPStatus.NOT_FOUND)
+        self.get(expected_status_code=http.HTTPStatus.NOT_FOUND)
 

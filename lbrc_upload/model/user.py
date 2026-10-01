@@ -1,6 +1,8 @@
-from lbrc_flask.security import User as BaseUser
+import typing
+
 from lbrc_flask.database import db
 from lbrc_flask.model import CommonMixin
+from lbrc_flask.security import User as BaseUser
 from sqlalchemy import func
 
 
@@ -20,12 +22,12 @@ class Site(CommonMixin, db.Model):
     def name_and_number(self):
         number_portion = ""
         if self.number:
-            number_portion = " ({})".format(self.number)
+            number_portion = f" ({self.number})"
         return self.name + number_portion
 
 
 class User(BaseUser, CommonMixin):
-    __table_args__ = {'extend_existing': True}
+    __table_args__: typing.ClassVar = {'extend_existing': True}
 
     site_id = db.Column(db.Integer, db.ForeignKey(Site.id))
     site = db.relationship(Site)
