@@ -60,7 +60,7 @@ def upload_data(study_id):
         return refresh_response()
 
     return render_template(
-        "lbrc/form_modal.html",
+        "ui/upload_dialog.html",
         title=f"Upload data to study {study.name}",
         form=form,
         submit_label="Upload",

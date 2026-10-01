@@ -1,15 +1,20 @@
 {% extends "lbrc/page_modal.html" %}
 {% from "lbrc/form_macros.html" import render_field %}
+{% from "lbrc/errors.html" import render_errors %}
 
 {% block content %}
     <form action="{{ url_for_security('login') }}" method="POST" name="login_user_form">
         <fieldset>
-            <img src="{{ url_for('lbrc_flask.static', filename='img/nihr-lbrc-cropped.png', ver=1) }}" alt="University Hospitals of Leicester Logo">
-            {{ login_user_form.hidden_tag() }}
+            <div>
+                <img src="{{ url_for('lbrc_flask.static', filename='img/nihr-lbrc-cropped.png', ver=1) }}" alt="University Hospitals of Leicester Logo">
+                {{ login_user_form.hidden_tag() }}
 
-            <p>Please enter your username and password to login</p>
-            <p>Use the following link if you have <a href="{{ url_for_security('forgot_password') }}">forgotten your password</a></p>
-            <p>If this is your first time here, use this link to <a href="{{ url_for_security('forgot_password') }}">register a password</a></p>
+                <p>Please enter your username and password to login</p>
+                <p>Use the following link if you have <a href="{{ url_for_security('forgot_password') }}">forgotten your password</a></p>
+                <p>If this is your first time here, use this link to <a href="{{ url_for_security('forgot_password') }}">register a password</a></p>
+    
+                {{ render_errors(get_flashed_messages(with_categories=true)) }}
+            </div>
                 
             <div class="field icon email">
                 {{ login_user_form.email(class="form-control", placeholder="Email Address") }}

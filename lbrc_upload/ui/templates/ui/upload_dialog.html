@@ -1,0 +1,42 @@
+{% extends "lbrc/form_modal.html" %}
+
+{% block scripts %}
+<script>
+    function getSubmitButton() {
+        return document.querySelector('button[type="submit"]');
+    }
+
+    function getSubmissionErrors() {
+        return document.querySelector('#submission_errors');
+    }
+
+    function getAllFileSizeInGb() {
+        const fileInputs = document.querySelectorAll('input[type="file"]');
+        let totalSize = 0;
+        fileInputs.forEach(input => {
+            if (input.files.length > 0) {
+                totalSize += input.files.item(0).size;
+            }
+        });
+        return totalSize / (1024 ** 3);
+    }
+
+    function validateFileSize() {
+        const fileSubmit = getSubmitButton();
+        file_size = getAllFileSizeInGb();
+        console.log(`Total file size: ${file_size} GB`);
+        if (file_size >= 1) {
+            getSubmissionErrors().textContent = "Total size of files exceeds 1GB limit.";
+            fileSubmit.disabled = true;
+        } else {
+            fileSubmit.disabled = false;
+        }
+    }
+
+    document.addEventListener('change', event => {
+        validateFileSize();
+    });
+
+    validateFileSize();
+</script>
+{% endblock %}
