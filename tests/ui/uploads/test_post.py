@@ -1,14 +1,22 @@
 import http
-from typing import Optional
-import pytest
 import os
-from sqlalchemy import select, func
-from lbrc_flask.pytest.asserts import assert__error__message_modal, assert__refresh_response
 from io import BytesIO
-from lbrc_upload.model.upload import Upload, UploadFile, UploadData
-from lbrc_flask.forms.dynamic import FieldType
+
+import pytest
 from lbrc_flask.database import db
-from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, FlaskViewLoggedInTester
+from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.pytest.asserts import (
+    assert__error__message,
+    assert__refresh_response,
+)
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+from sqlalchemy import func, select
+
+from lbrc_upload.model.upload import Upload, UploadData, UploadFile
 from tests.ui.uploads import UploadViewTester
 
 
@@ -81,7 +89,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         else:
             assert resp.status_code == http.HTTPStatus.OK
 
-            assert__error__message_modal(resp.soup, field.field_name)
+            assert__error__message(resp.soup, field.field_name)
             assert self.db_count_uploaded_with_study_number(study_number) == 0
 
     def assert_upload(self, field, value):
@@ -117,7 +125,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         with open(saved_filepath, 'r') as f:
             assert f.read() == content
 
-    def study_data(self, study_number: str, field_name: Optional[str]=None, field_value: Optional[str]=None):
+    def study_data(self, study_number: str, field_name: str | None=None, field_value: str | None=None):
         result =  {
             'study_number': study_number,
         }
@@ -152,7 +160,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
 
         resp = self.post(self.study_data(study_number=study_number))
 
-        assert__error__message_modal(resp.soup, 'Study Number')
+        assert__error__message(resp.soup, 'Study Number')
         assert self.db_count_uploaded_with_study_number(study_number) == 0
 
     def test__post__study_number__empty_when_required(self):
@@ -160,17 +168,17 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
 
         resp = self.post(self.study_data(study_number=study_number))
 
-        assert__error__message_modal(resp.soup, 'Study Number')
+        assert__error__message(resp.soup, 'Study Number')
         assert self.db_count_uploaded_with_study_number(study_number) == 0
 
     def test__post__study_number__duplicate_not_allowed(self):
         study_number = "UNIQUE123"
 
-        original_upload = self.faker.upload().get(save=True, study=self.study, study_number=study_number)
+        self.faker.upload().get(save=True, study=self.study, study_number=study_number)
 
         resp = self.post(self.study_data(study_number=study_number))
 
-        assert__error__message_modal(resp.soup, 'Study Number')
+        assert__error__message(resp.soup, 'Study Number')
         assert self.db_count_uploaded_with_study_number(study_number) == 1
 
     def test__post__study_number__duplicate_allowed(self):
@@ -180,7 +188,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
 
         study_number = "UNIQUE123"
 
-        original_upload = self.faker.upload().get(save=True, study=self.study, study_number=study_number)
+        self.faker.upload().get(save=True, study=self.study, study_number=study_number)
 
         resp = self.post(self.study_data(study_number=study_number))
 
@@ -191,7 +199,7 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         study_number = "UNIQUE123"
 
         another_study = self.faker.study().get(save=True)
-        original_upload = self.faker.upload().get(save=True, study=another_study, study_number=study_number)
+        self.faker.upload().get(save=True, study=another_study, study_number=study_number)
 
         resp = self.post(self.study_data(study_number=study_number))
 
@@ -286,5 +294,5 @@ class TestSiteDeletePost(UploadGetViewTester, FlaskViewLoggedInTester):
         else:
             assert resp.status_code == http.HTTPStatus.OK
 
-            assert__error__message_modal(resp.soup, field.field_name)
+            assert__error__message(resp.soup, field.field_name)
             assert self.db_count_uploaded_with_study_number(study_number) == 0

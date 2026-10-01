@@ -1,7 +1,18 @@
 import pytest
-from lbrc_flask.pytest.asserts import assert__refresh_response, assert__input_text, assert__input, assert__input_with_options
-from lbrc_flask.pytest.testers import RequiresLoginTester, RequiresRoleTester, ModalContentAsserter, FlaskViewLoggedInTester
 from lbrc_flask.forms.dynamic import FieldType
+from lbrc_flask.pytest.asserts import (
+    assert__input,
+    assert__input_text,
+    assert__input_with_options,
+    assert__refresh_response,
+)
+from lbrc_flask.pytest.testers import (
+    FlaskViewLoggedInTester,
+    ModalContentAsserter,
+    RequiresLoginTester,
+    RequiresRoleTester,
+)
+
 from tests.ui.uploads import UploadViewTester
 
 
@@ -58,7 +69,7 @@ class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
 
     def assert_response(self, resp):
         asserters = [
-            ModalContentAsserter(has_save_button=True, has_cancel_button=True),
+            ModalContentAsserter(has_save_button=True, has_cancel_button=True, save_button_text='Upload'),
             TitleAsserter(self.study),
         ]
 
@@ -67,13 +78,13 @@ class TestUploadFormGet(UploadGetViewTester, FlaskViewLoggedInTester):
 
     def test__get__valid(self):
         upload = self.faker.upload().get(save=True, study=self.study)
-        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=self.SIZE_LIMIT - 1)
+        self.faker.upload_file().get(save=True, upload=upload, size=self.SIZE_LIMIT - 1)
         resp = self.get()
         self.assert_response(resp)
 
     def test__get__space_exceeded(self):
         upload = self.faker.upload().get(save=True, study=self.study)
-        upload_file = self.faker.upload_file().get(save=True, upload=upload, size=self.SIZE_LIMIT + 1)
+        self.faker.upload_file().get(save=True, upload=upload, size=self.SIZE_LIMIT + 1)
         resp = self.get()
         assert__refresh_response(resp)
 
